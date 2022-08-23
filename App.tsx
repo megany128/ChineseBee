@@ -1,3 +1,9 @@
+import './config/firebase';
+import React from 'react';
+import RootNavigation from './navigation';
+import { ThemeProvider } from 'react-native-elements';
+import './config/firebase';
+
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -12,11 +18,9 @@ export default function App() {
   if (!isLoadingComplete) {
     return null;
   } else {
-    return (
-      <SafeAreaProvider>
-        <Navigation colorScheme={colorScheme} />
-        <StatusBar />
-      </SafeAreaProvider>
+    return (<ThemeProvider>
+      <RootNavigation/>
+    </ThemeProvider>
     );
   }
 }
