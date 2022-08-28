@@ -18,9 +18,10 @@ export default function App() {
   if (!isLoadingComplete) {
     return null;
   } else {
-    return (<ThemeProvider>
-      <RootNavigation/>
-    </ThemeProvider>
+    return (
+      <ThemeProvider>
+        <RootNavigation />
+      </ThemeProvider>
     );
   }
 }

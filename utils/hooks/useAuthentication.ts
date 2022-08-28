@@ -1,14 +1,11 @@
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-    initializeAuth,
-    getReactNativePersistence
-  } from 'firebase/auth/react-native';  
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth/react-native';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { app } from '../../config/firebase'
+import { app } from '../../config/firebase';
 
 const auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
+  persistence: getReactNativePersistence(AsyncStorage),
 });
 
 export function useAuthentication() {
@@ -30,6 +27,6 @@ export function useAuthentication() {
   }, []);
 
   return {
-    user
+    user,
   };
 }
