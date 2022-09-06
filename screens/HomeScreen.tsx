@@ -11,7 +11,7 @@ import { db } from '../config/firebase';
 import { push, ref, set, onValue } from 'firebase/database';
 
 export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
-  console.log('home screen')
+  console.log('home screen test')
   
   const { user } = useAuthentication();
   const auth = getAuth();
