@@ -5,7 +5,7 @@ import { Input } from 'react-native-elements';
 import { getAuth, signOut } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { RootStackScreenProps } from '../types';
-import { push, ref, set } from 'firebase/database';
+import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
 import { db, storage } from '../config/firebase';
 
 export default function AddScreen({ navigation }: RootStackScreenProps<'AddScreen'>) {
@@ -18,22 +18,51 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
     tag: '',
   });
 
+  const [error, setError] = useState(String);
+
+  const getKey = () => {
+    var cardRef = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), limitToLast(1));
+    let key = ''
+    onValue(cardRef, (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let card = { ...data };
+      key = Object.keys(card)[0]
+    });
+    return key;
+  }
+
   const addCard = () => {
     console.log('click');
 
-    push(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), {
-      english: value.english,
-      chinese: value.chinese,
-      tag: value.tag,
-    });
-
-    Alert.alert('Card created!');
-
-    setValue({
-      english: '',
-      chinese: '',
-      tag: '',
-    });
+    if (value.english === '') {
+      setError('English definition missing!');
+    }
+    else if (value.chinese === '') {
+      setError('Chinese definition missing!');
+    }
+    else {
+      setError('')
+      console.log(value.english + ' / ' + value.chinese)
+      push(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), {
+        english: value.english,
+        chinese: value.chinese,
+        tag: value.tag,
+        starred: false,
+      });
+  
+      const key = getKey();
+      update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + key), {
+        key
+      });
+  
+      Alert.alert('Card created!');
+  
+      setValue({
+        english: '',
+        chinese: '',
+        tag: '',
+      });
+    }
   };
 
   return (
@@ -79,6 +108,7 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
 
         {/* TODO: add tag selector */}
         <View style={{ alignSelf: 'center' }}>
+          <Text style={styles.error}>{error}</Text>
           <TouchableOpacity style={styles.button} onPress={() => addCard()}>
             <Text style={styles.buttonText}>ADD +</Text>
           </TouchableOpacity>
@@ -133,4 +163,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     alignSelf: 'center',
   },
+  error: {
+    color: 'red',
+    marginBottom: 20
+  }
 });
