@@ -11,7 +11,7 @@ import { db } from '../config/firebase';
 import { push, ref, set, onValue } from 'firebase/database';
 import * as Progress from 'react-native-progress';
 
-export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {  
+export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   const { user } = useAuthentication();
   const auth = getAuth();
 
@@ -37,9 +37,17 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
         {/* TODO: customise */}
         <TouchableOpacity style={styles.todaysRevision}>
           <Text style={styles.revisionText}>今天的复习</Text>
-          <Progress.Bar progress={0.3} height={10} width={310} color={'#FFE299'} borderWidth={0} unfilledColor={'white'} style={styles.progressBar}/>
+          <Progress.Bar
+            progress={0.3}
+            height={10}
+            width={310}
+            color={'#FFE299'}
+            borderWidth={0}
+            unfilledColor={'white'}
+            style={styles.progressBar}
+          />
         </TouchableOpacity>
-        <View style={{flexDirection: 'row', backgroundColor: 'transparent', justifyContent: 'center' }}>
+        <View style={{ flexDirection: 'row', backgroundColor: 'transparent', justifyContent: 'center' }}>
           <TouchableOpacity style={[styles.wordOfTheDay, { marginRight: 50 }]}>
             <Text style={styles.wordOfTheDayText}>中文</Text>
           </TouchableOpacity>
@@ -49,25 +57,33 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
         </View>
 
         <TouchableOpacity style={styles.stats}>
-          <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', flexDirection: 'row'}}>
-            <View style={{flexDirection: 'column', backgroundColor: 'transparent', marginRight: 50}}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'transparent',
+              flexDirection: 'row',
+            }}
+          >
+            <View style={{ flexDirection: 'column', backgroundColor: 'transparent', marginRight: 50 }}>
               {/* TODO: customise */}
               <Text style={styles.cardsStudied}>20</Text>
-              <Text style={{textAlign: 'center', fontWeight: '600'}}>cards{'\n'}studied</Text>
+              <Text style={{ textAlign: 'center', fontWeight: '600' }}>cards{'\n'}studied</Text>
             </View>
-            <View style={{flexDirection: 'column', backgroundColor: 'transparent', marginRight: 50}}>
+            <View style={{ flexDirection: 'column', backgroundColor: 'transparent', marginRight: 50 }}>
               {/* TODO: customise */}
               <Text style={styles.minutesLearning}>10</Text>
-              <Text style={{textAlign: 'center', fontWeight: '600'}}>minutes{'\n'}learning</Text>
+              <Text style={{ textAlign: 'center', fontWeight: '600' }}>minutes{'\n'}learning</Text>
             </View>
-            <View style={{flexDirection: 'column', backgroundColor: 'transparent'}}>
+            <View style={{ flexDirection: 'column', backgroundColor: 'transparent' }}>
               {/* TODO: customise */}
               <Text style={styles.streak}>5</Text>
-              <Text style={{textAlign: 'center', fontWeight: '600'}}>day{'\n'}streak</Text>
+              <Text style={{ textAlign: 'center', fontWeight: '600' }}>day{'\n'}streak</Text>
             </View>
           </View>
         </TouchableOpacity>
-        
+
         <Text style={styles.quickActionsHeader}>QUICK ACTIONS</Text>
         <View style={styles.quickActions}>
           <TouchableOpacity
@@ -147,7 +163,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 30,
     zIndex: 0,
-    backgroundColor: '#FFCB44'
+    backgroundColor: '#FFCB44',
   },
   wordOfTheDay: {
     flexDirection: 'column',
@@ -159,30 +175,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C4C4C4',
     justifyContent: 'center',
-    
   },
   wordOfTheDayText: {
     fontSize: 48,
     fontWeight: '800',
     color: '#FEB1C3',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   idiomOfTheDayText: {
     fontSize: 36,
     fontWeight: '800',
     color: '#94BAF4',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   revisionText: {
     fontSize: 40,
     fontWeight: '800',
     color: 'white',
     marginLeft: 20,
-    marginTop: 20
+    marginTop: 20,
   },
   progressBar: {
     marginLeft: 20,
-    marginTop: 15
+    marginTop: 15,
   },
   stats: {
     flexDirection: 'column',
@@ -194,29 +209,29 @@ const styles = StyleSheet.create({
     zIndex: 0,
     backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#C4C4C4'
+    borderColor: '#C4C4C4',
   },
   cardsStudied: {
     color: '#FFCB44',
     fontSize: 36,
     fontWeight: '700',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   minutesLearning: {
     color: '#94BAF4',
     fontSize: 36,
     fontWeight: '700',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   streak: {
     color: '#FEB1C3',
     fontSize: 36,
     fontWeight: '700',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   quickActionsHeader: {
     marginBottom: 30,
     fontWeight: '700',
-    fontSize: 20
-  }
+    fontSize: 20,
+  },
 });

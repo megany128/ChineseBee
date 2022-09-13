@@ -7,6 +7,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { RootStackScreenProps } from '../types';
 import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
 import { db, storage } from '../config/firebase';
+import moment from 'moment';
+moment().format(); 
 
 export default function AddScreen({ navigation }: RootStackScreenProps<'AddScreen'>) {
   const { user } = useAuthentication();
@@ -22,41 +24,41 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
 
   const getKey = () => {
     var cardRef = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), limitToLast(1));
-    let key = ''
+    let key = '';
     onValue(cardRef, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let card = { ...data };
-      key = Object.keys(card)[0]
+      key = Object.keys(card)[0];
     });
     return key;
-  }
+  };
 
   const addCard = () => {
     console.log('click');
 
     if (value.english === '') {
       setError('English definition missing!');
-    }
-    else if (value.chinese === '') {
+    } else if (value.chinese === '') {
       setError('Chinese definition missing!');
-    }
-    else {
-      setError('')
-      console.log(value.english + ' / ' + value.chinese)
+    } else {
+      setError('');
+      console.log(value.english + ' / ' + value.chinese);
       push(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), {
         english: value.english,
         chinese: value.chinese,
         tag: value.tag,
         starred: false,
+        masteryLevel: 0,
+        createdAt: moment().valueOf()
       });
-  
+
       const key = getKey();
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + key), {
-        key
+        key,
       });
-  
+
       Alert.alert('Card created!');
-  
+
       setValue({
         english: '',
         chinese: '',
@@ -165,6 +167,6 @@ const styles = StyleSheet.create({
   },
   error: {
     color: 'red',
-    marginBottom: 20
-  }
+    marginBottom: 20,
+  },
 });
