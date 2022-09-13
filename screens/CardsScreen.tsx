@@ -64,15 +64,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <TouchableOpacity
                     onPress={() =>
-                      set(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
-                        chinese: cardItem['chinese'],
-                        english: cardItem['english'],
-                        tag: cardItem['tag'],
-                        starred: !cardItem['starred'],
-                        key: cardItem['key'],
-                        masteryLevel: cardItem['masteryLevel'],
-                        createdAt: cardItem['createdAt']
-                      })
+                      updateStarred(cardItem)
                     }
                   >
                     <Icon
@@ -100,6 +92,24 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     );
   };
 
+  const updateStarred = (cardItem: any) => {
+    set(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
+      chinese: cardItem['chinese'],
+      english: cardItem['english'],
+      tag: cardItem['tag'],
+      starred: !cardItem['starred'],
+      key: cardItem['key'],
+      masteryLevel: cardItem['masteryLevel'],
+      createdAt: cardItem['createdAt']
+    })
+
+    // TODO: fix bug: when item is unstarred after star filter is already on
+    if (!cardItem['starred'] && starredFilter) {
+      getStarred(starredFilter);
+      console.log(cardArray)
+    }
+  }
+
   useEffect(() => {
     const orderedData = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), orderByChild('createdAt'));
     return onValue(orderedData, (querySnapShot) => {
@@ -115,6 +125,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     });
   }, []);
 
+  // TODO: fix bug: when searching, if you turn star filter on and off there's an issue
   const searchCards = (text: string) => {
     setSearch(text);
 
@@ -139,12 +150,16 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
   const getStarred = (newStarredFilter: boolean) => {
     if (newStarredFilter) {
       setFilteredCards(
-        cardArray.filter((obj: { starred: any }) => {
-          return obj.starred;
+        cardArray.filter((obj: { starred: any, english: string; chinese: string }) => {
+          return obj.starred && (obj.english.toLowerCase().includes(search) ||
+          obj.chinese.includes(search) ||
+          pinyin(obj.chinese, { removeTone: true }).toLowerCase().includes(search) ||
+          pinyin(obj.chinese, { removeTone: true, removeSpace: true }).toLowerCase().includes(search));
         })
       );
     } else {
       setFilteredCards(cardArray);
+      searchCards(search);
     }
   }
 
@@ -161,18 +176,21 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
           cardArray.sort((obj1: { createdAt: number }, obj2: { createdAt: number }) => obj2.createdAt - obj1.createdAt)
         );
         getStarred(starredFilter);
+        searchCards(search);
         break;
       case 1:
         setFilteredCards(
           cardArray.sort((obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj2.masteryLevel - obj1.masteryLevel)
         );
         getStarred(starredFilter);
+        searchCards(search);
         break;
       case 2:
         setFilteredCards(
           cardArray.sort((obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj1.masteryLevel - obj2.masteryLevel)
         );
         getStarred(starredFilter);
+        searchCards(search);
         break;
       default:
         break;
