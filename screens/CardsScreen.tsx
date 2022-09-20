@@ -11,6 +11,7 @@ import { db } from '../config/firebase';
 var pinyin = require('chinese-to-pinyin');
 
 export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>) {
+  // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
 
@@ -22,11 +23,10 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
 
   const cardKeys = Object.keys(filteredCards);
 
-  var arrayholder: any = [];
-
   const [starredFilter, setStarredFilter] = useState(false);
   const [sortStyle, setSortStyle] = useState(0);
 
+  // creates a Card component
   const Card = ({ cardItem, id }: any) => {
     return (
       pinyin(cardItem['chinese'], { removeTone: true }),
@@ -92,6 +92,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     );
   };
 
+  // toggles a card's starred status
   const updateStarred = (cardItem: any) => {
     set(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
       chinese: cardItem['chinese'],
@@ -110,13 +111,13 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     }
   }
 
+  // gets cards from database when screen loads
   useEffect(() => {
     const orderedData = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), orderByChild('createdAt'));
     return onValue(orderedData, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
       setCards(cardItems);
-      arrayholder = cardItems;
 
       let newArray: any = Object.values(cardItems).reverse();
 
@@ -126,6 +127,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
   }, []);
 
   // TODO: fix bug: when searching, if you turn star filter on and off there's an issue
+  // searches cards (english, chinese, pinyin) using search term and sets filteredCards to search results
   const searchCards = (text: string) => {
     setSearch(text);
 
@@ -141,12 +143,14 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     );
   };
 
+  // filters cards by starred
   const applyStarredFilter = () => {
     const newStarredFilter = !starredFilter;
     setStarredFilter(newStarredFilter);
     getStarred(newStarredFilter);
   };
 
+  // gets all cards that are starred (while still matching the search term)
   const getStarred = (newStarredFilter: boolean) => {
     if (newStarredFilter) {
       setFilteredCards(
@@ -163,6 +167,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     }
   }
 
+  // sorts cards by mastery
   const applySort = () => {
     let newSort = 0;
     if (sortStyle < 2) {
@@ -171,6 +176,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     setSortStyle(newSort);
 
     switch(newSort) {
+      // sort by time created
       case 0:
         setFilteredCards(
           cardArray.sort((obj1: { createdAt: number }, obj2: { createdAt: number }) => obj2.createdAt - obj1.createdAt)
@@ -178,6 +184,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
         getStarred(starredFilter);
         searchCards(search);
         break;
+      // sort by descending mastery
       case 1:
         setFilteredCards(
           cardArray.sort((obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj2.masteryLevel - obj1.masteryLevel)
@@ -185,6 +192,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
         getStarred(starredFilter);
         searchCards(search);
         break;
+      // sort by ascending mastery
       case 2:
         setFilteredCards(
           cardArray.sort((obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj1.masteryLevel - obj2.masteryLevel)
@@ -197,6 +205,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     }
   }
 
+  // returns the correct icon based on the sort
   const getSortIcon = () => {
     switch(sortStyle) {
       case 0:

@@ -12,6 +12,7 @@ import { push, ref, set, onValue } from 'firebase/database';
 import * as Progress from 'react-native-progress';
 
 export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
+  // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
 
@@ -35,7 +36,7 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
         </View>
 
         {/* TODO: customise */}
-        <TouchableOpacity style={styles.todaysRevision}>
+        <TouchableOpacity style={styles.todaysRevision} onPress={() => navigation.navigate('DailyStudyScreen')}>
           <Text style={styles.revisionText}>今天的复习</Text>
           <Progress.Bar
             progress={0.3}

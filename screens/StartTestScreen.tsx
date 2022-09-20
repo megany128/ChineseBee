@@ -8,6 +8,7 @@ import { RootStackScreenProps } from '../types';
 import { Dropdown } from 'react-native-element-dropdown';
 
 export default function StartTestScreen({ navigation }: RootStackScreenProps<'StartTestScreen'>) {
+  // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
 
@@ -21,6 +22,7 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
     chineseToEnglishListening: false,
   });
 
+  // variations of question numbers the user can choose
   const questionNumbers = [
     { label: '5', value: '5' },
     { label: '10', value: '10' },

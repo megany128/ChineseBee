@@ -7,6 +7,7 @@ import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase
 import { db } from '../config/firebase';
 import { push, ref, set } from 'firebase/database';
 
+// initialises auth
 const auth = getAuth();
 
 const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
@@ -17,20 +18,24 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
     name: '',
   });
 
+  // signs up the user
   async function signUp() {
+    // displays an error if email or password is left empty
     if (value.email === '' || value.password === '') {
       setValue({
         ...value,
-        error: 'Email and password are mandatory.',
+        error: 'Email or password is missing.',
       });
       return;
     }
 
+    // signs up the user via firebase auth
     try {
       await createUserWithEmailAndPassword(auth, value.email, value.password);
       updateProfile(auth.currentUser!, {
         displayName: value.name,
       });
+      // adds their details to the database
       set(ref(db, '/students/' + auth.currentUser?.uid), {
         emailAddress: value.email,
         name: value.name,

@@ -4,7 +4,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input, Button } from 'react-native-elements';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { StackScreenProps } from '@react-navigation/stack';
-
+ 
+// initialises auth
 const auth = getAuth();
 
 const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
@@ -14,7 +15,9 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
     error: '',
   });
 
+  // signs in the user
   async function signIn() {
+    // displays an error if email or password is left empty
     if (value.email === '' || value.password === '') {
       setValue({
         ...value,
@@ -23,6 +26,7 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       return;
     }
 
+    // signs the user in via firebase auth
     try {
       await signInWithEmailAndPassword(auth, value.email, value.password);
     } catch (error: any) {

@@ -11,6 +11,7 @@ import moment from 'moment';
 moment().format(); 
 
 export default function AddScreen({ navigation }: RootStackScreenProps<'AddScreen'>) {
+  // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
 
@@ -22,6 +23,7 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
 
   const [error, setError] = useState(String);
 
+  // gets the key of the last card created
   const getKey = () => {
     var cardRef = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), limitToLast(1));
     let key = '';
@@ -33,9 +35,11 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
     return key;
   };
 
+  // adds a card with data from the text inputs
   const addCard = () => {
     console.log('click');
 
+    // error checking
     if (value.english === '') {
       setError('English definition missing!');
     } else if (value.chinese === '') {
@@ -43,6 +47,8 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
     } else {
       setError('');
       console.log(value.english + ' / ' + value.chinese);
+
+      // adds a card to the database
       push(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), {
         english: value.english,
         chinese: value.chinese,
@@ -52,6 +58,7 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
         createdAt: moment().valueOf()
       });
 
+      // adds the card's key as a field
       const key = getKey();
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + key), {
         key,
@@ -59,6 +66,7 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
 
       Alert.alert('Card created!');
 
+      // resets the text inputs
       setValue({
         english: '',
         chinese: '',

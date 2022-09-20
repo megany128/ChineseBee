@@ -16,6 +16,7 @@ import HomeScreen from '../screens/HomeScreen';
 import StatsScreen from '../screens/StatsScreen';
 import AddScreen from '../screens/AddScreen';
 import StartTestScreen from '../screens/StartTestScreen';
+import DailyStudyScreen from '../screens/DailyStudyScreen'
 
 const Stack = createStackNavigator();
 
@@ -91,6 +92,7 @@ export default function UserStack() {
         </Stack.Group>
         <Stack.Screen name="AddScreen" component={AddScreen} options={{ headerShown: false }} />
         <Stack.Screen name="StartTestScreen" component={StartTestScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="DailyStudyScreen" component={DailyStudyScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
