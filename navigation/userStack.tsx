@@ -16,7 +16,7 @@ import HomeScreen from '../screens/HomeScreen';
 import StatsScreen from '../screens/StatsScreen';
 import AddScreen from '../screens/AddScreen';
 import StartTestScreen from '../screens/StartTestScreen';
-import DailyStudyScreen from '../screens/DailyStudyScreen'
+import DailyStudyScreen from '../screens/DailyStudyScreen';
 
 const Stack = createStackNavigator();
 

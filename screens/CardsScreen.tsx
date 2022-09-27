@@ -62,11 +62,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableOpacity
-                    onPress={() =>
-                      updateStarred(cardItem)
-                    }
-                  >
+                  <TouchableOpacity onPress={() => updateStarred(cardItem)}>
                     <Icon
                       name={cardItem['starred'] ? 'star' : 'staro'}
                       size={25}
@@ -101,15 +97,16 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       starred: !cardItem['starred'],
       key: cardItem['key'],
       masteryLevel: cardItem['masteryLevel'],
-      createdAt: cardItem['createdAt']
-    })
+      createdAt: cardItem['createdAt'],
+      timesReviewed: cardItem['timesReviewed'],
+    });
 
     // TODO: fix bug: when item is unstarred after star filter is already on
     if (!cardItem['starred'] && starredFilter) {
       getStarred(starredFilter);
-      console.log(cardArray)
+      console.log(cardArray);
     }
-  }
+  };
 
   // gets cards from database when screen loads
   useEffect(() => {
@@ -154,18 +151,21 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
   const getStarred = (newStarredFilter: boolean) => {
     if (newStarredFilter) {
       setFilteredCards(
-        cardArray.filter((obj: { starred: any, english: string; chinese: string }) => {
-          return obj.starred && (obj.english.toLowerCase().includes(search) ||
-          obj.chinese.includes(search) ||
-          pinyin(obj.chinese, { removeTone: true }).toLowerCase().includes(search) ||
-          pinyin(obj.chinese, { removeTone: true, removeSpace: true }).toLowerCase().includes(search));
+        cardArray.filter((obj: { starred: any; english: string; chinese: string }) => {
+          return (
+            obj.starred &&
+            (obj.english.toLowerCase().includes(search) ||
+              obj.chinese.includes(search) ||
+              pinyin(obj.chinese, { removeTone: true }).toLowerCase().includes(search) ||
+              pinyin(obj.chinese, { removeTone: true, removeSpace: true }).toLowerCase().includes(search))
+          );
         })
       );
     } else {
       setFilteredCards(cardArray);
       searchCards(search);
     }
-  }
+  };
 
   // sorts cards by mastery
   const applySort = () => {
@@ -175,7 +175,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     }
     setSortStyle(newSort);
 
-    switch(newSort) {
+    switch (newSort) {
       // sort by time created
       case 0:
         setFilteredCards(
@@ -187,7 +187,9 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       // sort by descending mastery
       case 1:
         setFilteredCards(
-          cardArray.sort((obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj2.masteryLevel - obj1.masteryLevel)
+          cardArray.sort(
+            (obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj2.masteryLevel - obj1.masteryLevel
+          )
         );
         getStarred(starredFilter);
         searchCards(search);
@@ -195,7 +197,9 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       // sort by ascending mastery
       case 2:
         setFilteredCards(
-          cardArray.sort((obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj1.masteryLevel - obj2.masteryLevel)
+          cardArray.sort(
+            (obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj1.masteryLevel - obj2.masteryLevel
+          )
         );
         getStarred(starredFilter);
         searchCards(search);
@@ -203,11 +207,11 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       default:
         break;
     }
-  }
+  };
 
   // returns the correct icon based on the sort
   const getSortIcon = () => {
-    switch(sortStyle) {
+    switch (sortStyle) {
       case 0:
         return 'sort';
       case 1:
@@ -215,9 +219,9 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       case 2:
         return 'sort-up';
       default:
-        return ''
+        return '';
     }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -238,7 +242,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
           autoCorrect={false}
         />
         <TouchableOpacity style={styles.sortButton} onPress={() => applySort()}>
-        <Icon2 name={getSortIcon()} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
+          <Icon2 name={getSortIcon()} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.starButton} onPress={() => applyStarredFilter()}>
           <Icon name={starredFilter ? 'star' : 'staro'} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />

@@ -8,7 +8,7 @@ import { RootStackScreenProps } from '../types';
 import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
 import { db, storage } from '../config/firebase';
 import moment from 'moment';
-moment().format(); 
+moment().format();
 
 export default function AddScreen({ navigation }: RootStackScreenProps<'AddScreen'>) {
   // initialises current user & auth
@@ -55,7 +55,8 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
         tag: value.tag,
         starred: false,
         masteryLevel: 0,
-        createdAt: moment().valueOf()
+        createdAt: moment().valueOf(),
+        timesReviewed: 0,
       });
 
       // adds the card's key as a field

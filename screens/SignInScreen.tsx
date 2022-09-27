@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input, Button } from 'react-native-elements';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { StackScreenProps } from '@react-navigation/stack';
- 
+
 // initialises auth
 const auth = getAuth();
 
