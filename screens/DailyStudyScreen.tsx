@@ -1,7 +1,7 @@
 import { RootStackScreenProps } from '../types';
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
-import Modal from "react-native-modal";
+import Modal from 'react-native-modal';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -10,7 +10,7 @@ import { db } from '../config/firebase';
 import moment from 'moment';
 import * as Progress from 'react-native-progress';
 import Icon2 from 'react-native-vector-icons/Entypo';
-import { Input } from 'react-native-elements';
+import { Input, Button } from 'react-native-elements';
 
 var pinyin = require('chinese-to-pinyin');
 
@@ -29,14 +29,17 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const answers: any = useRef([])
-  const correctAnswerOption: any = useRef(0)
+  const answers: any = useRef([]);
+  const correctAnswerOption: any = useRef(0);
 
-  const newQuestion = useRef(true)
-  const correct = useRef(false)
+  const newQuestion = useRef(true);
+  const correct = useRef(false);
 
-  const [typingAnswer, setTypingAnswer] = useState('');
+  const [typingQuestion, setTypingQuestion] = useState(false);
 
+  const [value, setValue] = React.useState({
+    typingAnswer: '',
+  });
   // gets cards from database when screen loads and creates array of cards to revise
   useEffect(() => {
     answers.current = [];
@@ -50,6 +53,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
 
       // gets cards that are not new but are due this session
       // TODO: set limit based on settings
+      // TODO: fix bug - sometimes one card is there twice
       reviewArray = reviewArray.filter((obj: { dueDate: number; masteryLevel: number }) => {
         return obj.dueDate === 0 && obj.masteryLevel != 0;
       });
@@ -80,149 +84,203 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
   };
 
   const hideModal = (card: any) => {
-    setModalVisible(false)
-    newQuestion.current = true
+    setModalVisible(false);
+    newQuestion.current = true;
     if (correct.current) {
-      console.log('correct')
-      updateCardNum(card, true)
+      console.log('correct');
+      updateCardNum(card, true);
+    } else {
+      console.log('wrong');
+      updateCardNum(card, false);
     }
-    else {
-      console.log('wrong')
-      updateCardNum(card, false)
-    }
-  }
+    setValue({ typingAnswer: '' });
+  };
 
   // renders each question
+  // TODO: fix bug - sometimes the correct answer is there twice
   const renderQuestions = () => {
     for (cardNum; cardNum < todaysRevision.length; ) {
       return (
-      <View>
-         {/* TODO: change to Question */}
-          <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+        <View>
+          {/* TODO: change to Question */}
+          <Question key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+          {typingQuestion && 
+            <Input
+            inputContainerStyle={styles.inputStyle}
+            containerStyle={styles.control}
+            value={value.typingAnswer}
+            onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
+            style={styles.inputText}
+            autoFocus={true}
+            blurOnSubmit={true}
+            autoCompleteType=""
+            onSubmitEditing={() => {
+              value.typingAnswer === todaysRevision[cardNum]['chinese']
+                ? ((correct.current = true), setModalVisible(true))
+                : ((correct.current = false), setModalVisible(true));
+            }}
+          />
+          }
+          
           {/* TODO: dismiss modal after timeout
           setTimeout(() => xxxx, 100) */}
-        <Modal
-          isVisible={modalVisible}
-          onBackdropPress={() => hideModal(todaysRevision[cardNum])}
-          style={{margin: 0}}
-        >
-          {correct.current === true ? (
-            <View
-              style={styles.correctModalView}
-            >
-              <View style={{borderRadius: 100, backgroundColor: 'white', width: 65, height: 65, marginLeft: 30, justifyContent: 'center', alignItems: 'center'}}>
-                <Icon2 name="check" size={35} color='#FEB1C3'/>
+          <Modal
+            isVisible={modalVisible}
+            onBackdropPress={() => hideModal(todaysRevision[cardNum])}
+            style={{ margin: 0 }}
+          >
+            {correct.current === true ? (
+              <View style={styles.correctModalView}>
+                <View
+                  style={{
+                    borderRadius: 100,
+                    backgroundColor: 'white',
+                    width: 65,
+                    height: 65,
+                    marginLeft: 30,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Icon2 name="check" size={35} color="#FEB1C3" />
+                </View>
+                <View style={{ flexDirection: 'column', marginLeft: 20 }}>
+                  <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
+                    {todaysRevision[cardNum]['chinese']}
+                  </Text>
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                    {pinyin(todaysRevision[cardNum]['chinese'])}
+                  </Text>
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                    {todaysRevision[cardNum]['english']}
+                  </Text>
+                </View>
               </View>
-              <View style={{flexDirection: 'column', marginLeft: 20}}>
-              <Text style={{color: 'white', fontWeight: '900', fontSize: 18}}>{todaysRevision[cardNum]['chinese']}</Text>
-                <Text style={{color: 'white', fontWeight: '600', fontSize: 16}}>{pinyin(todaysRevision[cardNum]['chinese'])}</Text>
-                <Text style={{color: 'white', fontWeight: '600', fontSize: 16}}>{todaysRevision[cardNum]['english']}</Text>
+            ) : (
+              <View style={styles.wrongModalView}>
+                <View
+                  style={{
+                    borderRadius: 100,
+                    backgroundColor: 'white',
+                    width: 65,
+                    height: 65,
+                    marginLeft: 30,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Icon2 name="cross" size={35} color="#94BAF4" />
+                </View>
+                <View style={{ flexDirection: 'column', marginLeft: 20 }}>
+                  <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
+                    {todaysRevision[cardNum]['chinese']}
+                  </Text>
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                    {pinyin(todaysRevision[cardNum]['chinese'])}
+                  </Text>
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                    {todaysRevision[cardNum]['english']}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ) : (
-            <View
-              style={styles.wrongModalView}
-            >
-              <View style={{borderRadius: 100, backgroundColor: 'white', width: 65, height: 65, marginLeft: 30, justifyContent: 'center', alignItems: 'center'}}>
-                <Icon2 name="cross" size={35} color='#94BAF4'/>
-              </View>
-              <View style={{flexDirection: 'column', marginLeft: 20}}>
-                <Text style={{color: 'white', fontWeight: '900', fontSize: 18}}>{todaysRevision[cardNum]['chinese']}</Text>
-                <Text style={{color: 'white', fontWeight: '600', fontSize: 16}}>{pinyin(todaysRevision[cardNum]['chinese'])}</Text>
-                <Text style={{color: 'white', fontWeight: '600', fontSize: 16}}>{todaysRevision[cardNum]['english']}</Text>
-              </View>
-            </View>
-          )}
-        </Modal>
-      </View>
+            )}
+          </Modal>
+        </View>
       );
     }
     return <Text>daily review complete!</Text>;
   };
 
   const generateRandomAnswers = (type: string, card: any) => {
-    if (newQuestion.current)
-    {
-    // generate correct answer option
-    correctAnswerOption.current = Math.floor(Math.random() * 4) + 1;
+    if (newQuestion.current) {
+      // generate correct answer option
+      correctAnswerOption.current = Math.floor(Math.random() * 4) + 1;
 
-    let wrongAnswerIndexes: any = [];
-    // generate random cards for wrong answers
-    let i = 0;
-    for (i; i < 3; i++) {
-      if (i === 0) {
-        let valid = false;
-        while (!valid) {
-          let randomNum = Math.floor(Math.random() * (allCards.length - 1));
-          if (card.english != allCards[randomNum]['english'] && card.chinese != allCards[randomNum]['chinese']) {
-            wrongAnswerIndexes[i] = randomNum;
-            valid = true;
-            console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
-            answers.current = [...answers.current, allCards[randomNum]]
+      let wrongAnswerIndexes: any = [];
+      // generate random cards for wrong answers
+      let i = 0;
+      for (i; i < 3; i++) {
+        if (i === 0) {
+          let valid = false;
+          while (!valid) {
+            let randomNum = Math.floor(Math.random() * (allCards.length - 1));
+            if (card.english != allCards[randomNum]['english'] && card.chinese != allCards[randomNum]['chinese']) {
+              wrongAnswerIndexes[i] = randomNum;
+              valid = true;
+              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              answers.current = [...answers.current, allCards[randomNum]];
+            }
+          }
+        }
+        if (i === 1) {
+          let valid = false;
+          while (!valid) {
+            let randomNum = Math.floor(Math.random() * (allCards.length - 1));
+            if (
+              card.english != allCards[randomNum]['english'] &&
+              card.chinese != allCards[randomNum]['chinese'] &&
+              allCards[wrongAnswerIndexes[0]]['english'] != allCards[randomNum]['english'] &&
+              allCards[wrongAnswerIndexes[0]]['chinese'] != allCards[randomNum]['chinese']
+            ) {
+              wrongAnswerIndexes[i] = randomNum;
+              valid = true;
+              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              answers.current = [...answers.current, allCards[randomNum]];
+            }
+          }
+        }
+        if (i === 2) {
+          let valid = false;
+          while (!valid) {
+            let randomNum = Math.floor(Math.random() * (allCards.length - 1));
+            if (
+              card.english != allCards[randomNum]['english'] &&
+              card.chinese != allCards[randomNum]['chinese'] &&
+              allCards[wrongAnswerIndexes[0]]['english'] != allCards[randomNum]['english'] &&
+              allCards[wrongAnswerIndexes[0]]['chinese'] != allCards[randomNum]['chinese'] &&
+              allCards[wrongAnswerIndexes[1]]['english'] != allCards[randomNum]['english'] &&
+              allCards[wrongAnswerIndexes[1]]['chinese'] != allCards[randomNum]['chinese']
+            ) {
+              wrongAnswerIndexes[i] = randomNum;
+              valid = true;
+              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              answers.current = [...answers.current, allCards[randomNum]];
+            }
           }
         }
       }
-      if (i === 1) {
-        let valid = false;
-        while (!valid) {
-          let randomNum = Math.floor(Math.random() * (allCards.length - 1));
-          if (
-            card.english != allCards[randomNum]['english'] &&
-            card.chinese != allCards[randomNum]['chinese'] &&
-            allCards[wrongAnswerIndexes[0]]['english'] != allCards[randomNum]['english'] &&
-            allCards[wrongAnswerIndexes[0]]['chinese'] != allCards[randomNum]['chinese']
-          ) {
-            wrongAnswerIndexes[i] = randomNum;
-            valid = true;
-            console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
-            answers.current = [...answers.current, allCards[randomNum]]
-          }
-        }
-      }
-      if (i === 2) {
-        let valid = false;
-        while (!valid) {
-          let randomNum = Math.floor(Math.random() * (allCards.length - 1));
-          if (
-            card.english != allCards[randomNum]['english'] &&
-            card.chinese != allCards[randomNum]['chinese'] &&
-            allCards[wrongAnswerIndexes[0]]['english'] != allCards[randomNum]['english'] &&
-            allCards[wrongAnswerIndexes[0]]['chinese'] != allCards[randomNum]['chinese'] &&
-            allCards[wrongAnswerIndexes[1]]['english'] != allCards[randomNum]['english'] &&
-            allCards[wrongAnswerIndexes[1]]['chinese'] != allCards[randomNum]['chinese']
-          ) {
-            wrongAnswerIndexes[i] = randomNum;
-            valid = true;
-            console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
-            answers.current = [...answers.current, allCards[randomNum]]
-          }
-        }
-      }
-    }
-  newQuestion.current = false
-    // TODO: solution for when not enough cards match the criteria
+      newQuestion.current = false;
+      // TODO: solution for when not enough cards match the criteria
     }
     let answerOption = [0, 1, 2, 3];
     console.log('correct answer is', correctAnswerOption.current);
     if (answerOption.length > 0) {
-      return answerOption.map((j) => (
-        console.log('j: ', j),
-        <View key={j}>
-          {j === correctAnswerOption.current - 1 ? (
-            <TouchableOpacity style={styles.answerChoiceBox} onPress={() => (correct.current = true, setModalVisible(true))}>
-              <Text style={styles.answerChoice}>{type === 'english' ? card.english : card.chinese}</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.answerChoiceBox} onPress={() => (correct.current = false, setModalVisible(true))}>
-              <Text style={styles.answerChoice}>
-                {j >= correctAnswerOption.current
-                  ? answers.current![j-1][type]
-                  : answers.current![j][type]}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      ));
+      return answerOption.map(
+        (j) => (
+          console.log('j: ', j),
+          (
+            <View key={j}>
+              {j === correctAnswerOption.current - 1 ? (
+                <TouchableOpacity
+                  style={styles.answerChoiceBox}
+                  onPress={() => ((correct.current = true), setModalVisible(true))}
+                >
+                  <Text style={styles.answerChoice}>{type === 'english' ? card.english : card.chinese}</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.answerChoiceBox}
+                  onPress={() => ((correct.current = false), setModalVisible(true))}
+                >
+                  <Text style={styles.answerChoice}>
+                    {j >= correctAnswerOption.current ? answers.current![j - 1][type] : answers.current![j][type]}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )
+        )
+      );
     } else {
       return <Text>test</Text>;
     }
@@ -243,38 +301,30 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
         <View style={{ marginTop: 100 }}>
           <Text style={styles.typingCard}>{card.card.english}</Text>
           <Text style={styles.instructions}>English → Chinese</Text>
-          <Input
-            inputContainerStyle={styles.inputStyle}
-            containerStyle={styles.control}
-            value={typingAnswer}
-            onChangeText={(text) => setTypingAnswer(text)}
-            autoCompleteType=""
-            style={styles.inputText}
-          />
         </View>
       </View>
-  );
-  }
+    );
+  };
 
   // Reading (Chinese -> English)
   const ReadingCTOE = (card: any) => {
     return (
-        <View>
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: 350, marginTop: 10 }}>
-            {card.card.tag && (
-              <View style={styles.tag}>
-                <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
-                  {card.card.tag}
-                </Text>
-              </View>
-            )}
-          </View>
-          <View style={{ marginTop: 100 }}>
-            <Text style={styles.newCard}>{card.card.chinese}</Text>
-            <Text style={styles.instructions}>Chinese → English</Text>
-            <View style={styles.answers}>{generateRandomAnswers('english', card.card)}</View>
-          </View>
+      <View>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: 350, marginTop: 10 }}>
+          {card.card.tag && (
+            <View style={styles.tag}>
+              <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
+                {card.card.tag}
+              </Text>
+            </View>
+          )}
         </View>
+        <View style={{ marginTop: 100 }}>
+          <Text style={styles.newCard}>{card.card.chinese}</Text>
+          <Text style={styles.instructions}>Chinese → English</Text>
+          <View style={styles.answers}>{generateRandomAnswers('english', card.card)}</View>
+        </View>
+      </View>
     );
   };
 
@@ -314,19 +364,24 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
         {
           // TODO: show mastery level
           card.card.timesReviewed === 0 ? (
+            setTypingQuestion(false),
             <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
           ) : // formats: typing (english -> chinese) [only after 4 reviews], multi-choice (chinese -> english),
           // listening (chinese -> english), listening (chinese -> chinese)
           // TODO: if between 1 - 3 reviews: random of all, excluding typing
           card.card.timesReviewed > 0 && card.card.timesReviewed < 4 ? (
-            <TouchableOpacity onPress={() => updateCardNum(card.card, true)}>
-              <ReadingCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
-            </TouchableOpacity>
+            setTypingQuestion(false),
+            // <TouchableOpacity onPress={() => updateCardNum(card.card, true)}>
+            <ReadingCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
           ) : (
+            // </TouchableOpacity>
             // TODO: if after 4 reviews: random of all, including typing
-            <TouchableOpacity onPress={() => updateCardNum(card.card, true)}>
-              <Text>more than 3 reviews</Text>
-            </TouchableOpacity>
+            // <TouchableOpacity onPress={() => updateCardNum(card.card, true)}>
+            setTypingQuestion(true),
+            <View>
+              <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+            </View>
+            // </TouchableOpacity>
           )
         }
       </View>
@@ -366,9 +421,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
           style={styles.progressBar}
         />
       </View>
-      <View style={{ alignSelf: 'center' }}>
-        {renderQuestions()}
-      </View>
+      <View style={{ alignSelf: 'center' }}>{renderQuestions()}</View>
     </SafeAreaView>
   );
 }
@@ -478,7 +531,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   wrongModalView: {
     height: '15%',
@@ -487,7 +540,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   control: {
     marginTop: 50,
@@ -503,5 +556,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C4C4C4',
     height: 50,
-  }
+  },
 });

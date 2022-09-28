@@ -130,9 +130,9 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-      {/* <View style={{ position: 'absolute', bottom: 30, backgroundColor: 'transparent' }}>
+      <View style={{ position: 'absolute', bottom: 30, backgroundColor: 'transparent' }}>
         <Button title="Sign Out" onPress={() => signOut(auth)} />
-      </View> */}
+      </View>
     </LinearGradient>
   );
 }
