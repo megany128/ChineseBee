@@ -32,18 +32,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       pinyin(cardItem['chinese'], { removeTone: true }),
       (
         <View>
-          <Pressable
-            onPress={
-              () => console.log('card clicked')
-              // navigation.navigate('CardInfoScreen', {
-              //   english: cardItem['english'],
-              //   chinese: cardItem['chinese'],
-              //   tag: cardItem['tag'],
-              //   key: cardItem['key'],
-              //   masteryLevel: cardItem['masteryLevel']
-              // })
-            }
-          >
+          <Pressable onPress={() => console.log('card clicked')}>
             <View style={styles.cardContainer}>
               <View style={{ flexDirection: 'column' }}>
                 <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -104,30 +93,37 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     // TODO: fix bug: when item is unstarred after star filter is already on
     if (!cardItem['starred'] && starredFilter) {
       getStarred(starredFilter);
-      console.log(cardArray);
     }
   };
 
   // gets cards from database when screen loads
   useEffect(() => {
+    // gets cards ordered by createdAt
     const orderedData = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), orderByChild('createdAt'));
     return onValue(orderedData, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
+
+      // uses state to set cards to the data just retrieved
       setCards(cardItems);
 
       let newArray: any = Object.values(cardItems).reverse();
 
+      // uses state to set cardArray and filteredCards to the reverse of this data
       setCardArray(newArray);
       setFilteredCards(newArray);
     });
   }, []);
 
   // TODO: fix bug: when searching, if you turn star filter on and off there's an issue
-  // searches cards (english, chinese, pinyin) using search term and sets filteredCards to search results
+
+  // searches Cards using search term and sets filteredCards to search results
   const searchCards = (text: string) => {
+    // sets the search term to the current search box input
     setSearch(text);
 
+    // applies the search: sets filteredCards to Cards in cardArray that contain the search term
+    // since Card is an object, checks if any of the english, chinese, and pinyin properties include the search term
     setFilteredCards(
       cardArray.filter((obj: { english: string; chinese: string }) => {
         return (
@@ -140,15 +136,19 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     );
   };
 
-  // filters cards by starred
+  // applies the starred filter
   const applyStarredFilter = () => {
+    // sets the new filter to the opposite of what it was previously
     const newStarredFilter = !starredFilter;
     setStarredFilter(newStarredFilter);
+
+    // filters cards based on starred
     getStarred(newStarredFilter);
   };
 
-  // gets all cards that are starred (while still matching the search term)
+  // gets all cards that match the starred filter (while still matching the search term)
   const getStarred = (newStarredFilter: boolean) => {
+    // if starred is true, filters cardArray by starred and then applies the search
     if (newStarredFilter) {
       setFilteredCards(
         cardArray.filter((obj: { starred: any; english: string; chinese: string }) => {
@@ -161,7 +161,9 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
           );
         })
       );
-    } else {
+    }
+    // if starred is false, ignores the starred filter and only applies the search
+    else {
       setFilteredCards(cardArray);
       searchCards(search);
     }
@@ -169,22 +171,23 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
 
   // sorts cards by mastery
   const applySort = () => {
+    // sets the new sort type
     let newSort = 0;
     if (sortStyle < 2) {
       newSort = sortStyle + 1;
     }
     setSortStyle(newSort);
 
+    // checks which sort is currently applied
     switch (newSort) {
-      // sort by time created
+      // sorts by time created, then applies the starred filter and the search (within getStarred)
       case 0:
         setFilteredCards(
           cardArray.sort((obj1: { createdAt: number }, obj2: { createdAt: number }) => obj2.createdAt - obj1.createdAt)
         );
         getStarred(starredFilter);
-        searchCards(search);
         break;
-      // sort by descending mastery
+      // sorts by descending mastery, then applies the starred filter and the search (within getStarred)
       case 1:
         setFilteredCards(
           cardArray.sort(
@@ -192,9 +195,8 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
           )
         );
         getStarred(starredFilter);
-        searchCards(search);
         break;
-      // sort by ascending mastery
+      // sorts by ascending mastery, then applies the starred filter and the search (within getStarred)
       case 2:
         setFilteredCards(
           cardArray.sort(
@@ -202,7 +204,6 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
           )
         );
         getStarred(starredFilter);
-        searchCards(search);
         break;
       default:
         break;

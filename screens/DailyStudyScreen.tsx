@@ -4,13 +4,18 @@ import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-na
 import Modal from 'react-native-modal';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { set, ref, onValue, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
 import * as Progress from 'react-native-progress';
-import Icon2 from 'react-native-vector-icons/Entypo';
 import { Input, Button } from 'react-native-elements';
+import { WebView } from 'react-native-webview';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Speech from 'expo-speech';
+
+import Icon from 'react-native-vector-icons/Ionicons';
+import Icon2 from 'react-native-vector-icons/Entypo';
+import Icon3 from 'react-native-vector-icons/FontAwesome';
 
 var pinyin = require('chinese-to-pinyin');
 
@@ -21,7 +26,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
   const { user } = useAuthentication();
   const auth = getAuth();
 
-  // TODO: save progress when you leave daily review
+  // TODO: change to async storage
   const [progress, setProgress] = useState(0);
   const [todaysRevision, setTodaysRevision]: any = useState([]);
   const [allCards, setAllCards]: any = useState([]);
@@ -36,14 +41,26 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
   const correct = useRef(false);
 
   const [typingQuestion, setTypingQuestion] = useState(false);
+  const [writingQuestion, setWritingQuestion] = useState(0);
+
+  const [newCards, setNewCards] = useState(5);
+  const [reviewCards, setReviewCards] = useState(20);
+  // const [finishedWriting, setFinishedWriting] = useState(false);
 
   const [value, setValue] = React.useState({
     typingAnswer: '',
   });
+
+  useEffect(() => {
+    if (modalVisible) {
+      setTimeout(() => setModalVisible(false), 700);
+    }
+  });
+
   // gets cards from database when screen loads and creates array of cards to revise
   useEffect(() => {
     answers.current = [];
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), (querySnapShot) => {
+    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
 
@@ -64,23 +81,33 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
         return obj.masteryLevel === 0;
       });
 
+      // TODO: reset daily study progress at beginning of the day.
       // sets today's revision to review cards and new cards randomised
       let todaysRevisonArray: any = [...reviewArray, ...newCardArray];
-      setTodaysRevision([...randomiseCards(todaysRevisonArray)]);
+      setTodaysRevision([...shuffleCards(todaysRevisonArray)]);
     });
   }, []);
 
-  // randomises cards in an array
-  // TODO: change to recursive
-  const randomiseCards = (array: []) => {
-    let i = array.length - 1;
-    for (i; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const temp = array[i];
-      array[i] = array[j];
-      array[j] = temp;
-    }
-    return array;
+  useEffect(() => {
+    getProgress();
+  }, []);
+
+  const getProgress = async () => {
+    let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
+    setProgress(parseFloat(dailyStudyProgress));
+    console.log('initial progress:', dailyStudyProgress);
+  };
+
+  // shuffles cards in an array through recursion
+  const shuffleCards: any = (array: []) => {
+    let shuffledArray: [] = [];
+    if (!array.length) return shuffledArray;
+
+    let index = Math.floor(Math.random() * array.length);
+    shuffledArray.push(array[index]);
+    let slicedArray = array.slice(0, index).concat(array.slice(index + 1));
+
+    return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
   const hideModal = (card: any) => {
@@ -88,23 +115,23 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     newQuestion.current = true;
     if (correct.current) {
       console.log('correct');
-      updateCardNum(card, true);
     } else {
       console.log('wrong');
-      updateCardNum(card, false);
     }
+    updateCardNum(card, correct.current);
     setValue({ typingAnswer: '' });
   };
 
   // renders each question
   // TODO: fix bug - sometimes the correct answer is there twice
   const renderQuestions = () => {
-    for (cardNum; cardNum < todaysRevision.length; ) {
-      return (
-        <View>
-          {/* TODO: change to Question */}
-          <Question key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
-          {typingQuestion && 
+    if (progress < 1) {
+      for (cardNum; cardNum < todaysRevision.length; ) {
+        return (
+          <View style={{ flex: 1 }}>
+            <Question key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+
+            {/* {typingQuestion && 
             <Input
             inputContainerStyle={styles.inputStyle}
             containerStyle={styles.control}
@@ -120,86 +147,64 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
                 : ((correct.current = false), setModalVisible(true));
             }}
           />
-          }
-          
-          {/* TODO: dismiss modal after timeout
+          } */}
+
+            {/* TODO: dismiss modal after timeout
           setTimeout(() => xxxx, 100) */}
-          <Modal
-            isVisible={modalVisible}
-            onBackdropPress={() => hideModal(todaysRevision[cardNum])}
-            style={{ margin: 0 }}
-          >
-            {correct.current === true ? (
-              <View style={styles.correctModalView}>
-                <View
-                  style={{
-                    borderRadius: 100,
-                    backgroundColor: 'white',
-                    width: 65,
-                    height: 65,
-                    marginLeft: 30,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Icon2 name="check" size={35} color="#FEB1C3" />
-                </View>
-                <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                  <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
-                    {todaysRevision[cardNum]['chinese']}
-                  </Text>
-                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                    {pinyin(todaysRevision[cardNum]['chinese'])}
-                  </Text>
-                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                    {todaysRevision[cardNum]['english']}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.wrongModalView}>
-                <View
-                  style={{
-                    borderRadius: 100,
-                    backgroundColor: 'white',
-                    width: 65,
-                    height: 65,
-                    marginLeft: 30,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Icon2 name="cross" size={35} color="#94BAF4" />
-                </View>
-                <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                  <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
-                    {todaysRevision[cardNum]['chinese']}
-                  </Text>
-                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                    {pinyin(todaysRevision[cardNum]['chinese'])}
-                  </Text>
-                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                    {todaysRevision[cardNum]['english']}
-                  </Text>
-                </View>
-              </View>
-            )}
-          </Modal>
-        </View>
-      );
+          </View>
+        );
+      }
     }
-    return <Text>daily review complete!</Text>;
+    return (
+      <View
+        style={{ justifyContent: 'center', alignContent: 'center', flex: 1, alignItems: 'center', marginBottom: 120 }}
+      >
+        <View
+          style={{
+            width: 200,
+            height: 200,
+            backgroundColor: '#FFCB44',
+            borderRadius: 200,
+            alignSelf: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon2 name="check" size={100} style={{ alignSelf: 'center', color: 'white' }} />
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ textAlign: 'center', fontSize: 36, fontWeight: '700' }}>all done!</Text>
+          <View style={{ marginTop: 20 }}>
+            <Text style={{ textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#FFCB44' }}>
+              today's recap:
+            </Text>
+            <View style={{ flexDirection: 'row' }}>
+              <Text style={{ textAlign: 'center', marginTop: 5, color: '#FEB1C3', fontWeight: '600' }}>{newCards}</Text>
+              <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600' }}> new cards learned</Text>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+              <Text style={{ textAlign: 'center', marginTop: 5, color: '#94BAF4', fontWeight: '600' }}>
+                {reviewCards}
+              </Text>
+              <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600' }}> cards reviewed</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
   };
 
   const generateRandomAnswers = (type: string, card: any) => {
+    // if it's a new question, generate new answers
     if (newQuestion.current) {
-      // generate correct answer option
+      // generates correct answer option (1 - 4)
       correctAnswerOption.current = Math.floor(Math.random() * 4) + 1;
 
       let wrongAnswerIndexes: any = [];
-      // generate random cards for wrong answers
+      // generates random cards for wrong answers
       let i = 0;
       for (i; i < 3; i++) {
+        // for the first wrong answer, keeps on generating a random number until it does not share an english/chinese
+        // translation with the correct answer
         if (i === 0) {
           let valid = false;
           while (!valid) {
@@ -208,10 +213,13 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
               console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
           }
         }
+        // for the second wrong answer, keeps on generating a random number until it does not share an english/chinese
+        // translation with the correct answer or the first wrong answer
         if (i === 1) {
           let valid = false;
           while (!valid) {
@@ -225,10 +233,13 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
               console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
           }
         }
+        // for the third wrong answer, keeps on generating a random number until it does not share an english/chinese
+        // translation with the correct answer or the first/second wrong answer
         if (i === 2) {
           let valid = false;
           while (!valid) {
@@ -244,33 +255,44 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
               console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
           }
         }
       }
+      // once list of answers has been generated, sets newQuestion to false to prevent the answers from constantly regenerating
+      // with each rerender
       newQuestion.current = false;
       // TODO: solution for when not enough cards match the criteria
     }
     let answerOption = [0, 1, 2, 3];
-    console.log('correct answer is', correctAnswerOption.current);
+
     if (answerOption.length > 0) {
+      // renders each answer in turn
       return answerOption.map(
         (j) => (
           console.log('j: ', j),
           (
             <View key={j}>
+              {/* if the current answer is the correct answer option, renders the correct answer */}
+              {/* else, renders the wrong answer with the same index if before the correct answer or the index shifted down by 1
+               if after the correct answer */}
               {j === correctAnswerOption.current - 1 ? (
                 <TouchableOpacity
                   style={styles.answerChoiceBox}
-                  onPress={() => ((correct.current = true), setModalVisible(true))}
+                  onPress={() => {
+                    console.log('correct');
+                    correct.current = true;
+                    setModalVisible(true);
+                  }}
                 >
                   <Text style={styles.answerChoice}>{type === 'english' ? card.english : card.chinese}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
                   style={styles.answerChoiceBox}
-                  onPress={() => ((correct.current = false), setModalVisible(true))}
+                  onPress={() => (console.log('wrong'), (correct.current = false), setModalVisible(true))}
                 >
                   <Text style={styles.answerChoice}>
                     {j >= correctAnswerOption.current ? answers.current![j - 1][type] : answers.current![j][type]}
@@ -279,13 +301,87 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
               )}
             </View>
           )
+          // TODO: fix bug with answers.current![j][type]
         )
       );
     } else {
-      return <Text>test</Text>;
+      return <Text>NA</Text>;
     }
   };
 
+  // Writing (English -> Chinese)
+  const HandwritingETOC = (character: any) => {
+    console.log(character.card);
+
+    const INJECTED_JAVASCRIPT =
+      `
+      var writer = HanziWriter.create('grid-background-target', '` +
+      character.card +
+      `', {
+            width: 500,
+            height: 500,
+            showCharacter: false,
+            showOutline: false,
+            padding: 5,
+            showHintAfterMisses: 3,
+            highlightOnComplete: true,
+            highlightColor: '#FFCB44',
+            strokeAnimationSpeed: 2,
+            leniency: 1
+          });
+          writer.quiz({
+            onMistake: function(strokeData) {
+              console.log('Oh no! you made a mistake on stroke ' + strokeData.strokeNum);
+              console.log("You've made " + strokeData.mistakesOnStroke + " mistakes on this stroke so far");
+              console.log("You've made " + strokeData.totalMistakes + " total mistakes on this quiz");
+              console.log("There are " + strokeData.strokesRemaining + " strokes remaining in this character");
+            },
+            onCorrectStroke: function(strokeData) {
+              console.log('Yes!!! You got stroke ' + strokeData.strokeNum + ' correct!');
+              console.log('You made ' + strokeData.mistakesOnStroke + ' mistakes on this stroke');
+              console.log("You've made " + strokeData.totalMistakes + ' total mistakes on this quiz');
+              console.log('There are ' + strokeData.strokesRemaining + ' strokes remaining in this character');
+            },
+            onComplete: function(summaryData) {
+              console.log('You did it! You finished drawing ' + summaryData.character);
+              console.log('You made ' + summaryData.totalMistakes + ' total mistakes on this quiz');
+              window.ReactNativeWebView.postMessage(summaryData.totalMistakes)
+            }
+          });
+      `;
+
+    const html = `
+      <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.2/dist/hanzi-writer.min.js"></script>
+      <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" id="grid-background-target">
+        <line x1="0" y1="0" x2="500" y2="500" stroke="#DDD" />
+        <line x1="500" y1="0" x2="0" y2="500" stroke="#DDD" />
+        <line x1="250" y1="0" x2="250" y2="500" stroke="#DDD" />
+        <line x1="0" y1="250" x2="500" y2="250" stroke="#DDD" />
+      </svg>
+    `;
+
+    // TODO: update visibility of button based on results
+    return (
+      <View style={{ flex: 1 }}>
+        <WebView
+          scrollEnabled={false}
+          mixedContentMode="always"
+          originWhiteList={['*']}
+          source={{ html: html }}
+          style={{ flex: 1, width: 550, marginLeft: 275, marginTop: 25 }}
+          javaScriptEnabled={true}
+          injectedJavaScript={INJECTED_JAVASCRIPT}
+          onMessage={(event) => {
+            // TODO: update mastery
+            console.log('number of mistakes: ' + event.nativeEvent.data);
+          }}
+        />
+      </View>
+    );
+    return null;
+  };
+
+  // Typing (English -> Chinese)
   const TypingETOC = (card: any) => {
     return (
       <View>
@@ -328,6 +424,28 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     );
   };
 
+  // Reading (English -> Chinese)
+  const ReadingETOC = (card: any) => {
+    return (
+      <View>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: 350, marginTop: 10 }}>
+          {card.card.tag && (
+            <View style={styles.tag}>
+              <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
+                {card.card.tag}
+              </Text>
+            </View>
+          )}
+        </View>
+        <View style={{ marginTop: 100 }}>
+          <Text style={styles.newCard}>{card.card.english}</Text>
+          <Text style={styles.instructions}>English → Chinese</Text>
+          <View style={styles.answers}>{generateRandomAnswers('chinese', card.card)}</View>
+        </View>
+      </View>
+    );
+  };
+
   // New card
   const NewCard = (card: any) => {
     return (
@@ -356,53 +474,248 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     );
   };
 
-  // Question const
-  const Question = (card: any) => {
-    // if it is a new card, simply allow the student to learn it without being quizzed
+  const randomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+
+  const ListeningCTOC = (card: any) => {
     return (
-      <View>
-        {
-          // TODO: show mastery level
-          card.card.timesReviewed === 0 ? (
-            setTypingQuestion(false),
-            <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
-          ) : // formats: typing (english -> chinese) [only after 4 reviews], multi-choice (chinese -> english),
-          // listening (chinese -> english), listening (chinese -> chinese)
-          // TODO: if between 1 - 3 reviews: random of all, excluding typing
-          card.card.timesReviewed > 0 && card.card.timesReviewed < 4 ? (
-            setTypingQuestion(false),
-            // <TouchableOpacity onPress={() => updateCardNum(card.card, true)}>
-            <ReadingCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
-          ) : (
-            // </TouchableOpacity>
-            // TODO: if after 4 reviews: random of all, including typing
-            // <TouchableOpacity onPress={() => updateCardNum(card.card, true)}>
-            setTypingQuestion(true),
-            <View>
-              <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: 350, marginTop: 10 }}>
+          {card.card.tag && (
+            <View style={styles.tag}>
+              <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
+                {card.card.tag}
+              </Text>
             </View>
-            // </TouchableOpacity>
-          )
-        }
+          )}
+        </View>
+        <View style={{ marginTop: 50, justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{
+              width: 150,
+              height: 150,
+              borderRadius: 250,
+              backgroundColor: '#FFCB44',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={() => Speech.speak(card.card.chinese, { language: 'zh-CN' })}
+          >
+            <Icon3 name="volume-up" size={60} color="white" />
+          </TouchableOpacity>
+          <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → Chinese</Text>
+          <View style={[styles.answers, { marginTop: 20 }]}>{generateRandomAnswers('chinese', card.card)}</View>
+        </View>
       </View>
     );
   };
 
+  const ListeningCTOE = (card: any) => {
+    console.log('chinese:', card.card.chinese);
+    return (
+      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: 350, marginTop: 10 }}>
+          {card.card.tag && (
+            <View style={styles.tag}>
+              <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
+                {card.card.tag}
+              </Text>
+            </View>
+          )}
+        </View>
+        <View style={{ marginTop: 50, justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{
+              width: 150,
+              height: 150,
+              borderRadius: 250,
+              backgroundColor: '#FFCB44',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={() => Speech.speak(card.card.chinese, { language: 'zh-CN' })}
+          >
+            <Icon3 name="volume-up" size={60} color="white" />
+          </TouchableOpacity>
+          <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → Chinese</Text>
+          <View style={[styles.answers, { marginTop: 20 }]}>{generateRandomAnswers('english', card.card)}</View>
+        </View>
+      </View>
+    );
+  };
+
+  // Question const
+  const Question = (card: any) => {
+    let timesReviewed = card.card.timesReviewed;
+    let cardType = '';
+    let type = 0;
+    switch (true) {
+      // new card
+      case timesReviewed === 0:
+        cardType = 'NewCard';
+        break;
+      // all excl typing and writing
+      case timesReviewed < 4:
+        type = randomInt(1, 4);
+        switch (type) {
+          case 1:
+            cardType = 'ListeningCTOC';
+            break;
+          case 2:
+            cardType = 'ReadingCTOE';
+            break;
+          case 3:
+            cardType = 'ListeningCTOE';
+            break;
+          case 4:
+            cardType = 'ReadingETOC';
+            break;
+          default:
+            break;
+        }
+        break;
+      // all excluding writing
+      case timesReviewed < 6:
+        type = randomInt(1, 5);
+        switch (type) {
+          case 1:
+            cardType = 'ListeningCTOC';
+            break;
+          case 2:
+            cardType = 'ReadingCTOE';
+            break;
+          case 3:
+            cardType = 'ListeningCTOE';
+            break;
+          case 4:
+            cardType = 'ReadingETOC';
+            break;
+          case 5:
+            cardType = 'TypingETOC';
+          default:
+            break;
+        }
+        break;
+      // all
+      default:
+        type = randomInt(1, 6);
+        switch (type) {
+          case 1:
+            cardType = 'ListeningCTOC';
+            break;
+          case 2:
+            cardType = 'ReadingCTOE';
+            break;
+          case 3:
+            cardType = 'ListeningCTOE';
+            break;
+          case 4:
+            cardType = 'ReadingETOC';
+            break;
+          case 5:
+            cardType = 'TypingETOC';
+            break;
+          case 6:
+            cardType = 'handwritingETOC';
+            break;
+          default:
+            break;
+        }
+        break;
+    }
+    if (cardType === 'NewCard') {
+      return <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+    } else if (cardType === 'ListeningCTOC') {
+      // setTypingQuestion(false)
+      return <ListeningCTOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+    } else if (cardType === 'ReadingCTOE') {
+      // setTypingQuestion(false)
+      return <ReadingCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+    } else if (cardType === 'ListeningCTOE') {
+      // setTypingQuestion(false)
+      return <ListeningCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+    } else if (cardType === 'ReadingETOC') {
+      // setTypingQuestion(false)
+      return <ReadingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+    } else if (cardType === 'TypingETOC') {
+      // setTypingQuestion(true)
+      return (
+        <View style={{ flex: 1 }}>
+          <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+          <Input
+            inputContainerStyle={styles.inputStyle}
+            containerStyle={styles.control}
+            value={value.typingAnswer}
+            onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
+            style={styles.inputText}
+            autoFocus={true}
+            blurOnSubmit={true}
+            autoCompleteType=""
+            onSubmitEditing={() => {
+              value.typingAnswer === todaysRevision[cardNum]['chinese']
+                ? ((correct.current = true), setModalVisible(true))
+                : ((correct.current = false), setModalVisible(true));
+            }}
+          />
+        </View>
+      );
+    } else if (cardType === 'handwritingETOC') {
+      // setTypingQuestion(false)
+      return (
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.typingCard, { marginTop: 25 }]}>{todaysRevision[cardNum].english}</Text>
+          <Text style={[styles.instructions, { marginBottom: 25 }]}>English → Chinese</Text>
+          <HandwritingETOC
+            key={todaysRevision[cardNum]}
+            card={todaysRevision[cardNum].chinese.charAt(writingQuestion)}
+          />
+          {writingQuestion < todaysRevision[cardNum].chinese.length - 1 ? (
+            <TouchableOpacity
+              style={{
+                marginBottom: 230,
+                width: 40,
+                backgroundColor: '#FFCB44',
+                borderRadius: 40,
+                height: 40,
+                justifyContent: 'center',
+                alignSelf: 'center',
+              }}
+              onPress={() => setWritingQuestion(writingQuestion + 1)}
+            >
+              <Text style={styles.nextCardText}>→</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[{ marginBottom: 230 }, styles.nextCard]}
+              onPress={() => updateCardNum(todaysRevision[cardNum], true)}
+            >
+              <Text style={styles.nextCardText}>NEXT CARD!</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    }
+    return null;
+  };
+
   // move to the next question
-  const updateCardNum = (card: any, right: boolean) => {
-    setCardNum(cardNum + 1);
+  const updateCardNum = async (card: any, right: boolean) => {
+    let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
+    AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1))
+    setWritingQuestion(0);
+    let cardNumber = cardNum + 1;
+    setCardNum(cardNumber);
     console.log('new card: ' + cardNum);
-    setProgress((cardNum + 1) / todaysRevision.length);
-    set(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), {
-      chinese: card.chinese,
-      english: card.english,
-      tag: card.tag,
-      starred: card.starred,
-      key: card.key,
+    setProgress((cardNumber + 1) / todaysRevision.length);
+    console.log('new progress:', (cardNumber + 1) / todaysRevision.length);
+    AsyncStorage.setItem('dailyStudyProgress', ((cardNumber + 1) / todaysRevision.length).toString());
+    console.log('new async progress:', (cardNumber + 1) / todaysRevision.length);
+    update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), {
       masteryLevel: card.masteryLevel,
-      createdAt: card.createdAt,
       timesReviewed: card.timesReviewed + 1,
     });
+    // TODO: set mastery based on right
   };
 
   return (
@@ -422,6 +735,69 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
         />
       </View>
       <View style={{ alignSelf: 'center' }}>{renderQuestions()}</View>
+      {modalVisible && (
+        <Modal
+          isVisible={modalVisible}
+          onBackdropPress={() => hideModal(todaysRevision[cardNum])}
+          style={{ margin: 0 }}
+        >
+          {correct.current === true ? (
+            <View style={styles.correctModalView}>
+              <View
+                style={{
+                  borderRadius: 100,
+                  backgroundColor: 'white',
+                  width: 65,
+                  height: 65,
+                  marginLeft: 30,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Icon2 name="check" size={35} color="#FEB1C3" />
+              </View>
+              <View style={{ flexDirection: 'column', marginLeft: 20 }}>
+                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
+                  {todaysRevision[cardNum]['chinese']}
+                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                  {pinyin(todaysRevision[cardNum]['chinese'])}
+                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                  {todaysRevision[cardNum]['english']}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.wrongModalView}>
+              <View
+                style={{
+                  borderRadius: 100,
+                  backgroundColor: 'white',
+                  width: 65,
+                  height: 65,
+                  marginLeft: 30,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Icon2 name="cross" size={35} color="#94BAF4" />
+              </View>
+              <View style={{ flexDirection: 'column', marginLeft: 20 }}>
+                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
+                  {todaysRevision[cardNum]['chinese']}
+                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                  {pinyin(todaysRevision[cardNum]['chinese'])}
+                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                  {todaysRevision[cardNum]['english']}
+                </Text>
+              </View>
+            </View>
+          )}
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }

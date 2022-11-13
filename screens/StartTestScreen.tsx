@@ -1,45 +1,57 @@
-import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input, CheckBox } from 'react-native-elements';
 import { getAuth, signOut } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { RootStackScreenProps } from '../types';
-import { Dropdown } from 'react-native-element-dropdown';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { push, ref, set, onValue } from 'firebase/database';
+import { db } from '../config/firebase';
 
 export default function StartTestScreen({ navigation }: RootStackScreenProps<'StartTestScreen'>) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
 
-  const [value, setValue] = React.useState({
-    numberOfQuestions: '',
-    tag: '',
-    starredCards: false,
-    englishToChineseReading: false,
-    chineseToEnglishReading: false,
-    englishToChineseListening: false,
-    chineseToEnglishListening: false,
-  });
+  const [dropdown1Open, setDropdown1Open] = useState(false);
+  const [dropdown2Open, setDropdown2Open] = useState(false);
+
+  const [numberOfQuestions, setNumberOfQuestions] = useState('');
+  const [tags, setTags] = useState([]);
+  const [starredCards, setStarredCards] = useState(false);
+  const [readingETOC, setReadingETOC] = useState(false);
+  const [readingCTOE, setReadingCTOE] = useState(false);
+  const [listeningETOC, setListeningETOC] = useState(false);
+  const [listeningCTOE, setListeningCTOE] = useState(false);
+  const [typingETOC, setTypingETOC] = useState(false);
+  const [handwritingETOC, setHandwritingETOC] = useState(false);
 
   // variations of question numbers the user can choose
-  const questionNumbers = [
+  const [questionNumberOptions, setQuestionNumberOptions] = useState([
     { label: '5', value: '5' },
     { label: '10', value: '10' },
     { label: '15', value: '15' },
     { label: '20', value: '20' },
     { label: '25', value: '25' },
     { label: '30', value: '30' },
-  ];
+  ]);
 
-  const [isFocus, setIsFocus] = React.useState(false);
+  const [tagOptions, setTagOptions]: any = useState([]);
 
-  const renderLabel = () => {
-    if (value || isFocus) {
-      return <Text style={[styles.dropdownLabel, isFocus && { color: 'blue' }]}>Dropdown label</Text>;
-    }
-    return null;
-  };
+  useEffect(() => {
+    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
+      let data = querySnapShot.val() || [];
+      let tags = { ...data };
+
+      let tagOptionsTemp: any = Object.keys(tags);
+      for (let tag = 0; tag < tagOptionsTemp.length; tag++) {
+        tagOptionsTemp[tag] = { label: tagOptionsTemp[tag], value: tagOptionsTemp[tag] };
+      }
+
+      setTagOptions(tagOptionsTemp);
+    });
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -50,149 +62,128 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
         <Text style={styles.header}>START TEST</Text>
       </View>
       <View style={{ marginTop: 20, flex: 1 }}>
-        <Dropdown
-          style={[isFocus && { borderColor: 'blue' }]}
-          // placeholderStyle={styles.placeholderStyle}
-          // selectedTextStyle={styles.selectedTextStyle}
-          // inputSearchStyle={styles.inputSearchStyle}
-          // iconStyle={styles.iconStyle}
-          data={questionNumbers}
-          maxHeight={300}
-          labelField="label"
-          valueField="value"
-          placeholder={!isFocus ? 'Number of questions' : '...'}
-          value={value}
-          onFocus={() => setIsFocus(true)}
-          onBlur={() => setIsFocus(false)}
-          onChange={(item) => {
-            setValue({
-              numberOfQuestions: value.numberOfQuestions,
-              tag: item.value,
-              starredCards: value.starredCards,
-              englishToChineseReading: value.englishToChineseReading,
-              chineseToEnglishReading: value.chineseToEnglishReading,
-              englishToChineseListening: value.englishToChineseListening,
-              chineseToEnglishListening: value.chineseToEnglishListening,
-            });
-            setIsFocus(false);
+        <DropDownPicker
+          open={dropdown1Open}
+          value={numberOfQuestions}
+          items={questionNumberOptions}
+          setOpen={setDropdown1Open}
+          setValue={setNumberOfQuestions}
+          setItems={setQuestionNumberOptions}
+          placeholder="Number of questions"
+          style={styles.inputStyle}
+          containerStyle={styles.control}
+          textStyle={styles.inputText}
+          dropDownContainerStyle={styles.dropdownStyle}
+          placeholderStyle={{
+            fontWeight: '400',
+            color: '#C4C4C4',
+          }}
+          zIndex={3000}
+          zIndexInverse={1000}
+        />
+
+        <DropDownPicker
+          open={dropdown2Open}
+          searchable={true}
+          value={tags}
+          items={tagOptions}
+          setOpen={setDropdown2Open}
+          setValue={setTags}
+          setItems={setTagOptions}
+          placeholder="Tags (Optional)"
+          style={styles.inputStyle}
+          containerStyle={styles.control}
+          textStyle={styles.inputText}
+          dropDownContainerStyle={styles.dropdownStyle}
+          placeholderStyle={{
+            fontWeight: '400',
+            color: '#C4C4C4',
+          }}
+          zIndex={2000}
+          zIndexInverse={2000}
+          itemSeparatorStyle={{ borderColor: 'red' }}
+          multiple={true}
+          mode="BADGE"
+          badgeDotColors={['#FFCB44', '#FEB1C3', '#94BAF4']}
+          badgeColors={['#F1F1F1']}
+          searchPlaceholder="Search tags..."
+          searchContainerStyle={{
+            borderBottomColor: '#C4C4C4',
+          }}
+          searchPlaceholderTextColor="#C4C4C4"
+          searchTextInputStyle={{
+            borderRadius: 20,
+            borderColor: '#C4C4C4',
+          }}
+          badgeStyle={{
+            borderRadius: 20,
           }}
         />
-        <Input
-          // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
-          inputContainerStyle={styles.inputStyle}
-          placeholder="Number of questions"
-          containerStyle={styles.control}
-          value={value.numberOfQuestions}
-          onChangeText={(text) => setValue({ ...value, numberOfQuestions: text })}
-          autoCompleteType=""
-          style={styles.inputText}
-        />
-        <Input
-          // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
-          inputContainerStyle={styles.inputStyle}
-          placeholder="Deck"
-          containerStyle={styles.control}
-          value={value.tag}
-          onChangeText={(text) => setValue({ ...value, tag: text })}
-          autoCompleteType=""
-          style={styles.inputText}
-        />
+
         <CheckBox
           title="Starred cards only"
-          checked={value.starredCards}
-          containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30, width: 380 }}
+          checked={starredCards}
+          containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
           textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
           checkedColor="#C4C4C4"
-          onPress={() =>
-            setValue({
-              numberOfQuestions: value.numberOfQuestions,
-              tag: value.tag,
-              starredCards: !value.starredCards,
-              englishToChineseReading: value.englishToChineseReading,
-              chineseToEnglishReading: value.chineseToEnglishReading,
-              englishToChineseListening: value.englishToChineseListening,
-              chineseToEnglishListening: value.chineseToEnglishListening,
-            })
-          }
+          onPress={() => setStarredCards(!starredCards)}
         />
 
-        <Text style={styles.header2}>Type of questions</Text>
+        <Text style={styles.header2}>Question Types</Text>
 
-        <View>
+        <View style={{ justifyContent: 'space-evenly' }}>
           <CheckBox
-            title="English → Chinese (reading)"
-            checked={value.englishToChineseReading}
-            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30, width: 380 }}
+            title="Reading (English → Chinese)"
+            checked={readingETOC}
+            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
             textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
             checkedColor="#C4C4C4"
-            onPress={() =>
-              setValue({
-                numberOfQuestions: value.numberOfQuestions,
-                tag: value.tag,
-                starredCards: value.starredCards,
-                englishToChineseReading: !value.englishToChineseReading,
-                chineseToEnglishReading: value.chineseToEnglishReading,
-                englishToChineseListening: value.englishToChineseListening,
-                chineseToEnglishListening: value.chineseToEnglishListening,
-              })
-            }
+            onPress={() => setReadingETOC(!readingETOC)}
           />
 
           <CheckBox
-            title="Chinese → English (reading)"
-            checked={value.chineseToEnglishReading}
-            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30, width: 380 }}
+            title="Reading (Chinese → English)"
+            checked={readingCTOE}
+            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
             textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
             checkedColor="#C4C4C4"
-            onPress={() =>
-              setValue({
-                numberOfQuestions: value.numberOfQuestions,
-                tag: value.tag,
-                starredCards: value.starredCards,
-                englishToChineseReading: value.englishToChineseReading,
-                chineseToEnglishReading: !value.chineseToEnglishReading,
-                englishToChineseListening: value.englishToChineseListening,
-                chineseToEnglishListening: value.chineseToEnglishListening,
-              })
-            }
+            onPress={() => setReadingCTOE(!readingCTOE)}
           />
 
           <CheckBox
-            title="English → Chinese (listening)"
-            checked={value.englishToChineseListening}
-            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30, width: 380 }}
+            title="Listening (English → Chinese)"
+            checked={listeningETOC}
+            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
             textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
             checkedColor="#C4C4C4"
-            onPress={() =>
-              setValue({
-                numberOfQuestions: value.numberOfQuestions,
-                tag: value.tag,
-                starredCards: value.starredCards,
-                englishToChineseReading: value.englishToChineseReading,
-                chineseToEnglishReading: value.chineseToEnglishReading,
-                englishToChineseListening: !value.englishToChineseListening,
-                chineseToEnglishListening: value.chineseToEnglishListening,
-              })
-            }
+            onPress={() => setListeningETOC(!listeningETOC)}
           />
 
           <CheckBox
-            title="Chinese → English (listening)"
-            checked={value.chineseToEnglishListening}
-            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30, width: 380 }}
+            title="Listening (Chinese → English)"
+            checked={listeningCTOE}
+            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
             textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
             checkedColor="#C4C4C4"
-            onPress={() =>
-              setValue({
-                numberOfQuestions: value.numberOfQuestions,
-                tag: value.tag,
-                starredCards: value.starredCards,
-                englishToChineseReading: value.englishToChineseReading,
-                chineseToEnglishReading: value.chineseToEnglishReading,
-                englishToChineseListening: value.englishToChineseListening,
-                chineseToEnglishListening: !value.chineseToEnglishListening,
-              })
-            }
+            onPress={() => setListeningCTOE(!listeningCTOE)}
+          />
+
+          <CheckBox
+            title="Typing (English → Chinese)"
+            checked={typingETOC}
+            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
+            textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
+            checkedColor="#C4C4C4"
+            onPress={() => setTypingETOC(!typingETOC)}
+          />
+
+          <CheckBox
+            title="Handwriting (English → Chinese)"
+            checked={handwritingETOC}
+            containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
+            textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
+            checkedColor="#C4C4C4"
+            onPress={() => setHandwritingETOC(!handwritingETOC)}
           />
         </View>
 
@@ -210,7 +201,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'flex-start',
   },
   header: {
     fontSize: 32,
@@ -222,7 +212,7 @@ const styles = StyleSheet.create({
     marginLeft: 30,
     fontSize: 20,
     fontWeight: '600',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 10,
   },
   navigation: {
@@ -232,17 +222,26 @@ const styles = StyleSheet.create({
   },
   control: {
     marginTop: 10,
-    marginLeft: 20,
-    width: 380,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    alignSelf: 'center',
   },
   inputText: {
-    marginLeft: 20,
+    marginHorizontal: 10,
   },
   inputStyle: {
     borderRadius: 40,
     borderWidth: 1,
     borderColor: '#C4C4C4',
     height: 50,
+    width: 360,
+    alignSelf: 'center',
+  },
+  dropdownStyle: {
+    borderWidth: 1,
+    borderColor: '#C4C4C4',
+    width: 360,
+    alignSelf: 'center',
   },
   button: {
     borderRadius: 30,
@@ -257,5 +256,4 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     fontWeight: '800',
   },
-  dropdownLabel: {},
 });

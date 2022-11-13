@@ -8,12 +8,17 @@ import { RootStackScreenProps } from '../types';
 import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
 import { db, storage } from '../config/firebase';
 import moment from 'moment';
+import Modal from 'react-native-modal';
+import Icon2 from 'react-native-vector-icons/Entypo';
+
 moment().format();
 
 export default function AddScreen({ navigation }: RootStackScreenProps<'AddScreen'>) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
+
+  const [modalVisible, setModalVisible] = useState(false);
 
   const [value, setValue] = React.useState({
     english: '',
@@ -22,6 +27,12 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
   });
 
   const [error, setError] = useState(String);
+
+  useEffect(() => {
+    if (modalVisible) {
+      setTimeout(() => setModalVisible(false), 700);
+    }
+  });
 
   // gets the key of the last card created
   const getKey = () => {
@@ -65,14 +76,14 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
         key,
       });
 
-      Alert.alert('Card created!');
-
       // resets the text inputs
       setValue({
         english: '',
         chinese: '',
         tag: '',
       });
+
+      setModalVisible(true);
     }
   };
 
@@ -124,6 +135,29 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
             <Text style={styles.buttonText}>ADD +</Text>
           </TouchableOpacity>
         </View>
+
+        <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)} style={{ margin: 0 }}>
+          <View style={styles.modalView}>
+            <View
+              style={{
+                borderRadius: 100,
+                backgroundColor: 'white',
+                width: 65,
+                height: 65,
+                marginLeft: 30,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Icon2 name="check" size={35} color="#FFCB44" />
+            </View>
+            <Text
+              style={{ color: 'white', fontWeight: '600', fontSize: 18, textAlignVertical: 'center', marginLeft: 20 }}
+            >
+              Card added!
+            </Text>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -177,5 +211,14 @@ const styles = StyleSheet.create({
   error: {
     color: 'red',
     marginBottom: 20,
+  },
+  modalView: {
+    height: '15%',
+    marginTop: 'auto',
+    backgroundColor: '#FFCB44',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
