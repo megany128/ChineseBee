@@ -21,33 +21,31 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   const [name, setName] = useState(String);
   const [progress, setProgress] = useState(0);
 
-  const [cardsStudied, setCardsStudied] = useState(0)
-  const [minutesLearning, setMinutesLearning] = useState(0)
-  const [dayStreak, setDayStreak] = useState(0)
+  const [cardsStudied, setCardsStudied] = useState(0);
+  const [minutesLearning, setMinutesLearning] = useState(0);
+  const [dayStreak, setDayStreak] = useState(0);
 
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
     let dayStreakTemp = parseInt((await AsyncStorage.getItem('dayStreak')) || '0');
-    
-    setCardsStudied(cardsStudiedTemp)
-    setMinutesLearning(minutesLearningTemp)
-    setDayStreak(dayStreakTemp)
+
+    setCardsStudied(cardsStudiedTemp);
+    setMinutesLearning(minutesLearningTemp);
+    setDayStreak(dayStreakTemp);
   };
 
   useEffect(() => {
-    getStats()
-  }, [])
+    getStats();
+  }, []);
 
   useEffect(() => {
     console.log('use effect');
     console.log(auth.currentUser?.uid);
-    console.log(db);
     return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || [];
       let name = { ...data };
       setName(name.name);
-      console.log('name is', data);
 
       // TODO: generate daily review list here instead
 

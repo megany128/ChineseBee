@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Text, View, ScrollView, Pressable, TextInput, TouchableOpacity } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  RefreshControl,
+  Pressable,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth, signOut } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
 import { RootTabScreenProps } from '../types';
-import { ref, set, onValue, orderByChild, query } from 'firebase/database';
+import { ref, set, onValue, orderByChild, query, update } from 'firebase/database';
 import { db } from '../config/firebase';
 
 var pinyin = require('chinese-to-pinyin');
@@ -14,6 +24,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
+  const [refreshing, setRefreshing] = useState(true);
 
   const [cards, setCards] = useState({});
   const [filteredCards, setFilteredCards] = useState([]);
@@ -32,7 +43,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       pinyin(cardItem['chinese'], { removeTone: true }),
       (
         <View>
-          <Pressable onPress={() => console.log('card clicked')}>
+          <Pressable onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
             <View style={styles.cardContainer}>
               <View style={{ flexDirection: 'column' }}>
                 <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -77,27 +88,38 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
     );
   };
 
+  // TODO: applying starred doesn't happen immediately
   // toggles a card's starred status
   const updateStarred = (cardItem: any) => {
-    set(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
-      chinese: cardItem['chinese'],
-      english: cardItem['english'],
-      tag: cardItem['tag'],
-      starred: !cardItem['starred'],
-      key: cardItem['key'],
-      masteryLevel: cardItem['masteryLevel'],
-      createdAt: cardItem['createdAt'],
-      timesReviewed: cardItem['timesReviewed'],
-    });
-
-    // TODO: fix bug: when item is unstarred after star filter is already on
-    if (!cardItem['starred'] && starredFilter) {
+    console.log(cardItem['starred']);
+    console.log(starredFilter);
+    if (cardItem['starred'] && starredFilter === true) {
+      update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
+        starred: false,
+      });
+      getStarred(starredFilter);
+      console.log('filtered cards:', filteredCards);
+      console.log('key:', cardItem['key']);
+      setFilteredCards(
+        filteredCards.filter((obj: any) => {
+          return !(obj.key === cardItem['key']);
+        })
+      );
+    } else if (cardItem['starred']) {
+      update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
+        starred: false,
+      });
+    } else {
+      console.log('updating');
+      update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
+        starred: true,
+      });
       getStarred(starredFilter);
     }
   };
 
-  // gets cards from database when screen loads
-  useEffect(() => {
+  const loadNewData = () => {
+    setRefreshing(true);
     // gets cards ordered by createdAt
     const orderedData = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), orderByChild('createdAt'));
     return onValue(orderedData, (querySnapShot) => {
@@ -112,10 +134,14 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       // uses state to set cardArray and filteredCards to the reverse of this data
       setCardArray(newArray);
       setFilteredCards(newArray);
+      setRefreshing(false);
     });
-  }, []);
+  };
 
-  // TODO: fix bug: when searching, if you turn star filter on and off there's an issue
+  // gets cards from database when screen loads
+  useEffect(() => {
+    loadNewData();
+  }, []);
 
   // searches Cards using search term and sets filteredCards to search results
   const searchCards = (text: string) => {
@@ -249,19 +275,24 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
           <Icon name={starredFilter ? 'star' : 'staro'} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
         </TouchableOpacity>
       </View>
-      <ScrollView
+      {/* TODO: add swipe to delete */}
+      {/* TODO: add tag screen */}
+      <FlatList
         style={styles.cardList}
         contentContainerStyle={styles.contentContainerStyle}
         showsVerticalScrollIndicator={false}
-      >
-        {cardKeys.length > 0 ? (
-          cardKeys.map((cardKey) => (
-            <Card key={cardKey} id={cardKey} cardItem={filteredCards[cardKey as keyof typeof cards]} />
-          ))
-        ) : (
-          <Text>No cards</Text>
-        )}
-      </ScrollView>
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
+        data={cardKeys}
+        keyExtractor={(item) => item}
+        renderItem={({ item }) => <Card id={item} cardItem={filteredCards[item as keyof typeof cards]} />}
+        ListEmptyComponent={() =>
+          !starredFilter ? (
+            <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No cards yet!</Text>
+          ) : !search ? (
+            <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No favourited cards!</Text>
+          ) : null
+        }
+      ></FlatList>
       <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen')}>
         <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
       </TouchableOpacity>

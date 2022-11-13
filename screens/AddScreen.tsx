@@ -17,6 +17,7 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
+  var hanzi = require('hanzi');
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -27,6 +28,11 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
   });
 
   const [error, setError] = useState(String);
+
+  // TODO: move this to later
+  useEffect(() => {
+    hanzi.start();
+  }, []);
 
   useEffect(() => {
     if (modalVisible) {
@@ -99,20 +105,25 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
         <Input
           // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
           inputContainerStyle={styles.inputStyle}
-          placeholder="English"
-          containerStyle={styles.control}
-          value={value.english}
-          onChangeText={(text) => setValue({ ...value, english: text })}
-          autoCompleteType=""
-          style={styles.inputText}
-        />
-        <Input
-          // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
-          inputContainerStyle={styles.inputStyle}
           placeholder="Chinese"
           containerStyle={styles.control}
           value={value.chinese}
           onChangeText={(text) => setValue({ ...value, chinese: text })}
+          autoCompleteType=""
+          style={styles.inputText}
+          // TODO: allow user to choose from list of premade definitions
+          // onBlur={() =>
+          //   setValue({...value, english: hanzi.definitionLookup(value.chinese)[0].definition})
+          // }
+        />
+
+        <Input
+          // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
+          inputContainerStyle={styles.inputStyle}
+          placeholder="English"
+          containerStyle={styles.control}
+          value={value.english}
+          onChangeText={(text) => setValue({ ...value, english: text })}
           autoCompleteType=""
           style={styles.inputText}
         />

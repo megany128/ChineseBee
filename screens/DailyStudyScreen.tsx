@@ -20,7 +20,7 @@ import Icon3 from 'react-native-vector-icons/FontAwesome';
 var pinyin = require('chinese-to-pinyin');
 
 moment().format();
-
+// TODO: can potentially add drag question type, like duolingo: hanzi.segment(phrase)
 export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'DailyStudyScreen'>) {
   // initialises current user & auth
   const { user } = useAuthentication();
@@ -702,7 +702,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
   // move to the next question
   const updateCardNum = async (card: any, right: boolean) => {
     let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
-    AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1))
+    AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
     setWritingQuestion(0);
     let cardNumber = cardNum + 1;
     setCardNum(cardNumber);

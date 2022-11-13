@@ -17,6 +17,7 @@ import StatsScreen from '../screens/StatsScreen';
 import AddScreen from '../screens/AddScreen';
 import StartTestScreen from '../screens/StartTestScreen';
 import DailyStudyScreen from '../screens/DailyStudyScreen';
+import CardInfoScreen from '../screens/CardInfoScreen';
 
 const Stack = createStackNavigator();
 
@@ -84,15 +85,16 @@ function BottomTabNavigator() {
 export default function UserStack() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Root" component={BottomTabNavigator} />
         <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
         <Stack.Group screenOptions={{ presentation: 'modal' }}>
           <Stack.Screen name="Modal" component={ModalScreen} />
         </Stack.Group>
-        <Stack.Screen name="AddScreen" component={AddScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="StartTestScreen" component={StartTestScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="DailyStudyScreen" component={DailyStudyScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="CardInfoScreen" component={CardInfoScreen} />
+        <Stack.Screen name="AddScreen" component={AddScreen} />
+        <Stack.Screen name="StartTestScreen" component={StartTestScreen} />
+        <Stack.Screen name="DailyStudyScreen" component={DailyStudyScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
