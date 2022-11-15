@@ -46,7 +46,7 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
 
       let tagOptionsTemp1: any = Object.keys(tags);
       let tagOptionsTemp2 = [];
-      for (let tag = 1; tag < tagOptionsTemp1.length; tag++) {
+      for (let tag = 1; tag < tagOptionsTemp1.length + 1; tag++) {
         tagOptionsTemp2[tag] = { label: tagOptionsTemp1[tag - 1], value: tagOptionsTemp1[tag - 1] };
       }
       tagOptionsTemp2[0] = { label: '', value: '' };

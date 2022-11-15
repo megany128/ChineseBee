@@ -19,6 +19,7 @@ import StartTestScreen from '../screens/StartTestScreen';
 import DailyStudyScreen from '../screens/DailyStudyScreen';
 import CardInfoScreen from '../screens/CardInfoScreen';
 import EditScreen from '../screens/EditScreen';
+import SearchByTagScreen from '../screens/SearchByTagScreen';
 
 const Stack = createStackNavigator();
 
@@ -97,6 +98,7 @@ export default function UserStack() {
         <Stack.Screen name="EditScreen" component={EditScreen} />
         <Stack.Screen name="StartTestScreen" component={StartTestScreen} />
         <Stack.Screen name="DailyStudyScreen" component={DailyStudyScreen} />
+        <Stack.Screen name="SearchByTagScreen" component={SearchByTagScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

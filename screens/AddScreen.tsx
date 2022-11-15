@@ -10,10 +10,11 @@ import { db, storage } from '../config/firebase';
 import moment from 'moment';
 import Modal from 'react-native-modal';
 import Icon2 from 'react-native-vector-icons/Entypo';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
-export default function AddScreen({ navigation }: RootStackScreenProps<'AddScreen'>) {
+export default function AddScreen({ navigation, route }: RootStackScreenProps<'AddScreen'>) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
@@ -21,11 +22,12 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const [value, setValue] = React.useState({
-    english: '',
-    chinese: '',
-    tag: '',
-  });
+  const [tagOptions, setTagOptions]: any = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const [english, setEnglish]: any = useState('');
+  const [chinese, setChinese]: any = useState('');
+  const [tag, setTag]: any = useState(route.params);
 
   const [error, setError] = useState(String);
 
@@ -39,6 +41,22 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
       setTimeout(() => setModalVisible(false), 700);
     }
   });
+
+  useEffect(() => {
+    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
+      let data = querySnapShot.val() || [];
+      let tags = { ...data };
+
+      let tagOptionsTemp1: any = Object.keys(tags);
+      let tagOptionsTemp2 = [];
+      for (let tag = 1; tag < tagOptionsTemp1.length + 1; tag++) {
+        tagOptionsTemp2[tag] = { label: tagOptionsTemp1[tag - 1], value: tagOptionsTemp1[tag - 1] };
+      }
+      tagOptionsTemp2[0] = { label: '', value: '' };
+      setTagOptions(tagOptionsTemp2);
+    });
+  }, []);
+
 
   // gets the key of the last card created
   const getKey = () => {
@@ -57,19 +75,19 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
     console.log('click');
 
     // error checking
-    if (value.english === '') {
+    if (english === '') {
       setError('English definition missing!');
-    } else if (value.chinese === '') {
+    } else if (chinese === '') {
       setError('Chinese definition missing!');
     } else {
       setError('');
-      console.log(value.english + ' / ' + value.chinese);
+      console.log(english + ' / ' + chinese);
 
       // adds a card to the database
       push(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), {
-        english: value.english,
-        chinese: value.chinese,
-        tag: value.tag,
+        english: english,
+        chinese: chinese,
+        tag: tag,
         starred: false,
         masteryLevel: 0,
         createdAt: moment().valueOf(),
@@ -83,11 +101,9 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
       });
 
       // resets the text inputs
-      setValue({
-        english: '',
-        chinese: '',
-        tag: '',
-      });
+      setEnglish('')
+      setChinese('')
+      setTag(route.params ? route.params : '')
 
       setModalVisible(true);
     }
@@ -107,13 +123,13 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
           inputContainerStyle={styles.inputStyle}
           placeholder="Chinese"
           containerStyle={styles.control}
-          value={value.chinese}
-          onChangeText={(text) => setValue({ ...value, chinese: text })}
+          value={chinese}
+          onChangeText={(text) => setChinese(text)}
           autoCompleteType=""
           style={styles.inputText}
           // TODO: allow user to choose from list of premade definitions
           // onBlur={() =>
-          //   setValue({...value, english: hanzi.definitionLookup(value.chinese)[0].definition})
+          //   setValue({...value, english: hanzi.definitionLookup(chinese)[0].definition})
           // }
         />
 
@@ -122,21 +138,42 @@ export default function AddScreen({ navigation }: RootStackScreenProps<'AddScree
           inputContainerStyle={styles.inputStyle}
           placeholder="English"
           containerStyle={styles.control}
-          value={value.english}
-          onChangeText={(text) => setValue({ ...value, english: text })}
+          value={english}
+          onChangeText={(text) => setEnglish(text)}
           autoCompleteType=""
           style={styles.inputText}
         />
 
-        <Input
-          // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
-          inputContainerStyle={styles.inputStyle}
-          placeholder="Tag"
-          containerStyle={styles.control}
-          value={value.tag}
-          onChangeText={(text) => setValue({ ...value, tag: text })}
-          autoCompleteType=""
-          style={styles.inputText}
+<DropDownPicker
+          open={dropdownOpen}
+          searchable={true}
+          value={tag}
+          items={tagOptions}
+          setOpen={setDropdownOpen}
+          setValue={setTag}
+          setItems={setTagOptions}
+          placeholder="Tags (Optional)"
+          style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
+          containerStyle={[styles.control, { marginHorizontal: 20 }]}
+          textStyle={styles.inputText}
+          dropDownContainerStyle={styles.dropdownStyle}
+          placeholderStyle={{
+            fontWeight: '400',
+            color: '#C4C4C4',
+          }}
+          zIndex={2000}
+          zIndexInverse={2000}
+          itemSeparatorStyle={{ borderColor: 'red' }}
+          searchPlaceholder="Search tags or type to add a new tag..."
+          searchContainerStyle={{
+            borderBottomColor: '#C4C4C4',
+          }}
+          searchPlaceholderTextColor="#C4C4C4"
+          searchTextInputStyle={{
+            borderRadius: 20,
+            borderColor: '#C4C4C4',
+          }}
+          addCustomItem={true}
         />
 
         {/* TODO: add tag selector */}
@@ -231,5 +268,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  dropdownStyle: {
+    borderWidth: 1,
+    borderColor: '#C4C4C4',
+    width: 360,
+    alignSelf: 'center',
   },
 });

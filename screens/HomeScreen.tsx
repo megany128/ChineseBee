@@ -13,6 +13,11 @@ import * as Progress from 'react-native-progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlipCard from 'react-native-flip-card';
 
+var isPast = require('date-fns/isPast')
+var format = require('date-fns/format')
+
+const { utcToZonedTime } = require('date-fns-tz')
+
 export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   // initialises current user & auth
   const { user } = useAuthentication();
@@ -24,7 +29,7 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   const [cardsStudied, setCardsStudied] = useState(0);
   const [minutesLearning, setMinutesLearning] = useState(0);
   const [dayStreak, setDayStreak] = useState(0);
-
+  
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
@@ -33,6 +38,29 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
     setCardsStudied(cardsStudiedTemp);
     setMinutesLearning(minutesLearningTemp);
     setDayStreak(dayStreakTemp);
+  };
+
+  // reset progress if after midnight
+  // TODO: check before midnight and after midnight
+  useEffect(() => {
+    getLastTimeOpened()
+  })
+
+  const getLastTimeOpened = async () => {
+    let lastTimeOpened = await AsyncStorage.getItem('lastTimeOpened')
+    console.log(lastTimeOpened)
+    if (lastTimeOpened) {
+      console.log('last time opened:', format(utcToZonedTime(new Date(JSON.parse(lastTimeOpened)), 'Asia/Singapore'), 'dd/MM/yy hh:mm'))
+      if (isPast(utcToZonedTime(new Date(lastTimeOpened), 'Asia/Singapore'))) {
+        AsyncStorage.setItem('dailyStudyProgress', '0')
+      }
+    } else {
+      console.log('first time opening')
+      AsyncStorage.setItem('dailyStudyProgress', '0')
+    }
+    console.log('already opened today')
+    console.log('set time opened to:', format(utcToZonedTime(new Date(), 'Asia/Singapore'), 'dd/MM/yy hh:mm'))
+    AsyncStorage.setItem('lastTimeOpened', JSON.stringify(Date.now()))
   };
 
   useEffect(() => {

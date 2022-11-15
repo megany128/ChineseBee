@@ -14,6 +14,8 @@ import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth, signOut } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
+import Icon3 from 'react-native-vector-icons/Ionicons';
+
 import { RootTabScreenProps } from '../types';
 import { ref, set, onValue, orderByChild, query, update } from 'firebase/database';
 import { db } from '../config/firebase';
@@ -21,7 +23,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 
 var pinyin = require('chinese-to-pinyin');
 
-export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>) {
+export default function SearchByTagScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
@@ -37,6 +39,8 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
 
   const [starredFilter, setStarredFilter] = useState(false);
   const [sortStyle, setSortStyle] = useState(0);
+
+  const tagSearch = route.params
 
   // creates a Card component
   const Card = ({ cardItem, id }: any) => {
@@ -70,7 +74,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
                   />
                 </TouchableOpacity>
                 {cardItem['tag'] ? (
-                  <TouchableOpacity style={styles.tag} onPress={() => navigation.navigate('SearchByTagScreen', cardItem['tag'])}>
+                  <TouchableOpacity style={styles.tag}>
                     <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
                       {cardItem['tag']}
                     </Text>
@@ -124,10 +128,16 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
 
-      // uses state to set cards to the data just retrieved
-      setCards(cardItems);
+      // TODO: crash when editing
 
-      let newArray: any = Object.values(cardItems).reverse();
+      // uses state to set cards to the data just retrieved
+      setCards(Object.values(cardItems).filter((item: any) => {
+        return item.tag === tagSearch
+      }));
+
+      let newArray: any = Object.values(cardItems).filter((item: any) => {
+        return item.tag === tagSearch
+      }).reverse();
 
       // uses state to set cardArray and filteredCards to the reverse of this data
       setCardArray(newArray);
@@ -251,7 +261,10 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
-        <Text style={styles.header}>CARDS</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icon3 name="chevron-back" size={40} />
+        </TouchableOpacity>
+        <Text style={styles.header}>{tagSearch}</Text>
       </View>
       <View style={{ backgroundColor: 'transparent', zIndex: 1000, flexDirection: 'row' }}>
         <TextInput
@@ -291,7 +304,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
           ) : null
         }
       />
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen')}>
+      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen', tagSearch)}>
         <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -363,7 +376,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     position: 'absolute',
-    bottom: 15,
+    bottom: 45,
   },
   starButton: {
     borderRadius: 30,
