@@ -33,39 +33,43 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
-    let dayStreakTemp = parseInt((await AsyncStorage.getItem('dayStreak')) || '0');
 
-    setCardsStudied(cardsStudiedTemp);
-    setMinutesLearning(minutesLearningTemp);
-    setDayStreak(dayStreakTemp);
-  };
-
-  // reset progress if after midnight
-  // TODO: check before midnight and after midnight
-  useEffect(() => {
-    getLastTimeOpened()
-  })
-
-  const getLastTimeOpened = async () => {
     let lastTimeOpened = await AsyncStorage.getItem('lastTimeOpened')
+    let streak = JSON.parse(await AsyncStorage.getItem('dayStreak') || '0') + 1 
     console.log(lastTimeOpened)
     if (lastTimeOpened) {
       console.log('last time opened:', format(utcToZonedTime(new Date(JSON.parse(lastTimeOpened)), 'Asia/Singapore'), 'dd/MM/yy hh:mm'))
       if (isPast(utcToZonedTime(new Date(lastTimeOpened), 'Asia/Singapore'))) {
+        console.log('first time opening today')
         AsyncStorage.setItem('dailyStudyProgress', '0')
+        AsyncStorage.setItem('dayStreak', JSON.stringify(streak))
       }
     } else {
       console.log('first time opening')
       AsyncStorage.setItem('dailyStudyProgress', '0')
+      AsyncStorage.setItem('dayStreak', '1')
     }
     console.log('already opened today')
     console.log('set time opened to:', format(utcToZonedTime(new Date(), 'Asia/Singapore'), 'dd/MM/yy hh:mm'))
     AsyncStorage.setItem('lastTimeOpened', JSON.stringify(Date.now()))
+
+    setCardsStudied(cardsStudiedTemp);
+    setMinutesLearning(minutesLearningTemp);
+    setDayStreak(streak);
   };
+
+  // reset progress if after midnight
+  // TODO: check before midnight and after midnight
 
   useEffect(() => {
     getStats();
-  }, []);
+    const willFocusSubscription = navigation.addListener('focus', () => {
+      console.log('getting stats')
+      getStats();
+  });
+
+  return willFocusSubscription;
+}, []);
 
   useEffect(() => {
     console.log('use effect');
