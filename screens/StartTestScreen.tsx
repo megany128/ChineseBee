@@ -18,7 +18,7 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
   const [dropdown2Open, setDropdown2Open] = useState(false);
 
   const [numberOfQuestions, setNumberOfQuestions] = useState('');
-  const [tags, setTags] = useState([]);
+  const [tag, setTag] = useState('');
   const [starredCards, setStarredCards] = useState(false);
   const [readingETOC, setReadingETOC] = useState(false);
   const [readingCTOE, setReadingCTOE] = useState(false);
@@ -44,12 +44,13 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
       let data = querySnapShot.val() || [];
       let tags = { ...data };
 
-      let tagOptionsTemp: any = Object.keys(tags);
-      for (let tag = 0; tag < tagOptionsTemp.length; tag++) {
-        tagOptionsTemp[tag] = { label: tagOptionsTemp[tag], value: tagOptionsTemp[tag] };
+      let tagOptionsTemp1: any = Object.keys(tags);
+      let tagOptionsTemp2 = [];
+      for (let tag = 1; tag < tagOptionsTemp1.length; tag++) {
+        tagOptionsTemp2[tag] = { label: tagOptionsTemp1[tag - 1], value: tagOptionsTemp1[tag - 1] };
       }
-
-      setTagOptions(tagOptionsTemp);
+      tagOptionsTemp2[0] = { label: '', value: '' };
+      setTagOptions(tagOptionsTemp2);
     });
   }, []);
 
@@ -85,10 +86,10 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
         <DropDownPicker
           open={dropdown2Open}
           searchable={true}
-          value={tags}
+          value={tag}
           items={tagOptions}
           setOpen={setDropdown2Open}
-          setValue={setTags}
+          setValue={setTag}
           setItems={setTagOptions}
           placeholder="Tags (Optional)"
           style={styles.inputStyle}
@@ -102,7 +103,6 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
           zIndex={2000}
           zIndexInverse={2000}
           itemSeparatorStyle={{ borderColor: 'red' }}
-          multiple={true}
           mode="BADGE"
           badgeDotColors={['#FFCB44', '#FEB1C3', '#94BAF4']}
           badgeColors={['#F1F1F1']}

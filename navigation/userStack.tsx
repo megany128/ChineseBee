@@ -18,6 +18,7 @@ import AddScreen from '../screens/AddScreen';
 import StartTestScreen from '../screens/StartTestScreen';
 import DailyStudyScreen from '../screens/DailyStudyScreen';
 import CardInfoScreen from '../screens/CardInfoScreen';
+import EditScreen from '../screens/EditScreen';
 
 const Stack = createStackNavigator();
 
@@ -93,6 +94,7 @@ export default function UserStack() {
         </Stack.Group>
         <Stack.Screen name="CardInfoScreen" component={CardInfoScreen} />
         <Stack.Screen name="AddScreen" component={AddScreen} />
+        <Stack.Screen name="EditScreen" component={EditScreen} />
         <Stack.Screen name="StartTestScreen" component={StartTestScreen} />
         <Stack.Screen name="DailyStudyScreen" component={DailyStudyScreen} />
       </Stack.Navigator>

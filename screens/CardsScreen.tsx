@@ -40,51 +40,48 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
   // creates a Card component
   const Card = ({ cardItem, id }: any) => {
     return (
-      pinyin(cardItem['chinese'], { removeTone: true }),
-      (
-        <View>
-          <Pressable onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
-            <View style={styles.cardContainer}>
-              <View style={{ flexDirection: 'column' }}>
-                <Text style={styles.chinese}>{cardItem['chinese']}</Text>
-                <Text style={styles.pinyin}>{pinyin(cardItem['chinese'])}</Text>
-                <Text style={styles.english}>{cardItem['english']}</Text>
-              </View>
-              <View
-                style={{
-                  width: 270,
-                  height: 100,
-                  alignItems: 'flex-end',
-                  marginTop: 10,
-                  alignContent: 'flex-end',
-                  flex: 1,
-                  marginRight: 10,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableOpacity onPress={() => updateStarred(cardItem)}>
-                    <Icon
-                      name={cardItem['starred'] ? 'star' : 'staro'}
-                      size={25}
-                      color="#FFCB44"
-                      style={{ marginTop: 8, marginRight: 10 }}
-                    />
+      <View>
+        <Pressable onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
+          <View style={styles.cardContainer}>
+            <View style={{ flexDirection: 'column' }}>
+              <Text style={styles.chinese}>{cardItem['chinese']}</Text>
+              <Text style={styles.pinyin}>{pinyin(cardItem['chinese'])}</Text>
+              <Text style={styles.english}>{cardItem['english']}</Text>
+            </View>
+            <View
+              style={{
+                width: 270,
+                height: 100,
+                alignItems: 'flex-end',
+                marginTop: 10,
+                alignContent: 'flex-end',
+                flex: 1,
+                marginRight: 10,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => updateStarred(cardItem)}>
+                  <Icon
+                    name={cardItem['starred'] ? 'star' : 'staro'}
+                    size={25}
+                    color="#FFCB44"
+                    style={{ marginTop: 8, marginRight: 10 }}
+                  />
+                </TouchableOpacity>
+                {cardItem['tag'] ? (
+                  <TouchableOpacity style={styles.tag}>
+                    <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
+                      {cardItem['tag']}
+                    </Text>
                   </TouchableOpacity>
-                  {cardItem['tag'] ? (
-                    <TouchableOpacity style={styles.tag}>
-                      <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
-                        {cardItem['tag']}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <View></View>
-                  )}
-                </View>
+                ) : (
+                  <View></View>
+                )}
               </View>
             </View>
-          </Pressable>
-        </View>
-      )
+          </View>
+        </Pressable>
+      </View>
     );
   };
 

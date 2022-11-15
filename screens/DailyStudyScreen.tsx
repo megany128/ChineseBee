@@ -96,6 +96,10 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
     setProgress(parseFloat(dailyStudyProgress));
     console.log('initial progress:', dailyStudyProgress);
+
+    // async get last date opened app
+    // if that date was before today, reset progress and set async to today
+    // question: note: do this in home screen, along with setting today's cards
   };
 
   // shuffles cards in an array through recursion
@@ -148,9 +152,6 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
             }}
           />
           } */}
-
-            {/* TODO: dismiss modal after timeout
-          setTimeout(() => xxxx, 100) */}
           </View>
         );
       }

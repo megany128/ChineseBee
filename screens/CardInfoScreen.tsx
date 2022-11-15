@@ -16,11 +16,11 @@ var pinyin = require('chinese-to-pinyin');
 export default function CardInfoScreen({ route, navigation }: any) {
   const auth = getAuth();
   const card = route.params;
-  const [starred, setStarred] = useState(card.starred)
+  const [starred, setStarred] = useState(card.starred);
   console.log(card);
 
   useEffect(() => {
-    const data = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key))
+    const data = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
     return onValue(data, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItem = { ...data };
@@ -28,7 +28,7 @@ export default function CardInfoScreen({ route, navigation }: any) {
       // uses state to set cards to the data just retrieved
       setStarred(cardItem.starred);
     });
-  }, [])
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,15 +56,30 @@ export default function CardInfoScreen({ route, navigation }: any) {
               alignItems: 'center',
             }}
           >
-            <FontAwesome5 name="pen" size={25} style={{ marginRight: 20 }} color="white" />
-            <TouchableOpacity onPress={() => update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), {starred: !starred})}>
-              <AntDesign name={starred ? "star": "staro"} size={30} color="white" />
+            <TouchableOpacity onPress={() => navigation.navigate('EditScreen', card)}>
+              <FontAwesome5 name="pen" size={25} style={{ marginRight: 20 }} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), { starred: !starred })
+              }
+            >
+              <AntDesign name={starred ? 'star' : 'staro'} size={30} color="white" />
             </TouchableOpacity>
           </View>
         </View>
         <View style={{ backgroundColor: 'white', height: 1000 }}>
           <View style={{ backgroundColor: 'transparent', marginHorizontal: 30, marginTop: 30 }}>
-            <Text style={styles.chinese}>{card.chinese}</Text>
+            <View style={{ backgroundColor: 'transparent', flexDirection: 'row' }}>
+              <Text style={styles.chinese}>{card.chinese}</Text>
+              {card.tag ? (
+                <TouchableOpacity style={styles.tag}>
+                  <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
+                    {card.tag}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
             <View style={{ backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
               <Text style={styles.pinyin}>{pinyin(card.chinese)}</Text>
               <TouchableOpacity
@@ -88,25 +103,27 @@ export default function CardInfoScreen({ route, navigation }: any) {
             {card.tag && card.tag.map((item: any) => {
               <Text>{card.tag[item]}</Text>
             })} */}
-            <Text style={styles.title}>Example Words</Text>
-            
-            <TouchableOpacity style={styles.button} onPress={() => 
-              Alert.alert(
-                "Delete Card",
-                "Are you sure? This is irreversible",
-                [
+            <Text style={styles.title}>Example Phrases</Text>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() =>
+                Alert.alert('Delete Card', 'Are you sure? This is irreversible', [
                   {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
+                    text: 'Cancel',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
                   },
-                  { text: "OK", onPress: () => {
-                    remove(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key))
-                    navigation.goBack()
-                  } }
-                ]
-              )
-            }>
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      remove(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
+                      navigation.goBack();
+                    },
+                  },
+                ])
+              }
+            >
               <Text style={styles.buttonText}>DELETE</Text>
             </TouchableOpacity>
           </View>
@@ -136,7 +153,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     marginTop: 20,
-    marginBottom: 5
+    marginBottom: 5,
   },
   button: {
     borderRadius: 30,
@@ -145,12 +162,21 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignSelf: 'center',
-    marginTop: 20
+    marginTop: 20,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '900',
     alignSelf: 'center',
+  },
+  tag: {
+    justifyContent: 'center',
+    backgroundColor: '#FEB1C3',
+    borderRadius: 20,
+    width: 55,
+    height: 25,
+    marginTop: 10,
+    marginLeft: 20,
   },
 });
