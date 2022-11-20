@@ -1,13 +1,19 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Input, Button } from 'react-native-elements';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Alert,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { StackScreenProps } from '@react-navigation/stack';
 
-// initialises auth
 const auth = getAuth();
-
 const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
   const [value, setValue] = React.useState({
     email: '',
@@ -15,9 +21,26 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
     error: '',
   });
 
-  // signs in the user
+  const onFooterLinkPress = () => {
+    navigation.navigate('SignUpScreen');
+  };
+
+  const handlePasswordReset = (email: string) => {
+    if (email) {
+      sendPasswordResetEmail(auth, email)
+        .then(function (user) {
+          Alert.alert('Check your email for the password reset link!', 'If not in your inbox it may be in spam.');
+        })
+        .catch(function (e) {
+          console.log(e);
+        });
+    } else {
+      alert('Please enter a valid email to reset your password!');
+      setValue({ ...value, error: 'Please enter a valid email.' });
+    }
+  };
+
   async function signIn() {
-    // displays an error if email or password is left empty
     if (value.email === '' || value.password === '') {
       setValue({
         ...value,
@@ -26,98 +49,146 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       return;
     }
 
-    // signs the user in via firebase auth
     try {
       await signInWithEmailAndPassword(auth, value.email, value.password);
     } catch (error: any) {
-      setValue({
-        ...value,
-        error: error.message,
-      });
+      console.log(error.message);
+      if (error.message.includes('wrong-password')) {
+        setValue({
+          ...value,
+          error: 'Wrong password',
+        });
+      } else if (error.message.includes('too-many-requests')) {
+        setValue({
+          ...value,
+          error: 'Please wait a while before trying again',
+        });
+      } else if (error.message.includes('user-not-found')) {
+        setValue({
+          ...value,
+          error: 'Account does not exist. Please make sure your email address is correct',
+        });
+      } else {
+        setValue({
+          ...value,
+          error: error.message,
+        });
+      }
     }
   }
 
   return (
-    <View style={styles.container}>
-      <Text>Signin screen!</Text>
-
-      {!!value.error && (
-        <View style={styles.error}>
-          <Text>{value.error}</Text>
-        </View>
-      )}
-
-      <View style={styles.controls}>
-        <Input
-          placeholder="Email"
-          containerStyle={styles.control}
-          value={value.email}
-          onChangeText={(text) => setValue({ ...value, email: text })}
-          leftIcon={<Icon name="envelope" size={16} />}
-          autoCompleteType=""
-        />
-
-        <Input
-          placeholder="Password"
-          containerStyle={styles.control}
-          value={value.password}
-          onChangeText={(text) => setValue({ ...value, password: text })}
-          secureTextEntry={true}
-          leftIcon={<Icon name="key" size={16} />}
-          autoCompleteType=""
-        />
-
-        <Button title="Sign in" buttonStyle={styles.control} onPress={signIn} />
-        <View style={styles.footerView}>
-          <Text style={styles.footerText}>
-            don't have an account?{' '}
-            <Text onPress={() => navigation.navigate('Sign Up')} style={styles.footerLink}>
-              sign up
+    <SafeAreaView style={styles.container}>
+      <TouchableWithoutFeedback
+        onPress={() => Keyboard.dismiss()}
+        style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <View style={styles.container}>
+          <Text style={styles.title}>log in</Text>
+          {value.error && <Text style={styles.error}>{value.error}</Text>}
+          <TextInput
+            style={styles.input}
+            placeholder="email address"
+            placeholderTextColor="#C4C4C4"
+            onChangeText={(text) => setValue({ ...value, email: text })}
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            value={value.email}
+            underlineColorAndroid="transparent"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholderTextColor="#C4C4C4"
+            secureTextEntry
+            placeholder="password"
+            onChangeText={(text) => setValue({ ...value, password: text })}
+            value={value.password}
+            underlineColorAndroid="transparent"
+            autoCapitalize="none"
+          />
+          <TouchableOpacity style={styles.button} onPress={() => signIn()}>
+            <Text style={styles.buttonTitle}>LOG IN →</Text>
+          </TouchableOpacity>
+          <View style={styles.footerView}>
+            <Text style={styles.footerText}>don't have an account? </Text>
+            <TouchableOpacity onPress={onFooterLinkPress}>
+              <Text style={styles.footerLink}>sign up</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={() => handlePasswordReset(value.email)}>
+            <Text style={{ fontSize: 16, color: '#94BAF4', marginTop: 30, fontWeight: '600', fontStyle: 'italic' }}>
+              reset password
             </Text>
-          </Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </View>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-    backgroundColor: '#fff',
+    justifyContent: 'center',
     alignItems: 'center',
+  },
+  title: {
+    alignSelf: 'center',
+    marginBottom: 20,
+    fontSize: 48,
+    color: '#FFCB44',
+    fontWeight: '500',
+  },
+  input: {
+    height: 48,
+    width: 320,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'white',
+    marginTop: 10,
+    marginBottom: 10,
+    marginLeft: 30,
+    marginRight: 30,
+    paddingLeft: 16,
+    borderWidth: 1,
+    borderColor: '#C4C4C4',
+  },
+  button: {
+    backgroundColor: '#FEB1C3',
+    marginLeft: 30,
+    marginRight: 30,
+    marginTop: 20,
+    height: 48,
+    width: 120,
+    borderRadius: 20,
+    alignItems: 'center',
+    alignSelf: 'center',
     justifyContent: 'center',
   },
-
-  controls: {
-    flex: 1,
-    width: 319,
-  },
-
-  control: {
-    marginTop: 10,
-  },
-
-  error: {
-    marginTop: 10,
-    padding: 10,
-    color: '#fff',
-    backgroundColor: '#D54826FF',
+  buttonTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   footerView: {
-    flex: 1,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 30,
+    flexDirection: 'row',
   },
   footerText: {
     fontSize: 16,
     color: '#C4C4C4',
   },
   footerLink: {
-    color: '#2A3242',
+    color: '#FEB1C3',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  error: {
+    color: '#D54826FF',
+    marginLeft: 30,
+    marginBottom: 20,
   },
 });
 

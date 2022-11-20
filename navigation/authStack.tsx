@@ -3,16 +3,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import SignInScreen from '../screens/SignInScreen';
-import SignOutScreen from '../screens/SignUpScreen';
+import SignUpScreen from '../screens/SignUpScreen';
 
 const Stack = createStackNavigator();
 
 export default function AuthStack() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Sign In" component={SignInScreen} />
-        <Stack.Screen name="Sign Up" component={SignOutScreen} />
+      <Stack.Navigator screenOptions={{
+          headerShown: false,
+          cardStyle: { backgroundColor: 'white' },
+          animationEnabled: false,
+        }}>
+        <Stack.Screen name="SignInScreen" component={SignInScreen} />
+        <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

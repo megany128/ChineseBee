@@ -1,122 +1,208 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Input, Button } from 'react-native-elements';
-import { StackScreenProps } from '@react-navigation/stack';
+import React, { useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Alert,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { StackScreenProps } from '@react-navigation/stack';
 import { db } from '../config/firebase';
-import { push, ref, set } from 'firebase/database';
+import { ref, set } from 'firebase/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// initialises auth
 const auth = getAuth();
-
 const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
   const [value, setValue] = React.useState({
+    name: '',
     email: '',
     password: '',
     error: '',
-    name: '',
   });
 
-  // signs up the user
+  const onFooterLinkPress = () => {
+    navigation.navigate('SignInScreen');
+  };
+
   async function signUp() {
-    // displays an error if email or password is left empty
     if (value.email === '' || value.password === '') {
       setValue({
         ...value,
-        error: 'Email or password is missing.',
+        error: 'Email and password are mandatory',
       });
       return;
     }
 
-    // signs up the user via firebase auth
-    try {
-      await createUserWithEmailAndPassword(auth, value.email, value.password);
-      updateProfile(auth.currentUser!, {
-        displayName: value.name,
-      });
-      // adds their details to the database
-      set(ref(db, '/students/' + auth.currentUser?.uid), {
-        emailAddress: value.email,
-        name: value.name,
-      });
-      navigation.navigate('Sign In');
-    } catch (error: any) {
+    if (value.name === '') {
       setValue({
         ...value,
-        error: error.message,
+        error: 'Name is mandatory',
       });
+      return;
     }
+
+      await createUserWithEmailAndPassword(auth, value.email.trim(), value.password.trim())
+        .then(async (data) => {
+          // TODO: use firebase for this instead of asyncstorage since progress should be carried over multiple devices
+          AsyncStorage.setItem('dailyStudyProgress', '0')
+          AsyncStorage.setItem('cardsStudied', '0')
+          AsyncStorage.setItem('minutesLearning', '0')
+          AsyncStorage.setItem('dayStreak', '0')
+          await updateProfile(auth.currentUser!, {
+            displayName: value.name.trim(),
+          });
+          set(ref(db, '/students/' + data.user.uid), {
+            name: value.name.trim(),
+            uid: data.user.uid,
+          });
+        })
+        .catch((error) => {
+          if (error.message.includes('email-already-in-use')) {
+            setValue({
+              ...value,
+              error: 'Email already in use',
+            });
+          } else if (error.message.includes('weak-password')) {
+            setValue({
+              ...value,
+              error: 'Password must be at least 6 characters',
+            });
+          } else if (error.message.includes('invalid-email')) {
+            setValue({
+              ...value,
+              error: 'Please enter a valid email',
+            });
+          } else {
+            setValue({
+              ...value,
+              error: error.message,
+            });
+            return;
+          }
+        });
   }
 
   return (
-    <View style={styles.container}>
-      <Text>Signup screen!</Text>
-
-      {!!value.error && (
-        <View style={styles.error}>
-          <Text>{value.error}</Text>
+    <SafeAreaView style={styles.container}>
+      <TouchableWithoutFeedback
+        onPress={() => Keyboard.dismiss()}
+        style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <View style={styles.container}>
+          <Text style={styles.title}>sign up</Text>
+          {value.error && <Text style={styles.error}>{value.error}</Text>}
+          <TextInput
+            style={styles.input}
+            placeholder="name"
+            placeholderTextColor="#C4C4C4"
+            onChangeText={(text) => setValue({ ...value, name: text })}
+            value={value.name}
+            underlineColorAndroid="transparent"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="email address"
+            placeholderTextColor="#C4C4C4"
+            onChangeText={(text) => setValue({ ...value, email: text })}
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            value={value.email}
+            underlineColorAndroid="transparent"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholderTextColor="#C4C4C4"
+            secureTextEntry
+            placeholder="password"
+            onChangeText={(text) => setValue({ ...value, password: text })}
+            value={value.password}
+            underlineColorAndroid="transparent"
+            autoCapitalize="none"
+          />
+          <TouchableOpacity style={styles.button} onPress={() => signUp()}>
+            <Text style={styles.buttonTitle}>SIGN UP →</Text>
+          </TouchableOpacity>
+          <View style={styles.footerView}>
+            <Text style={styles.footerText}>don't have an account? </Text>
+            <TouchableOpacity onPress={onFooterLinkPress}>
+              <Text style={styles.footerLink}>log in</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
-
-      <View style={styles.controls}>
-        <Input
-          placeholder="Name"
-          containerStyle={styles.control}
-          value={value.name}
-          onChangeText={(text) => setValue({ ...value, name: text })}
-          leftIcon={<Icon name="envelope" size={16} />}
-          autoCompleteType="name"
-        />
-        {/* change input */}
-        <Input
-          placeholder="Email"
-          containerStyle={styles.control}
-          value={value.email}
-          onChangeText={(text) => setValue({ ...value, email: text })}
-          leftIcon={<Icon name="envelope" size={16} />}
-          autoCompleteType="email"
-        />
-
-        <Input
-          placeholder="Password"
-          containerStyle={styles.control}
-          value={value.password}
-          onChangeText={(text) => setValue({ ...value, password: text })}
-          secureTextEntry={true}
-          leftIcon={<Icon name="key" size={16} />}
-          autoCompleteType=""
-        />
-
-        <Button title="Sign up" buttonStyle={styles.control} onPress={signUp} />
-      </View>
-    </View>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-    backgroundColor: '#fff',
+    justifyContent: 'center',
     alignItems: 'center',
+  },
+  title: {
+    alignSelf: 'center',
+    marginBottom: 20,
+    fontSize: 48,
+    color: '#FFCB44',
+    fontWeight: '500',
+  },
+  input: {
+    height: 48,
+    width: 320,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'white',
+    marginTop: 10,
+    marginBottom: 10,
+    marginLeft: 30,
+    marginRight: 30,
+    paddingLeft: 16,
+    borderWidth: 1,
+    borderColor: '#C4C4C4',
+  },
+  button: {
+    backgroundColor: '#94BAF4',
+    marginLeft: 30,
+    marginRight: 30,
+    marginTop: 20,
+    height: 48,
+    width: 120,
+    borderRadius: 20,
+    alignItems: 'center',
+    alignSelf: 'center',
     justifyContent: 'center',
   },
-
-  controls: {
-    flex: 1,
-    width: 319,
+  buttonTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-
-  control: {
-    marginTop: 10,
+  footerView: {
+    alignItems: 'center',
+    marginTop: 30,
+    flexDirection: 'row',
   },
-
+  footerText: {
+    fontSize: 16,
+    color: '#C4C4C4',
+  },
+  footerLink: {
+    color: '#94BAF4',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   error: {
-    marginTop: 10,
-    padding: 10,
-    color: '#fff',
-    backgroundColor: '#D54826FF',
+    color: '#D54826FF',
+    marginLeft: 30,
+    marginBottom: 20,
   },
 });
 

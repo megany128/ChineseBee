@@ -21,7 +21,7 @@ export default function ProfileScreen({ navigation }: any) {
   }, []);
 
   const getData = async () => {
-    return await onValue(ref(db, '/users/' + auth?.currentUser?.uid), (querySnapShot) => {
+    return await onValue(ref(db, '/students/' + auth?.currentUser?.uid), (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let userData = { ...data };
 
