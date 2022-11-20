@@ -13,6 +13,7 @@ import * as Progress from 'react-native-progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlipCard from 'react-native-flip-card';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 var isPast = require('date-fns/isPast');
 var format = require('date-fns/format');
@@ -35,6 +36,7 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
 
+    // TODO: use firebase instead since user shld be able to access over multiple devices
     let lastTimeOpened = await AsyncStorage.getItem('lastTimeOpened');
     let streak = JSON.parse((await AsyncStorage.getItem('dayStreak')) || '0') + 1;
     console.log(lastTimeOpened);
@@ -140,6 +142,7 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
           >
             <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
               {/* Face Side */}
+              {/* TODO: add indicator 'word of the day' and 'idiom of the day'*/}
               <View style={styles.wordOfTheDay}>
                 <Text style={styles.wordOfTheDayText}>中文</Text>
               </View>
@@ -217,7 +220,7 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
               }}
               onPress={() => navigation.navigate('StartTestScreen')}
             >
-              <Icon2 name="book-open" size={50} color="#FFFFFF" />
+              <Ionicons name="school-outline" size={60} color="#FFFFFF" />
             </TouchableOpacity>
             <TouchableOpacity
               style={{
@@ -230,7 +233,8 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
                 marginHorizontal: 10,
               }}
             >
-              <Icon2 name="clock" size={60} color="#FFFFFF" />
+              {/* TODO: shared cards */}
+              <MaterialCommunityIcons name="cards-outline" size={60} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </ScrollView>

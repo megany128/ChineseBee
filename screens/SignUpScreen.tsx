@@ -46,45 +46,45 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       return;
     }
 
-      await createUserWithEmailAndPassword(auth, value.email.trim(), value.password.trim())
-        .then(async (data) => {
-          // TODO: use firebase for this instead of asyncstorage since progress should be carried over multiple devices
-          AsyncStorage.setItem('dailyStudyProgress', '0')
-          AsyncStorage.setItem('cardsStudied', '0')
-          AsyncStorage.setItem('minutesLearning', '0')
-          AsyncStorage.setItem('dayStreak', '0')
-          await updateProfile(auth.currentUser!, {
-            displayName: value.name.trim(),
-          });
-          set(ref(db, '/students/' + data.user.uid), {
-            name: value.name.trim(),
-            uid: data.user.uid,
-          });
-        })
-        .catch((error) => {
-          if (error.message.includes('email-already-in-use')) {
-            setValue({
-              ...value,
-              error: 'Email already in use',
-            });
-          } else if (error.message.includes('weak-password')) {
-            setValue({
-              ...value,
-              error: 'Password must be at least 6 characters',
-            });
-          } else if (error.message.includes('invalid-email')) {
-            setValue({
-              ...value,
-              error: 'Please enter a valid email',
-            });
-          } else {
-            setValue({
-              ...value,
-              error: error.message,
-            });
-            return;
-          }
+    await createUserWithEmailAndPassword(auth, value.email.trim(), value.password.trim())
+      .then(async (data) => {
+        // TODO: use firebase for this instead of asyncstorage since progress should be carried over multiple devices
+        AsyncStorage.setItem('dailyStudyProgress', '0');
+        AsyncStorage.setItem('cardsStudied', '0');
+        AsyncStorage.setItem('minutesLearning', '0');
+        AsyncStorage.setItem('dayStreak', '0');
+        await updateProfile(auth.currentUser!, {
+          displayName: value.name.trim(),
         });
+        set(ref(db, '/students/' + data.user.uid), {
+          name: value.name.trim(),
+          uid: data.user.uid,
+        });
+      })
+      .catch((error) => {
+        if (error.message.includes('email-already-in-use')) {
+          setValue({
+            ...value,
+            error: 'Email already in use',
+          });
+        } else if (error.message.includes('weak-password')) {
+          setValue({
+            ...value,
+            error: 'Password must be at least 6 characters',
+          });
+        } else if (error.message.includes('invalid-email')) {
+          setValue({
+            ...value,
+            error: 'Please enter a valid email',
+          });
+        } else {
+          setValue({
+            ...value,
+            error: error.message,
+          });
+          return;
+        }
+      });
   }
 
   return (

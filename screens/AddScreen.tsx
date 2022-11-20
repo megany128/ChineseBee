@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
 import { getAuth, signOut } from 'firebase/auth';
@@ -115,96 +123,98 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
         </TouchableOpacity>
         <Text style={styles.header}>ADD CARD</Text>
       </View>
-      <View style={{ marginTop: 20, flex: 1 }}>
-        <Input
-          // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
-          inputContainerStyle={styles.inputStyle}
-          placeholder="Chinese"
-          containerStyle={styles.control}
-          value={chinese}
-          onChangeText={(text) => setChinese(text)}
-          autoCompleteType=""
-          style={styles.inputText}
-          // TODO: allow user to choose from list of premade definitions
-          // onBlur={() =>
-          //   setValue({...value, english: hanzi.definitionLookup(chinese)[0].definition})
-          // }
-        />
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <View style={{ marginTop: 20, flex: 1 }}>
+          <Input
+            // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
+            inputContainerStyle={styles.inputStyle}
+            placeholder="Chinese"
+            containerStyle={styles.control}
+            value={chinese}
+            onChangeText={(text) => setChinese(text)}
+            autoCompleteType=""
+            style={styles.inputText}
+            // TODO: allow user to choose from list of premade definitions
+            // onBlur={() =>
+            //   setValue({...value, english: hanzi.definitionLookup(chinese)[0].definition})
+            // }
+          />
 
-        <Input
-          // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
-          inputContainerStyle={styles.inputStyle}
-          placeholder="English"
-          containerStyle={styles.control}
-          value={english}
-          onChangeText={(text) => setEnglish(text)}
-          autoCompleteType=""
-          style={styles.inputText}
-        />
+          <Input
+            // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
+            inputContainerStyle={styles.inputStyle}
+            placeholder="English"
+            containerStyle={styles.control}
+            value={english}
+            onChangeText={(text) => setEnglish(text)}
+            autoCompleteType=""
+            style={styles.inputText}
+          />
 
-        <DropDownPicker
-          open={dropdownOpen}
-          searchable={true}
-          value={tag}
-          items={tagOptions}
-          setOpen={setDropdownOpen}
-          setValue={setTag}
-          setItems={setTagOptions}
-          placeholder="Tags (Optional)"
-          style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
-          containerStyle={[styles.control, { marginHorizontal: 20 }]}
-          textStyle={styles.inputText}
-          dropDownContainerStyle={styles.dropdownStyle}
-          placeholderStyle={{
-            fontWeight: '400',
-            color: '#C4C4C4',
-          }}
-          zIndex={2000}
-          zIndexInverse={2000}
-          itemSeparatorStyle={{ borderColor: 'red' }}
-          searchPlaceholder="Search tags or type to add a new tag..."
-          searchContainerStyle={{
-            borderBottomColor: '#C4C4C4',
-          }}
-          searchPlaceholderTextColor="#C4C4C4"
-          searchTextInputStyle={{
-            borderRadius: 20,
-            borderColor: '#C4C4C4',
-          }}
-          addCustomItem={true}
-        />
+          <DropDownPicker
+            open={dropdownOpen}
+            searchable={true}
+            value={tag}
+            items={tagOptions}
+            setOpen={setDropdownOpen}
+            setValue={setTag}
+            setItems={setTagOptions}
+            placeholder="Tags (Optional)"
+            style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
+            containerStyle={[styles.control, { marginHorizontal: 20 }]}
+            textStyle={styles.inputText}
+            dropDownContainerStyle={styles.dropdownStyle}
+            placeholderStyle={{
+              fontWeight: '400',
+              color: '#C4C4C4',
+            }}
+            zIndex={2000}
+            zIndexInverse={2000}
+            itemSeparatorStyle={{ borderColor: 'red' }}
+            searchPlaceholder="Search tags or type to add a new tag..."
+            searchContainerStyle={{
+              borderBottomColor: '#C4C4C4',
+            }}
+            searchPlaceholderTextColor="#C4C4C4"
+            searchTextInputStyle={{
+              borderRadius: 20,
+              borderColor: '#C4C4C4',
+            }}
+            addCustomItem={true}
+          />
 
-        {/* TODO: add tag selector */}
-        <View style={{ alignSelf: 'center' }}>
-          <Text style={styles.error}>{error}</Text>
-          <TouchableOpacity style={styles.button} onPress={() => addCard()}>
-            <Text style={styles.buttonText}>ADD +</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)} style={{ margin: 0 }}>
-          <View style={styles.modalView}>
-            <View
-              style={{
-                borderRadius: 100,
-                backgroundColor: 'white',
-                width: 65,
-                height: 65,
-                marginLeft: 30,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Icon2 name="check" size={35} color="#FFCB44" />
-            </View>
-            <Text
-              style={{ color: 'white', fontWeight: '600', fontSize: 18, textAlignVertical: 'center', marginLeft: 20 }}
-            >
-              Card added!
-            </Text>
+          {/* TODO: add tag selector */}
+          <View style={{ alignSelf: 'center' }}>
+            <Text style={styles.error}>{error}</Text>
+            <TouchableOpacity style={styles.button} onPress={() => addCard()}>
+              <Text style={styles.buttonText}>ADD +</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </View>
+
+          <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)} style={{ margin: 0 }}>
+            <View style={styles.modalView}>
+              <View
+                style={{
+                  borderRadius: 100,
+                  backgroundColor: 'white',
+                  width: 65,
+                  height: 65,
+                  marginLeft: 30,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Icon2 name="check" size={35} color="#FFCB44" />
+              </View>
+              <Text
+                style={{ color: 'white', fontWeight: '600', fontSize: 18, textAlignVertical: 'center', marginLeft: 20 }}
+              >
+                Card added!
+              </Text>
+            </View>
+          </Modal>
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
@@ -256,7 +266,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   error: {
-    color: 'red',
+    color: '#D54826FF',
     marginVertical: 20,
   },
   modalView: {

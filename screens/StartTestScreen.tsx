@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input, CheckBox } from 'react-native-elements';
@@ -18,7 +18,7 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
   const [dropdown2Open, setDropdown2Open] = useState(false);
 
   const [numberOfQuestions, setNumberOfQuestions] = useState('');
-  const [tags, setTags] = useState([]);
+  const [tags, setTags]: any = useState([]);
   const [starredCards, setStarredCards] = useState(false);
   const [readingETOC, setReadingETOC] = useState(false);
   const [readingCTOE, setReadingCTOE] = useState(false);
@@ -26,6 +26,11 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
   const [listeningCTOE, setListeningCTOE] = useState(false);
   const [typingETOC, setTypingETOC] = useState(false);
   const [handwritingETOC, setHandwritingETOC] = useState(false);
+
+  const [error, setError] = useState('')
+
+  const [allCards, setAllCards]: any = useState([]);
+  const [testCards, setTestCards]: any = useState([])
 
   // variations of question numbers the user can choose
   const [questionNumberOptions, setQuestionNumberOptions] = useState([
@@ -53,6 +58,65 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
       setTagOptions(tagOptionsTemp2);
     });
   }, []);
+
+  useEffect(() => {
+    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let cardItems = { ...data };
+      setAllCards(Object.values(cardItems));
+    })
+  }, [])
+
+  // shuffles cards in an array through recursion
+  const shuffleCards: any = (array: []) => {
+    let shuffledArray: [] = [];
+    if (!array.length) return shuffledArray;
+
+    let index = Math.floor(Math.random() * array.length);
+    shuffledArray.push(array[index]);
+    let slicedArray = array.slice(0, index).concat(array.slice(index + 1));
+
+    return shuffledArray.concat(shuffleCards(slicedArray));
+  };
+
+  const generateTest = () => {
+    console.log('\nGENERATING TEST')
+    console.log('===============')
+    console.log('number of questions:', numberOfQuestions)
+    console.log('starred cards only:', starredCards)
+    console.log('tags:', tags.length > 0 ? tags : 'none')
+    if (numberOfQuestions === '') {
+      setError('Please specify number of questions')
+    } else if (!readingETOC && !readingCTOE && !listeningETOC && !listeningCTOE && !typingETOC && !handwritingETOC) {
+      setError('Please select at least one question type')
+    } else {
+      let testCardArray = starredCards ? (allCards.filter((obj: { starred: boolean }) => {
+        return obj.starred === true;
+      })) : allCards
+
+      console.log('after star filter:', testCardArray.length)
+  
+      testCardArray = tags.length > 0 ? (testCardArray.filter((obj: { tag: string }) => {
+        return tags.includes(obj.tag);
+      })) : testCardArray
+
+      console.log('after tags:', testCardArray.length)
+
+      testCardArray = shuffleCards(testCardArray).splice(0, 5)
+      console.log('after randomising + selecting ' + numberOfQuestions + ' cards: ' + testCardArray.length)
+  
+      console.log(' ')
+      for (let i = 0; i < testCardArray.length; i++) {
+        console.log('card' + (i+1) + ':')
+        console.log(testCardArray[i].chinese + ' / ' + testCardArray[i].english + ' / ' + (testCardArray[i].starred ? 'starred' : 'not starred') + (testCardArray[i].tag ? (' / ' + testCardArray[i].tag) : ''))
+      }
+    }
+    // 3. navigate to test screen w/ cards & question types allowed
+    // 4. create array of question types
+    // 5. for each card in card array, generate random number out of question type array length
+    // 6. set card array[i] to that number
+    // 7. in render function: map card array, use conditional rendering
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -188,9 +252,14 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
           />
         </View>
 
+        {
+          error && 
+          <Text style={styles.error}>{error}</Text>
+        }
+
         <View style={{ alignSelf: 'center' }}>
-          <TouchableOpacity style={styles.button} onPress={() => console.log('click')}>
-            <Text style={styles.buttonText}>LET'S GO! →</Text>
+          <TouchableOpacity style={styles.button} onPress={() => generateTest()}>
+            <Text style={styles.buttonText}>START TEST! →</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -256,5 +325,10 @@ const styles = StyleSheet.create({
     color: 'white',
     alignSelf: 'center',
     fontWeight: '800',
+  },
+  error: {
+    color: '#D54826FF',
+    marginVertical: 20,
+    marginLeft: 30
   },
 });

@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   error: {
-    color: 'red',
+    color: '#D54826FF',
     marginVertical: 20,
   },
   dropdownStyle: {

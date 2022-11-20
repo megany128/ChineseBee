@@ -93,28 +93,28 @@ export default function ProfileScreen({ navigation }: any) {
                   }
                 }}
                 onBlur={({ nativeEvent }) => {
-                    console.log(nativeEvent.text);
-                    if (nativeEvent.text === '') {
-                      setValue({
-                        ...value,
-                        error: 'Name is mandatory',
-                      });
-                      return;
-                    }
-                    try {
-                      updateProfile(auth.currentUser!, { displayName: nativeEvent.text.trim() });
-                      // setValue({ ...value, name: nativeEvent.text.trim()});
-                      update(ref(db, '/users/' + auth.currentUser?.uid), {
-                        name: nativeEvent.text.trim(),
-                      });
-                      getData();
-                    } catch (error: any) {
-                      setValue({
-                        ...value,
-                        error: error.message,
-                      });
-                    }
-                  }}
+                  console.log(nativeEvent.text);
+                  if (nativeEvent.text === '') {
+                    setValue({
+                      ...value,
+                      error: 'Name is mandatory',
+                    });
+                    return;
+                  }
+                  try {
+                    updateProfile(auth.currentUser!, { displayName: nativeEvent.text.trim() });
+                    // setValue({ ...value, name: nativeEvent.text.trim()});
+                    update(ref(db, '/users/' + auth.currentUser?.uid), {
+                      name: nativeEvent.text.trim(),
+                    });
+                    getData();
+                  } catch (error: any) {
+                    setValue({
+                      ...value,
+                      error: error.message,
+                    });
+                  }
+                }}
               />
               <View
                 style={{
