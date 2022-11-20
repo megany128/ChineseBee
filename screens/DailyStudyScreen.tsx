@@ -47,7 +47,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
   const [reviewCards, setReviewCards] = useState(20);
   // const [finishedWriting, setFinishedWriting] = useState(false);
 
-  const timeOpened = new Date()
+  const timeOpened = new Date();
 
   const [value, setValue] = React.useState({
     typingAnswer: '',
@@ -719,15 +719,15 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
 
   // TODO: add to test screen as well
   const exitDailyStudy = async () => {
-    const exitTime = new Date()
-    console.log('time opened:', timeOpened.getTime())
-    console.log('time exited:', exitTime.getTime())
-    const minutesLearning = JSON.parse(await AsyncStorage.getItem('minutesLearning') || '0') 
-    const extraMinutesLearning = (exitTime.getTime() - timeOpened.getTime()) / 60000
-    console.log('minutes:', extraMinutesLearning)
-    AsyncStorage.setItem('minutesLearning', JSON.stringify(minutesLearning + extraMinutesLearning))
-    navigation.goBack()
-  }
+    const exitTime = new Date();
+    console.log('time opened:', timeOpened.getTime());
+    console.log('time exited:', exitTime.getTime());
+    const minutesLearning = JSON.parse((await AsyncStorage.getItem('minutesLearning')) || '0');
+    const extraMinutesLearning = (exitTime.getTime() - timeOpened.getTime()) / 60000;
+    console.log('minutes:', extraMinutesLearning);
+    AsyncStorage.setItem('minutesLearning', JSON.stringify(minutesLearning + extraMinutesLearning));
+    navigation.goBack();
+  };
 
   return (
     <SafeAreaView style={styles.container}>

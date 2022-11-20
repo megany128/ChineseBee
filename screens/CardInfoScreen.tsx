@@ -103,7 +103,7 @@ export default function CardInfoScreen({ route, navigation }: any) {
             {card.tag && card.tag.map((item: any) => {
               <Text>{card.tag[item]}</Text>
             })} */}
-            <Text style={styles.title}>Example Phrases</Text>
+            {/* <Text style={styles.title}>Example Phrases</Text> */}
 
             <TouchableOpacity
               style={styles.button}

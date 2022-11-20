@@ -83,8 +83,8 @@ export default function EditScreen({ navigation, route }: RootStackScreenProps<'
       card.chinese = chinese;
       card.tag = tag;
 
-      navigation.pop(2)
-      navigation.push('CardInfoScreen', card)
+      navigation.pop(2);
+      navigation.push('CardInfoScreen', card);
     }
   };
 

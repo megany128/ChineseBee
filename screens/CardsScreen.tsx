@@ -70,7 +70,10 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
                   />
                 </TouchableOpacity>
                 {cardItem['tag'] ? (
-                  <TouchableOpacity style={styles.tag} onPress={() => navigation.navigate('SearchByTagScreen', cardItem['tag'])}>
+                  <TouchableOpacity
+                    style={styles.tag}
+                    onPress={() => navigation.navigate('SearchByTagScreen', cardItem['tag'])}
+                  >
                     <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
                       {cardItem['tag']}
                     </Text>

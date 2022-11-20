@@ -18,7 +18,7 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
   const [dropdown2Open, setDropdown2Open] = useState(false);
 
   const [numberOfQuestions, setNumberOfQuestions] = useState('');
-  const [tag, setTag] = useState('');
+  const [tags, setTags] = useState([]);
   const [starredCards, setStarredCards] = useState(false);
   const [readingETOC, setReadingETOC] = useState(false);
   const [readingCTOE, setReadingCTOE] = useState(false);
@@ -85,11 +85,12 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
 
         <DropDownPicker
           open={dropdown2Open}
+          multiple={true}
           searchable={true}
-          value={tag}
+          value={tags}
           items={tagOptions}
           setOpen={setDropdown2Open}
-          setValue={setTag}
+          setValue={setTags}
           setItems={setTagOptions}
           placeholder="Tags (Optional)"
           style={styles.inputStyle}

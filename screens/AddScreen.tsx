@@ -31,10 +31,9 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
 
   const [error, setError] = useState(String);
 
-  // TODO: move this to later
-  useEffect(() => {
-    hanzi.start();
-  }, []);
+  // useEffect(() => {
+  //   hanzi.start();
+  // }, []);
 
   useEffect(() => {
     if (modalVisible) {
@@ -56,7 +55,6 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
       setTagOptions(tagOptionsTemp2);
     });
   }, []);
-
 
   // gets the key of the last card created
   const getKey = () => {
@@ -101,9 +99,9 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
       });
 
       // resets the text inputs
-      setEnglish('')
-      setChinese('')
-      setTag(route.params ? route.params : '')
+      setEnglish('');
+      setChinese('');
+      setTag(route.params ? route.params : '');
 
       setModalVisible(true);
     }
@@ -144,7 +142,7 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
           style={styles.inputText}
         />
 
-<DropDownPicker
+        <DropDownPicker
           open={dropdownOpen}
           searchable={true}
           value={tag}
@@ -226,6 +224,7 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     marginTop: 20,
     flexDirection: 'row',
+    alignItems: 'center',
   },
   control: {
     marginTop: 10,

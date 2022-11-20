@@ -20,6 +20,8 @@ import DailyStudyScreen from '../screens/DailyStudyScreen';
 import CardInfoScreen from '../screens/CardInfoScreen';
 import EditScreen from '../screens/EditScreen';
 import SearchByTagScreen from '../screens/SearchByTagScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import VerifyAccountScreen from '../screens/VerifyAccountScreen';
 
 const Stack = createStackNavigator();
 
@@ -99,6 +101,8 @@ export default function UserStack() {
         <Stack.Screen name="StartTestScreen" component={StartTestScreen} />
         <Stack.Screen name="DailyStudyScreen" component={DailyStudyScreen} />
         <Stack.Screen name="SearchByTagScreen" component={SearchByTagScreen} />
+        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+        <Stack.Screen name="VerifyAccountScreen" component={VerifyAccountScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -40,7 +40,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
   const [starredFilter, setStarredFilter] = useState(false);
   const [sortStyle, setSortStyle] = useState(0);
 
-  const tagSearch = route.params
+  const tagSearch = route.params;
 
   // creates a Card component
   const Card = ({ cardItem, id }: any) => {
@@ -131,13 +131,17 @@ export default function SearchByTagScreen({ route, navigation }: any) {
       // TODO: crash when editing
 
       // uses state to set cards to the data just retrieved
-      setCards(Object.values(cardItems).filter((item: any) => {
-        return item.tag === tagSearch
-      }));
+      setCards(
+        Object.values(cardItems).filter((item: any) => {
+          return item.tag === tagSearch;
+        })
+      );
 
-      let newArray: any = Object.values(cardItems).filter((item: any) => {
-        return item.tag === tagSearch
-      }).reverse();
+      let newArray: any = Object.values(cardItems)
+        .filter((item: any) => {
+          return item.tag === tagSearch;
+        })
+        .reverse();
 
       // uses state to set cardArray and filteredCards to the reverse of this data
       setCardArray(newArray);

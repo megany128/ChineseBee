@@ -12,11 +12,12 @@ import { push, ref, set, onValue } from 'firebase/database';
 import * as Progress from 'react-native-progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlipCard from 'react-native-flip-card';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-var isPast = require('date-fns/isPast')
-var format = require('date-fns/format')
+var isPast = require('date-fns/isPast');
+var format = require('date-fns/format');
 
-const { utcToZonedTime } = require('date-fns-tz')
+const { utcToZonedTime } = require('date-fns-tz');
 
 export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   // initialises current user & auth
@@ -29,29 +30,32 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   const [cardsStudied, setCardsStudied] = useState(0);
   const [minutesLearning, setMinutesLearning] = useState(0);
   const [dayStreak, setDayStreak] = useState(0);
-  
+
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
 
-    let lastTimeOpened = await AsyncStorage.getItem('lastTimeOpened')
-    let streak = JSON.parse(await AsyncStorage.getItem('dayStreak') || '0') + 1 
-    console.log(lastTimeOpened)
+    let lastTimeOpened = await AsyncStorage.getItem('lastTimeOpened');
+    let streak = JSON.parse((await AsyncStorage.getItem('dayStreak')) || '0') + 1;
+    console.log(lastTimeOpened);
     if (lastTimeOpened) {
-      console.log('last time opened:', format(utcToZonedTime(new Date(JSON.parse(lastTimeOpened)), 'Asia/Singapore'), 'dd/MM/yy hh:mm'))
+      console.log(
+        'last time opened:',
+        format(utcToZonedTime(new Date(JSON.parse(lastTimeOpened)), 'Asia/Singapore'), 'dd/MM/yy hh:mm')
+      );
       if (isPast(utcToZonedTime(new Date(lastTimeOpened), 'Asia/Singapore'))) {
-        console.log('first time opening today')
-        AsyncStorage.setItem('dailyStudyProgress', '0')
-        AsyncStorage.setItem('dayStreak', JSON.stringify(streak))
+        console.log('first time opening today');
+        AsyncStorage.setItem('dailyStudyProgress', '0');
+        AsyncStorage.setItem('dayStreak', JSON.stringify(streak));
       }
     } else {
-      console.log('first time opening')
-      AsyncStorage.setItem('dailyStudyProgress', '0')
-      AsyncStorage.setItem('dayStreak', '1')
+      console.log('first time opening');
+      AsyncStorage.setItem('dailyStudyProgress', '0');
+      AsyncStorage.setItem('dayStreak', '1');
     }
-    console.log('already opened today')
-    console.log('set time opened to:', format(utcToZonedTime(new Date(), 'Asia/Singapore'), 'dd/MM/yy hh:mm'))
-    AsyncStorage.setItem('lastTimeOpened', JSON.stringify(Date.now()))
+    console.log('already opened today');
+    console.log('set time opened to:', format(utcToZonedTime(new Date(), 'Asia/Singapore'), 'dd/MM/yy hh:mm'));
+    AsyncStorage.setItem('lastTimeOpened', JSON.stringify(Date.now()));
 
     setCardsStudied(cardsStudiedTemp);
     setMinutesLearning(minutesLearningTemp);
@@ -64,12 +68,12 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   useEffect(() => {
     getStats();
     const willFocusSubscription = navigation.addListener('focus', () => {
-      console.log('getting stats')
+      console.log('getting stats');
       getStats();
-  });
+    });
 
-  return willFocusSubscription;
-}, []);
+    return willFocusSubscription;
+  }, []);
 
   useEffect(() => {
     console.log('use effect');
@@ -90,10 +94,23 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
     <LinearGradient colors={['rgba(255,203,68,0.2)', 'rgba(255,255,255,0.3)']} style={styles.container}>
       <SafeAreaView>
         <ScrollView>
-          <View style={{ flexDirection: 'row', backgroundColor: 'transparent' }}>
-            <Text style={styles.greeting}>你好,</Text>
-            <Text style={[styles.greeting, { color: '#FFCB44' }]}>{name}</Text>
-            <Text style={styles.greeting}>!</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              backgroundColor: 'transparent',
+              justifyContent: 'space-between',
+              width: 370,
+              alignSelf: 'center',
+            }}
+          >
+            <View style={{ flexDirection: 'row', backgroundColor: 'transparent' }}>
+              <Text style={styles.greeting}>你好,</Text>
+              <Text style={[styles.greeting, { color: '#FFCB44' }]}>{name}</Text>
+              <Text style={styles.greeting}>!</Text>
+            </View>
+            <TouchableOpacity style={{ alignSelf: 'center' }} onPress={() => navigation.navigate('ProfileScreen')}>
+              <Ionicons name="person-circle-outline" size={35} style={{ marginRight: 10 }} />
+            </TouchableOpacity>
           </View>
 
           {/* TODO: little bee at end of progress bar */}
@@ -110,14 +127,15 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
             />
           </TouchableOpacity>
 
-          {/* TODO: fix spacing */}
           <View
             style={{
               flexDirection: 'row',
               flex: 1,
               backgroundColor: 'transparent',
-              width: 350,
+              width: 380,
               justifyContent: 'space-between',
+              alignSelf: 'center',
+              marginVertical: 10,
             }}
           >
             <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
@@ -215,9 +233,6 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
               <Icon2 name="clock" size={60} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          <View style={{ backgroundColor: 'transparent' }}>
-            <Button title="Sign Out" onPress={() => signOut(auth)} />
-          </View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -241,20 +256,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    alignSelf: 'center',
   },
   todaysRevision: {
     flexDirection: 'column',
     width: 350,
     height: 120,
     borderRadius: 20,
-    marginTop: 20,
-    marginBottom: 30,
+    marginBottom: 20,
+    marginTop: 10,
     zIndex: 0,
     backgroundColor: '#FFCB44',
+    alignSelf: 'center',
   },
   wordOfTheDay: {
-    width: 150,
-    height: 150,
+    width: 160,
+    height: 160,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#C4C4C4',
@@ -297,6 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: '#C4C4C4',
+    alignSelf: 'center',
   },
   cardsStudied: {
     color: '#FFCB44',
@@ -320,5 +338,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     fontWeight: '700',
     fontSize: 20,
+    marginLeft: 20,
   },
 });
