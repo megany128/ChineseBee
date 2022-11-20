@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 
-export default function StatsScreen() {
+export default function StatsScreen({ route, navigation }: any) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Stats Screen</Text>

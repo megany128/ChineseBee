@@ -1,14 +1,13 @@
-import { RootStackScreenProps } from '../types';
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import Modal from 'react-native-modal';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
-import { set, ref, onValue, update } from 'firebase/database';
+import { ref, onValue, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
 import * as Progress from 'react-native-progress';
-import { Input, Button } from 'react-native-elements';
+import { Input } from 'react-native-elements';
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
@@ -20,16 +19,15 @@ import Icon3 from 'react-native-vector-icons/FontAwesome';
 var pinyin = require('chinese-to-pinyin');
 
 moment().format();
-// TODO: can potentially add drag question type, like duolingo: hanzi.segment(phrase)
-export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'DailyStudyScreen'>) {
+export default function DailyStudyScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
 
   // TODO: change to async storage
   const [progress, setProgress] = useState(0);
-  const [todaysRevision, setTodaysRevision]: any = useState([]);
-  const [allCards, setAllCards]: any = useState([]);
+  const { todaysRevision, allCards } = route.params
+
   const [cardNum, setCardNum] = useState(0);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -39,6 +37,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
 
   const newQuestion = useRef(true);
   const correct = useRef(false);
+  const [currentCardType, setCurrentCardType] = useState('')
 
   const [typingQuestion, setTypingQuestion] = useState(false);
   const [writingQuestion, setWritingQuestion] = useState(0);
@@ -62,32 +61,12 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
   // gets cards from database when screen loads and creates array of cards to revise
   useEffect(() => {
     answers.current = [];
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
-      let data = querySnapShot.val() || {};
-      let cardItems = { ...data };
-
-      let reviewArray: any = Object.values(cardItems);
-      let newCardArray: any = Object.values(cardItems);
-      setAllCards(Object.values(cardItems));
-
-      // gets cards that are not new but are due this session
-      // TODO: set limit based on settings
-      // TODO: fix bug - sometimes one card is there twice
-      reviewArray = reviewArray.filter((obj: { dueDate: number; masteryLevel: number }) => {
-        return obj.dueDate === 0 && obj.masteryLevel != 0;
-      });
-
-      // gets cards that are new
-      // TODO: set limit based on settings
-      newCardArray = newCardArray.filter((obj: { masteryLevel: number }) => {
-        return obj.masteryLevel === 0;
-      });
-
-      // TODO: reset daily study progress at beginning of the day.
-      // sets today's revision to review cards and new cards randomised
-      let todaysRevisonArray: any = [...reviewArray, ...newCardArray];
-      setTodaysRevision([...shuffleCards(todaysRevisonArray)]);
-    });
+    console.log('\nDAILY STUDY SCREEN')
+    console.log(JSON.stringify(todaysRevision))
+    for (let card = 0; card < todaysRevision.length; card++) {
+      console.log('card' + (card+1) + ':')
+        console.log(todaysRevision[card].chinese + ' / ' + todaysRevision[card].english + ' / ' + (todaysRevision[card].timesReviewed === 0 ? 'new' : 'revision'))
+    }
   }, []);
 
   useEffect(() => {
@@ -98,6 +77,9 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
     setProgress(parseFloat(dailyStudyProgress));
     console.log('initial progress:', dailyStudyProgress);
+
+    // TODO: make sure card type is same when exiting and reentering
+    setCurrentCardType((await AsyncStorage.getItem('cardType')) || '')
   };
 
   // shuffles cards in an array through recursion
@@ -192,6 +174,10 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     );
   };
 
+  useEffect(() => {
+    newQuestion.current = true
+  }, [])
+
   const generateRandomAnswers = (type: string, card: any) => {
     // if it's a new question, generate new answers
     if (newQuestion.current) {
@@ -211,7 +197,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
             if (card.english != allCards[randomNum]['english'] && card.chinese != allCards[randomNum]['chinese']) {
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
-              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
@@ -231,7 +217,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
             ) {
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
-              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
@@ -253,7 +239,7 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
             ) {
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
-              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
@@ -271,7 +257,6 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
       // renders each answer in turn
       return answerOption.map(
         (j) => (
-          console.log('j: ', j),
           (
             <View key={j}>
               {/* if the current answer is the correct answer option, renders the correct answer */}
@@ -300,7 +285,6 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
               )}
             </View>
           )
-          // TODO: fix bug with answers.current![j][type]
         )
       );
     } else {
@@ -371,7 +355,6 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
           javaScriptEnabled={true}
           injectedJavaScript={INJECTED_JAVASCRIPT}
           onMessage={(event) => {
-            // TODO: update mastery
             console.log('number of mistakes: ' + event.nativeEvent.data);
           }}
         />
@@ -547,82 +530,103 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
   // Question const
   const Question = (card: any) => {
     let timesReviewed = card.card.timesReviewed;
-    let cardType = '';
+    let cardType: any = currentCardType
+    console.log('card type:', cardType)
     let type = 0;
-    switch (true) {
-      // new card
-      case timesReviewed === 0:
-        cardType = 'NewCard';
-        break;
-      // all excl typing and writing
-      case timesReviewed < 4:
-        type = randomInt(1, 4);
-        switch (type) {
-          case 1:
-            cardType = 'ListeningCTOC';
-            break;
-          case 2:
-            cardType = 'ReadingCTOE';
-            break;
-          case 3:
-            cardType = 'ListeningCTOE';
-            break;
-          case 4:
-            cardType = 'ReadingETOC';
-            break;
-          default:
-            break;
-        }
-        break;
-      // all excluding writing
-      case timesReviewed < 6:
-        type = randomInt(1, 5);
-        switch (type) {
-          case 1:
-            cardType = 'ListeningCTOC';
-            break;
-          case 2:
-            cardType = 'ReadingCTOE';
-            break;
-          case 3:
-            cardType = 'ListeningCTOE';
-            break;
-          case 4:
-            cardType = 'ReadingETOC';
-            break;
-          case 5:
-            cardType = 'TypingETOC';
-          default:
-            break;
-        }
-        break;
-      // all
-      default:
-        type = randomInt(1, 6);
-        switch (type) {
-          case 1:
-            cardType = 'ListeningCTOC';
-            break;
-          case 2:
-            cardType = 'ReadingCTOE';
-            break;
-          case 3:
-            cardType = 'ListeningCTOE';
-            break;
-          case 4:
-            cardType = 'ReadingETOC';
-            break;
-          case 5:
-            cardType = 'TypingETOC';
-            break;
-          case 6:
-            cardType = 'handwritingETOC';
-            break;
-          default:
-            break;
-        }
-        break;
+
+    if (cardType === '') {
+      switch (true) {
+        // new card
+        case timesReviewed === 0:
+          cardType = 'NewCard';
+          AsyncStorage.setItem('cardType', 'NewCard');
+          break;
+        // all excl typing and writing
+        case timesReviewed < 4:
+          type = randomInt(1, 4);
+          switch (type) {
+            case 1:
+              cardType = 'ListeningCTOC';
+              AsyncStorage.setItem('cardType', 'ListeningCTOC');
+              break;
+            case 2:
+              cardType = 'ReadingCTOE';
+              AsyncStorage.setItem('cardType', 'ReadingCTOE');
+              break;
+            case 3:
+              cardType = 'ListeningCTOE';
+              AsyncStorage.setItem('cardType', 'ListeningCTOE');
+              break;
+            case 4:
+              cardType = 'ReadingETOC';
+              AsyncStorage.setItem('cardType', 'ReadingETOC');
+              break;
+            default:
+              break;
+          }
+          break;
+        // all excluding writing
+        case timesReviewed < 6:
+          type = randomInt(1, 5);
+          switch (type) {
+            case 1:
+              cardType = 'ListeningCTOC';
+              AsyncStorage.setItem('cardType', 'ListeningCTOC');
+              break;
+            case 2:
+              cardType = 'ReadingCTOE';
+              AsyncStorage.setItem('cardType', 'ReadingCTOE');
+              break;
+            case 3:
+              cardType = 'ListeningCTOE';
+              AsyncStorage.setItem('cardType', 'ListeningCTOE');
+              break;
+            case 4:
+              cardType = 'ReadingETOC';
+              AsyncStorage.setItem('cardType', 'ReadingETOC');
+              break;
+            case 5:
+              cardType = 'TypingETOC';
+              AsyncStorage.setItem('cardType', 'TypingETOC');
+            default:
+              break;
+          }
+          break;
+        // all
+        default:
+          type = randomInt(1, 6);
+          switch (type) {
+            case 1:
+              cardType = 'ListeningCTOC';
+              AsyncStorage.setItem('cardType', 'ListeningCTOC');
+              break;
+            case 2:
+              cardType = 'ReadingCTOE';
+              AsyncStorage.setItem('cardType', 'ReadingCTOE');
+              break;
+            case 3:
+              cardType = 'ListeningCTOE';
+              AsyncStorage.setItem('cardType', 'ListeningCTOE');
+              break;
+            case 4:
+              cardType = 'ReadingETOC';
+              AsyncStorage.setItem('cardType', 'ReadingETOC');
+              break;
+            case 5:
+              cardType = 'TypingETOC';
+              AsyncStorage.setItem('cardType', 'TypingETOC');
+              break;
+            case 6:
+              cardType = 'handwritingETOC';
+              AsyncStorage.setItem('cardType', 'handwritingETOC');
+              break;
+            default:
+              break;
+          }
+          break;
+      }
     }
+
     if (cardType === 'NewCard') {
       return <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
     } else if (cardType === 'ListeningCTOC') {
@@ -640,6 +644,8 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     } else if (cardType === 'TypingETOC') {
       // setTypingQuestion(true)
       return (
+        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+
         <View style={{ flex: 1 }}>
           <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
           <Input
@@ -658,6 +664,8 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
             }}
           />
         </View>
+        </TouchableWithoutFeedback>
+
       );
     } else if (cardType === 'handwritingETOC') {
       // setTypingQuestion(false)
@@ -703,19 +711,51 @@ export default function DailyStudyScreen({ navigation }: RootStackScreenProps<'D
     let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
     setWritingQuestion(0);
+
     let cardNumber = cardNum + 1;
     setCardNum(cardNumber);
     console.log('new card: ' + cardNum);
+
     setProgress((cardNumber + 1) / todaysRevision.length);
     console.log('new progress:', (cardNumber + 1) / todaysRevision.length);
     AsyncStorage.setItem('dailyStudyProgress', ((cardNumber + 1) / todaysRevision.length).toString());
     console.log('new async progress:', (cardNumber + 1) / todaysRevision.length);
+
+    // TODO: fix 'right' for writing question
+    const newTimesCorrect = right ? card.timesCorrect + 1 : card.timesCorrect
+    const dueDate = getDueDate(card, right)
+    console.log('new due date is', dueDate)
+
     update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), {
-      masteryLevel: card.masteryLevel,
+      timesCorrect: newTimesCorrect,
       timesReviewed: card.timesReviewed + 1,
+      dueDate: dueDate
     });
-    // TODO: set mastery based on right
   };
+
+  // adapted from https://www.skritter.com/api/v0/docs/scheduling
+  const getDueDate = (card: any, right: boolean) => {
+    let interval = card.timesReviewed + 1
+    let factor = 1
+    let successRate = card.timesCorrect / card.timesReviewed
+
+    // delays the due rate if the user consistently gets the card right
+    if (successRate === 1 && card.timesReviewed < 4) factor *=  1.5
+
+    // accelerates the due rate if the user consistently gets the card wrong
+    if (successRate < 0.5 && card.timesReviewed > 8) factor *= successRate ** 0.1
+
+    if (card.timesReviewed > 0) {
+      interval *= factor
+
+      let randomAdjustment = 0.925 + (Math.random() * 0.15)
+      interval *= randomAdjustment
+      interval = Math.min(interval, 365)
+      interval = Math.max(interval, 1)
+      interval = Math.round(interval)
+    }
+    return interval
+  }
 
   // TODO: add to test screen as well
   const exitDailyStudy = async () => {

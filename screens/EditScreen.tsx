@@ -14,7 +14,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
-export default function EditScreen({ navigation, route }: RootStackScreenProps<'EditScreen'>) {
+export default function EditScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();

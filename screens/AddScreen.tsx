@@ -22,7 +22,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
-export default function AddScreen({ navigation, route }: RootStackScreenProps<'AddScreen'>) {
+export default function AddScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
@@ -95,9 +95,10 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
         chinese: chinese,
         tag: tag,
         starred: false,
-        masteryLevel: 0,
         createdAt: moment().valueOf(),
+        timesCorrect: 0,
         timesReviewed: 0,
+        dueDate: 0
       });
 
       // adds the card's key as a field
@@ -126,7 +127,6 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={{ marginTop: 20, flex: 1 }}>
           <Input
-            // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
             inputContainerStyle={styles.inputStyle}
             placeholder="Chinese"
             containerStyle={styles.control}
@@ -134,14 +134,9 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
             onChangeText={(text) => setChinese(text)}
             autoCompleteType=""
             style={styles.inputText}
-            // TODO: allow user to choose from list of premade definitions
-            // onBlur={() =>
-            //   setValue({...value, english: hanzi.definitionLookup(chinese)[0].definition})
-            // }
           />
 
           <Input
-            // TODO: add text detection: https://blog.logrocket.com/build-text-detector-react-native/
             inputContainerStyle={styles.inputStyle}
             placeholder="English"
             containerStyle={styles.control}
@@ -183,7 +178,6 @@ export default function AddScreen({ navigation, route }: RootStackScreenProps<'A
             addCustomItem={true}
           />
 
-          {/* TODO: add tag selector */}
           <View style={{ alignSelf: 'center' }}>
             <Text style={styles.error}>{error}</Text>
             <TouchableOpacity style={styles.button} onPress={() => addCard()}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView, StyleSheet, TouchableOpacity, Button, ScrollView } from 'react-native';
 import { Text, View } from '../components/Themed';
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -20,7 +20,7 @@ var format = require('date-fns/format');
 
 const { utcToZonedTime } = require('date-fns-tz');
 
-export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
+export default function HomeScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
@@ -31,6 +31,83 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
   const [cardsStudied, setCardsStudied] = useState(0);
   const [minutesLearning, setMinutesLearning] = useState(0);
   const [dayStreak, setDayStreak] = useState(0);
+
+  const [allCards, setAllCards]: any = useState([])
+
+  const todaysRevision = useRef()
+
+  // TODO: modal to set this
+  const newCardLimit = 5
+  const reviewLimit = 5
+
+  // shuffles cards in an array through recursion
+  const shuffleCards: any = (array: []) => {
+    let shuffledArray: [] = [];
+    if (!array.length) return shuffledArray;
+
+    let index = Math.floor(Math.random() * array.length);
+    shuffledArray.push(array[index]);
+    let slicedArray = array.slice(0, index).concat(array.slice(index + 1));
+
+    return shuffledArray.concat(shuffleCards(slicedArray));
+  };
+
+  const generateTodaysRevision = () => {
+    console.log('\nGENERATING TODAYS REVISION...\n')
+    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let cardItems = { ...data };
+
+      let allCards: any = Object.values(cardItems)
+      setAllCards(Object.values(cardItems))
+
+      // gets cards that are not new but are due this session
+      // TODO: fix bug - sometimes one card is there twice
+      let reviewArray = allCards.filter((obj: { dueDate: number; timesReviewed: number }) => {
+        return obj.dueDate === 0 && obj.timesReviewed > 0;
+      })
+
+      console.log('REVIEW ARRAY')
+      console.log('============')
+      for (let i = 0; i < reviewArray.length; i++) {
+        console.log('card' + (i+1) + ':')
+        console.log(reviewArray[i].chinese + ' / ' + reviewArray[i].english + ' / due: ' + reviewArray[i].dueDate + ' / times reviewed: ' + reviewArray[i].timesReviewed)
+      }
+
+      console.log(' ')
+
+      // gets cards that are new
+      let newCardArray = allCards.filter((obj: { timesReviewed: number }) => {
+        return obj.timesReviewed === 0;
+      });
+
+      console.log('NEW CARD ARRAY')
+      console.log('==============')
+      for (let i = 0; i < newCardArray.length; i++) {
+        console.log('card' + (i+1) + ':')
+        console.log(newCardArray[i].chinese + ' / ' + newCardArray[i].english + ' / due: ' + newCardArray[i].dueDate + ' / times reviewed: ' + newCardArray[i].timesReviewed)
+      }
+
+      console.log(' ')
+
+      // sets today's revision to review cards and new cards randomised
+      let combinedCards: any = [...reviewArray.slice(0, reviewLimit), ...newCardArray.slice(0, newCardLimit)];
+      let todaysRevisionTemp: any = [...shuffleCards(combinedCards)];
+      todaysRevision.current = todaysRevisionTemp
+
+      console.log('FULL ARRAY')
+      console.log('==========')
+      for (let i = 0; i < todaysRevisionTemp.length; i++) {
+        console.log('card' + (i+1) + ':')
+        console.log(todaysRevisionTemp[i].chinese + ' / ' + todaysRevisionTemp[i].english + ' / ' + (todaysRevisionTemp[i].timesReviewed === 0 ? 'new' : 'revision'))
+      }
+    });
+  }
+
+  // TODO: only generate new cards when last time opened was in the past
+  useEffect(() => {
+    generateTodaysRevision()
+  }, [])
 
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
@@ -49,11 +126,15 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
         console.log('first time opening today');
         AsyncStorage.setItem('dailyStudyProgress', '0');
         AsyncStorage.setItem('dayStreak', JSON.stringify(streak));
+
+        generateTodaysRevision()
       }
     } else {
       console.log('first time opening');
       AsyncStorage.setItem('dailyStudyProgress', '0');
       AsyncStorage.setItem('dayStreak', '1');
+
+      generateTodaysRevision()
     }
     console.log('already opened today');
     console.log('set time opened to:', format(utcToZonedTime(new Date(), 'Asia/Singapore'), 'dd/MM/yy hh:mm'));
@@ -63,9 +144,6 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
     setMinutesLearning(minutesLearningTemp);
     setDayStreak(streak);
   };
-
-  // reset progress if after midnight
-  // TODO: check before midnight and after midnight
 
   useEffect(() => {
     getStats();
@@ -116,7 +194,7 @@ export default function HomeScreen({ navigation }: RootTabScreenProps<'Home'>) {
           </View>
 
           {/* TODO: little bee at end of progress bar */}
-          <TouchableOpacity style={styles.todaysRevision} onPress={() => navigation.navigate('DailyStudyScreen')}>
+          <TouchableOpacity style={styles.todaysRevision} onPress={() => navigation.navigate('DailyStudyScreen', {todaysRevision: todaysRevision.current, allCards: allCards})}>
             <Text style={styles.revisionText}>今天的复习</Text>
             <Progress.Bar
               progress={progress}

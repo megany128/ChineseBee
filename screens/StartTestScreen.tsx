@@ -9,7 +9,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { push, ref, set, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 
-export default function StartTestScreen({ navigation }: RootStackScreenProps<'StartTestScreen'>) {
+export default function StartTestScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
@@ -102,7 +102,7 @@ export default function StartTestScreen({ navigation }: RootStackScreenProps<'St
 
       console.log('after tags:', testCardArray.length)
 
-      testCardArray = shuffleCards(testCardArray).splice(0, 5)
+      testCardArray = shuffleCards(testCardArray).slice(0, 5)
       console.log('after randomising + selecting ' + numberOfQuestions + ' cards: ' + testCardArray.length)
   
       console.log(' ')

@@ -229,7 +229,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
       case 1:
         setFilteredCards(
           cardArray.sort(
-            (obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj2.masteryLevel - obj1.masteryLevel
+            (obj1: { timesReviewed: number, timesCorrect: number }, obj2: { timesReviewed: number, timesCorrect: number }) => (obj2.timesCorrect / obj2.timesReviewed) - (obj1.timesCorrect / obj1.timesReviewed)
           )
         );
         getStarred(starredFilter);
@@ -238,7 +238,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
       case 2:
         setFilteredCards(
           cardArray.sort(
-            (obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj1.masteryLevel - obj2.masteryLevel
+            (obj1: { timesReviewed: number, timesCorrect: number }, obj2: { timesReviewed: number, timesCorrect: number }) => (obj2.timesCorrect / obj2.timesReviewed) - (obj1.timesCorrect / obj1.timesReviewed)
           )
         );
         getStarred(starredFilter);

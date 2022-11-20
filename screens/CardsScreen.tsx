@@ -21,7 +21,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 
 var pinyin = require('chinese-to-pinyin');
 
-export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>) {
+export default function CardsScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
@@ -218,7 +218,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       case 1:
         setFilteredCards(
           cardArray.sort(
-            (obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj2.masteryLevel - obj1.masteryLevel
+            (obj1: { timesCorrect: number, timesReviewed: number }, obj2: { timesCorrect: number, timesReviewed: number }) => (obj2.timesCorrect / obj2.timesReviewed) - (obj1.timesCorrect / obj1.timesReviewed)
           )
         );
         getStarred(starredFilter);
@@ -227,7 +227,7 @@ export default function CardsScreen({ navigation }: RootTabScreenProps<'Cards'>)
       case 2:
         setFilteredCards(
           cardArray.sort(
-            (obj1: { masteryLevel: number }, obj2: { masteryLevel: number }) => obj1.masteryLevel - obj2.masteryLevel
+            (obj1: { timesCorrect: number, timesReviewed: number }, obj2: { timesCorrect: number, timesReviewed: number }) => (obj2.timesCorrect / obj2.timesReviewed) - (obj1.timesCorrect / obj1.timesReviewed)
           )
         );
         getStarred(starredFilter);
