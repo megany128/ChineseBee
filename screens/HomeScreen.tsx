@@ -67,6 +67,16 @@ export default function HomeScreen({ route, navigation }: any) {
         return obj.dueDate === 0 && obj.timesReviewed > 0;
       });
 
+      // gets cards that are new
+      let newCardArray = allCards.filter((obj: { timesReviewed: number }) => {
+        return obj.timesReviewed === 0;
+      });
+
+      // sets today's revision to review cards and new cards randomised
+      let combinedCards: any = [...reviewArray.slice(0, reviewLimit), ...newCardArray.slice(0, newCardLimit)];
+      let todaysRevisionTemp: any = [...shuffleCards(combinedCards)];
+      todaysRevision.current = todaysRevisionTemp;
+
       console.log('REVIEW ARRAY');
       console.log('============');
       for (let i = 0; i < reviewArray.length; i++) {
@@ -81,14 +91,7 @@ export default function HomeScreen({ route, navigation }: any) {
             reviewArray[i].timesReviewed
         );
       }
-
       console.log(' ');
-
-      // gets cards that are new
-      let newCardArray = allCards.filter((obj: { timesReviewed: number }) => {
-        return obj.timesReviewed === 0;
-      });
-
       console.log('NEW CARD ARRAY');
       console.log('==============');
       for (let i = 0; i < newCardArray.length; i++) {
@@ -105,12 +108,6 @@ export default function HomeScreen({ route, navigation }: any) {
       }
 
       console.log(' ');
-
-      // sets today's revision to review cards and new cards randomised
-      let combinedCards: any = [...reviewArray.slice(0, reviewLimit), ...newCardArray.slice(0, newCardLimit)];
-      let todaysRevisionTemp: any = [...shuffleCards(combinedCards)];
-      todaysRevision.current = todaysRevisionTemp;
-
       console.log('FULL ARRAY');
       console.log('==========');
       for (let i = 0; i < todaysRevisionTemp.length; i++) {

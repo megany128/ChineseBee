@@ -62,7 +62,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   // useEffect(() => {
   //   if (modalVisible) {
-  //     setTimeout(() => hideModal(allCards[cardNum]), 1500);
+  //     setTimeout(() => hideModal(todaysRevision[cardNum]), 1500);
   //   }
   // });
 
@@ -166,9 +166,9 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         >
           <Icon2 name="check" size={100} style={{ alignSelf: 'center', color: 'white' }} />
         </View>
-        <View style={{ marginTop: 20 }}>
+        <View style={{ marginTop: 30 }}>
           <Text style={{ textAlign: 'center', fontSize: 36, fontWeight: '700' }}>all done!</Text>
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 30 }}>
             <Text style={{ textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#FFCB44' }}>
               today's recap:
             </Text>
@@ -703,7 +703,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={[{ marginBottom: 230 }, styles.nextCard]}
-              onPress={() => updateCardNum(todaysRevision[cardNum], true)}
+              onPress={() => hideModal(todaysRevision[cardNum])}
             >
               <Text style={styles.nextCardText}>NEXT CARD!</Text>
             </TouchableOpacity>
@@ -720,7 +720,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
     setWritingQuestion(0);
-    
+
     let cardNumber = cardNum + 1;
     setCardNum(cardNumber);
     console.log('new card: ' + cardNum);

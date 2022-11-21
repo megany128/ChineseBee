@@ -33,7 +33,29 @@ export default function TestScreen({ route, navigation }: any) {
   const auth = getAuth();
 
   const [progress, setProgress] = useState(0);
-  const { allCards, cards, readingETOC, readingCTOE, listeningCTOC, listeningCTOE, typingETOC, handwritingETOC } = route.params;
+  const { allCards, cards, readingETOC, readingCTOE, listeningCTOC, listeningCTOE, typingETOC, handwritingETOC } =
+    route.params;
+
+  const correctCards: any = useRef([]);
+  const incorrectCards: any = useRef([]);
+
+  const correctReadingETOC = useRef(0);
+  const totalReadingETOC = useRef(0);
+
+  const correctReadingCTOE = useRef(0);
+  const totalReadingCTOE = useRef(0);
+
+  const correctListeningCTOC = useRef(0);
+  const totalListeningCTOC = useRef(0);
+
+  const correctListeningCTOE = useRef(0);
+  const totalListeningCTOE = useRef(0);
+
+  const correctTypingETOC = useRef(0);
+  const totalTypingETOC = useRef(0);
+
+  const correctHandwritingETOC = useRef(0);
+  const totalHandwritingETOC = useRef(0);
 
   const [cardNum, setCardNum] = useState(0);
 
@@ -44,13 +66,9 @@ export default function TestScreen({ route, navigation }: any) {
 
   const newQuestion = useRef(true);
   const correct = useRef(false);
-  const [currentCardType, setCurrentCardType] = useState('');
 
-  const [typingQuestion, setTypingQuestion] = useState(false);
   const [writingQuestion, setWritingQuestion] = useState(0);
 
-  const [newCards, setNewCards] = useState(5);
-  const [reviewCards, setReviewCards] = useState(20);
   // const [finishedWriting, setFinishedWriting] = useState(false);
 
   const timeOpened = new Date();
@@ -88,13 +106,17 @@ export default function TestScreen({ route, navigation }: any) {
   };
 
   const hideModal = (card: any) => {
-    console.log('hide modal')
+    console.log('hide modal');
     setModalVisible(false);
     newQuestion.current = true;
     if (correct.current) {
       console.log('correct');
+      let newCorrectCards = [...correctCards.current, card];
+      correctCards.current = newCorrectCards;
     } else {
       console.log('wrong');
+      let newIncorrectCards = [...incorrectCards.current, card];
+      incorrectCards.current = newIncorrectCards;
     }
     updateCardNum(card, correct.current);
     setValue({ typingAnswer: '' });
@@ -140,27 +162,17 @@ export default function TestScreen({ route, navigation }: any) {
             borderRadius: 200,
             alignSelf: 'center',
             justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
-          <Icon2 name="check" size={100} style={{ alignSelf: 'center', color: 'white' }} />
+          <Text style={{ fontSize: 52, color: 'white', fontWeight: '800' }}>{correctCards.current.length}</Text>
+          <Text style={{ fontSize: 24, color: 'white', fontWeight: '600' }}>out of {cards.length}</Text>
         </View>
-        <View style={{ marginTop: 20 }}>
-          <Text style={{ textAlign: 'center', fontSize: 36, fontWeight: '700' }}>all done!</Text>
-          <View style={{ marginTop: 20 }}>
-            <Text style={{ textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#FFCB44' }}>
-              today's recap:
-            </Text>
-            <View style={{ flexDirection: 'row' }}>
-              <Text style={{ textAlign: 'center', marginTop: 5, color: '#FEB1C3', fontWeight: '600' }}>{newCards}</Text>
-              <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600' }}> new cards learned</Text>
-            </View>
-            <View style={{ flexDirection: 'row' }}>
-              <Text style={{ textAlign: 'center', marginTop: 5, color: '#94BAF4', fontWeight: '600' }}>
-                {reviewCards}
-              </Text>
-              <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600' }}> cards reviewed</Text>
-            </View>
-          </View>
+        <View style={{ marginTop: 30 }}>
+          <Text style={{ textAlign: 'center', fontSize: 36, fontWeight: '700' }}>good job!</Text>
+          <TouchableOpacity style={styles.button}>
+            <Text style={styles.buttonText}>RESULTS →</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -416,34 +428,6 @@ export default function TestScreen({ route, navigation }: any) {
     );
   };
 
-  // New card
-  const NewCard = (card: any) => {
-    return (
-      <View>
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: 350, marginTop: 10 }}>
-          <View style={styles.newCardIndicator}>
-            <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>new card</Text>
-          </View>
-          {card.card.tag && (
-            <View style={styles.tag}>
-              <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
-                {card.card.tag}
-              </Text>
-            </View>
-          )}
-        </View>
-        <View style={{ marginTop: 140 }}>
-          <Text style={styles.newCard}>{card.card.chinese}</Text>
-          <Text style={styles.newCardSubtitle}>{pinyin(card.card.chinese)}</Text>
-          <Text style={styles.newCardSubtitle2}>{card.card.english}</Text>
-          <TouchableOpacity style={styles.nextCard} onPress={() => updateCardNum(card.card, true)}>
-            <Text style={styles.nextCardText}>NEXT CARD!</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
   const randomInt = (min: number, max: number) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
@@ -536,7 +520,7 @@ export default function TestScreen({ route, navigation }: any) {
 
     type = randomInt(0, possibleQuestionTypes.length - 1);
     cardType = possibleQuestionTypes[type];
-    console.log('card type is', cardType)
+    console.log('card type is', cardType);
 
     if (cardType === 'ListeningCTOC') {
       // setTypingQuestion(false)
@@ -599,7 +583,7 @@ export default function TestScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={[{ marginBottom: 230 }, styles.nextCard]}
-              onPress={() => updateCardNum(cards[cardNum], true)}
+              onPress={() => hideModal(cards[cardNum])}
             >
               <Text style={styles.nextCardText}>NEXT CARD!</Text>
             </TouchableOpacity>
@@ -612,7 +596,7 @@ export default function TestScreen({ route, navigation }: any) {
 
   // move to the next question
   const updateCardNum = async (card: any, right: boolean) => {
-    console.log('moving to next question')
+    console.log('moving to next question');
     let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
     setWritingQuestion(0);
@@ -629,7 +613,7 @@ export default function TestScreen({ route, navigation }: any) {
       timesReviewed: card.timesReviewed + 1,
     });
 
-    setProgress(cardNumber / cards.length)
+    setProgress(cardNumber / cards.length);
   };
 
   const exitTest = async () => {
@@ -845,5 +829,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C4C4C4',
     height: 50,
+  },
+  button: {
+    borderRadius: 30,
+    backgroundColor: '#FEB1C3',
+    width: 140,
+    height: 50,
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginTop: 30,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '900',
+    alignSelf: 'center',
   },
 });
