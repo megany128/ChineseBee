@@ -98,7 +98,7 @@ export default function AddScreen({ route, navigation }: any) {
         createdAt: moment().valueOf(),
         timesCorrect: 0,
         timesReviewed: 0,
-        dueDate: 0
+        dueDate: 0,
       });
 
       // adds the card's key as a field

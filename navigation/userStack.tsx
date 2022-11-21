@@ -22,6 +22,7 @@ import EditScreen from '../screens/EditScreen';
 import SearchByTagScreen from '../screens/SearchByTagScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import VerifyAccountScreen from '../screens/VerifyAccountScreen';
+import TestScreen from '../screens/TestScreen';
 
 const Stack = createStackNavigator();
 
@@ -103,6 +104,7 @@ export default function UserStack() {
         <Stack.Screen name="SearchByTagScreen" component={SearchByTagScreen} />
         <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
         <Stack.Screen name="VerifyAccountScreen" component={VerifyAccountScreen} />
+        <Stack.Screen name="TestScreen" component={TestScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -27,14 +27,13 @@ import Icon3 from 'react-native-vector-icons/FontAwesome';
 var pinyin = require('chinese-to-pinyin');
 
 moment().format();
-export default function DailyStudyScreen({ route, navigation }: any) {
+export default function TestScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
   const auth = getAuth();
 
-  // TODO: change to async storage
   const [progress, setProgress] = useState(0);
-  const { todaysRevision, allCards } = route.params;
+  const { allCards, cards, readingETOC, readingCTOE, listeningCTOC, listeningCTOE, typingETOC, handwritingETOC } = route.params;
 
   const [cardNum, setCardNum] = useState(0);
 
@@ -62,39 +61,19 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   // useEffect(() => {
   //   if (modalVisible) {
-  //     setTimeout(() => hideModal(allCards[cardNum]), 1500);
+  //     setTimeout(() => hideModal(cards[cardNum]), 1500);
   //   }
   // });
 
   // gets cards from database when screen loads and creates array of cards to revise
   useEffect(() => {
     answers.current = [];
-    console.log('\nDAILY STUDY SCREEN');
-    console.log(JSON.stringify(todaysRevision));
-    for (let card = 0; card < todaysRevision.length; card++) {
+    console.log('\nTEST SCREEN');
+    for (let card = 0; card < cards.length; card++) {
       console.log('card' + (card + 1) + ':');
-      console.log(
-        todaysRevision[card].chinese +
-          ' / ' +
-          todaysRevision[card].english +
-          ' / ' +
-          (todaysRevision[card].timesReviewed === 0 ? 'new' : 'revision')
-      );
+      console.log(cards[card].chinese + ' / ' + cards[card].english);
     }
   }, []);
-
-  useEffect(() => {
-    getProgress();
-  }, []);
-
-  const getProgress = async () => {
-    let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
-    setProgress(parseFloat(dailyStudyProgress));
-    console.log('initial progress:', dailyStudyProgress);
-
-    // TODO: make sure card type is same when exiting and reentering
-    setCurrentCardType((await AsyncStorage.getItem('cardType')) || '');
-  };
 
   // shuffles cards in an array through recursion
   const shuffleCards: any = (array: []) => {
@@ -109,6 +88,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   };
 
   const hideModal = (card: any) => {
+    console.log('hide modal')
     setModalVisible(false);
     newQuestion.current = true;
     if (correct.current) {
@@ -121,15 +101,13 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   };
 
   // renders each question
-  // TODO: fix bug - sometimes the correct answer is there twice
   const renderQuestions = () => {
-    if (progress < 1) {
-      for (cardNum; cardNum < todaysRevision.length; ) {
-        return (
-          <View style={{ flex: 1 }}>
-            <Question key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+    for (cardNum; cardNum < cards.length; ) {
+      return (
+        <View style={{ flex: 1 }}>
+          <Question key={cards[cardNum]} card={cards[cardNum]} />
 
-            {/* {typingQuestion && 
+          {/* {typingQuestion && 
             <Input
             inputContainerStyle={styles.inputStyle}
             containerStyle={styles.control}
@@ -140,16 +118,16 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             blurOnSubmit={true}
             autoCompleteType=""
             onSubmitEditing={() => {
-              value.typingAnswer === todaysRevision[cardNum]['chinese']
+              value.typingAnswer === cards[cardNum]['chinese']
                 ? ((correct.current = true), setModalVisible(true))
                 : ((correct.current = false), setModalVisible(true));
             }}
           />
           } */}
-          </View>
-        );
-      }
+        </View>
+      );
     }
+
     return (
       <View
         style={{ justifyContent: 'center', alignContent: 'center', flex: 1, alignItems: 'center', marginBottom: 120 }}
@@ -540,123 +518,44 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   // Question const
   const Question = (card: any) => {
     let timesReviewed = card.card.timesReviewed;
-    let cardType: any = currentCardType;
+    let cardType: any = '';
     console.log('card type:', cardType);
     let type = 0;
 
-    if (cardType === '') {
-      switch (true) {
-        // new card
-        case timesReviewed === 0:
-          cardType = 'NewCard';
-          AsyncStorage.setItem('cardType', 'NewCard');
-          break;
-        // all excl typing and writing
-        case timesReviewed < 4:
-          type = randomInt(1, 4);
-          switch (type) {
-            case 1:
-              cardType = 'ListeningCTOC';
-              AsyncStorage.setItem('cardType', 'ListeningCTOC');
-              break;
-            case 2:
-              cardType = 'ReadingCTOE';
-              AsyncStorage.setItem('cardType', 'ReadingCTOE');
-              break;
-            case 3:
-              cardType = 'ListeningCTOE';
-              AsyncStorage.setItem('cardType', 'ListeningCTOE');
-              break;
-            case 4:
-              cardType = 'ReadingETOC';
-              AsyncStorage.setItem('cardType', 'ReadingETOC');
-              break;
-            default:
-              break;
-          }
-          break;
-        // all excluding writing
-        case timesReviewed < 6:
-          type = randomInt(1, 5);
-          switch (type) {
-            case 1:
-              cardType = 'ListeningCTOC';
-              AsyncStorage.setItem('cardType', 'ListeningCTOC');
-              break;
-            case 2:
-              cardType = 'ReadingCTOE';
-              AsyncStorage.setItem('cardType', 'ReadingCTOE');
-              break;
-            case 3:
-              cardType = 'ListeningCTOE';
-              AsyncStorage.setItem('cardType', 'ListeningCTOE');
-              break;
-            case 4:
-              cardType = 'ReadingETOC';
-              AsyncStorage.setItem('cardType', 'ReadingETOC');
-              break;
-            case 5:
-              cardType = 'TypingETOC';
-              AsyncStorage.setItem('cardType', 'TypingETOC');
-            default:
-              break;
-          }
-          break;
-        // all
-        default:
-          type = randomInt(1, 6);
-          switch (type) {
-            case 1:
-              cardType = 'ListeningCTOC';
-              AsyncStorage.setItem('cardType', 'ListeningCTOC');
-              break;
-            case 2:
-              cardType = 'ReadingCTOE';
-              AsyncStorage.setItem('cardType', 'ReadingCTOE');
-              break;
-            case 3:
-              cardType = 'ListeningCTOE';
-              AsyncStorage.setItem('cardType', 'ListeningCTOE');
-              break;
-            case 4:
-              cardType = 'ReadingETOC';
-              AsyncStorage.setItem('cardType', 'ReadingETOC');
-              break;
-            case 5:
-              cardType = 'TypingETOC';
-              AsyncStorage.setItem('cardType', 'TypingETOC');
-              break;
-            case 6:
-              cardType = 'handwritingETOC';
-              AsyncStorage.setItem('cardType', 'handwritingETOC');
-              break;
-            default:
-              break;
-          }
-          break;
-      }
-    }
+    let possibleQuestionTypes = [
+      readingETOC ? 'ReadingETOC' : null,
+      readingCTOE ? 'ReadingCTOE' : null,
+      listeningCTOC ? 'ListeningCTOC' : null,
+      listeningCTOE ? 'ListeningCTOE' : null,
+      typingETOC ? 'TypingETOC' : null,
+      handwritingETOC ? 'HandwritingETOC' : null,
+    ];
+    possibleQuestionTypes = possibleQuestionTypes.filter((item) => {
+      return item != null;
+    });
 
-    if (cardType === 'NewCard') {
-      return <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
-    } else if (cardType === 'ListeningCTOC') {
+    type = randomInt(0, possibleQuestionTypes.length - 1);
+    cardType = possibleQuestionTypes[type];
+    console.log('card type is', cardType)
+
+    if (cardType === 'ListeningCTOC') {
       // setTypingQuestion(false)
-      return <ListeningCTOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+      return <ListeningCTOC key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'ReadingCTOE') {
       // setTypingQuestion(false)
-      return <ReadingCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+      return <ReadingCTOE key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'ListeningCTOE') {
       // setTypingQuestion(false)
-      return <ListeningCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+      return <ListeningCTOE key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'ReadingETOC') {
       // setTypingQuestion(false)
-      return <ReadingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
+      return <ReadingETOC key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'TypingETOC') {
       // setTypingQuestion(true)
       return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
           <View style={{ flex: 1 }}>
-            <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+            <TypingETOC key={cards[cardNum]} card={cards[cardNum]} />
             <Input
               inputContainerStyle={styles.inputStyle}
               containerStyle={styles.control}
@@ -667,7 +566,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
               blurOnSubmit={true}
               autoCompleteType=""
               onSubmitEditing={() => {
-                value.typingAnswer === todaysRevision[cardNum]['chinese']
+                value.typingAnswer === cards[cardNum]['chinese']
                   ? ((correct.current = true), setModalVisible(true))
                   : ((correct.current = false), setModalVisible(true));
               }}
@@ -675,17 +574,14 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           </View>
         </TouchableWithoutFeedback>
       );
-    } else if (cardType === 'handwritingETOC') {
+    } else if (cardType === 'HandwritingETOC') {
       // setTypingQuestion(false)
       return (
         <View style={{ flex: 1 }}>
-          <Text style={[styles.typingCard, { marginTop: 25 }]}>{todaysRevision[cardNum].english}</Text>
+          <Text style={[styles.typingCard, { marginTop: 25 }]}>{cards[cardNum].english}</Text>
           <Text style={[styles.instructions, { marginBottom: 25 }]}>English → Chinese</Text>
-          <HandwritingETOC
-            key={todaysRevision[cardNum]}
-            card={todaysRevision[cardNum].chinese.charAt(writingQuestion)}
-          />
-          {writingQuestion < todaysRevision[cardNum].chinese.length - 1 ? (
+          <HandwritingETOC key={cards[cardNum]} card={cards[cardNum].chinese.charAt(writingQuestion)} />
+          {writingQuestion < cards[cardNum].chinese.length - 1 ? (
             <TouchableOpacity
               style={{
                 marginBottom: 230,
@@ -703,7 +599,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={[{ marginBottom: 230 }, styles.nextCard]}
-              onPress={() => updateCardNum(todaysRevision[cardNum], true)}
+              onPress={() => updateCardNum(cards[cardNum], true)}
             >
               <Text style={styles.nextCardText}>NEXT CARD!</Text>
             </TouchableOpacity>
@@ -714,59 +610,29 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     return null;
   };
 
-  // TODO: fix!!
   // move to the next question
   const updateCardNum = async (card: any, right: boolean) => {
+    console.log('moving to next question')
     let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
     setWritingQuestion(0);
-    
+
     let cardNumber = cardNum + 1;
     setCardNum(cardNumber);
     console.log('new card: ' + cardNum);
 
-    setProgress((cardNumber + 1) / todaysRevision.length);
-    console.log('new progress:', (cardNumber + 1) / todaysRevision.length);
-    AsyncStorage.setItem('dailyStudyProgress', ((cardNumber + 1) / todaysRevision.length).toString());
-    console.log('new async progress:', (cardNumber + 1) / todaysRevision.length);
-
     // TODO: fix 'right' for writing question
     const newTimesCorrect = right ? card.timesCorrect + 1 : card.timesCorrect;
-    const dueDate = getDueDate(card, right);
-    console.log('new due date is', dueDate);
 
     update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), {
       timesCorrect: newTimesCorrect,
       timesReviewed: card.timesReviewed + 1,
-      dueDate: dueDate,
     });
+
+    setProgress(cardNumber / cards.length)
   };
 
-  // adapted from https://www.skritter.com/api/v0/docs/scheduling
-  const getDueDate = (card: any, right: boolean) => {
-    let interval = card.timesReviewed + 1;
-    let factor = 1;
-    let successRate = card.timesCorrect / card.timesReviewed;
-
-    // delays the due rate if the user consistently gets the card right
-    if (successRate === 1 && card.timesReviewed < 4) factor *= 1.5;
-
-    // accelerates the due rate if the user consistently gets the card wrong
-    if (successRate < 0.5 && card.timesReviewed > 8) factor *= successRate ** 0.1;
-
-    if (card.timesReviewed > 0) {
-      interval *= factor;
-
-      let randomAdjustment = 0.925 + Math.random() * 0.15;
-      interval *= randomAdjustment;
-      interval = Math.min(interval, 365);
-      interval = Math.max(interval, 1);
-      interval = Math.round(interval);
-    }
-    return interval;
-  };
-
-  const exitDailyStudy = async () => {
+  const exitTest = async () => {
     const exitTime = new Date();
     console.log('time opened:', timeOpened.getTime());
     console.log('time exited:', exitTime.getTime());
@@ -774,13 +640,13 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     const extraMinutesLearning = (exitTime.getTime() - timeOpened.getTime()) / 60000;
     console.log('minutes:', extraMinutesLearning);
     AsyncStorage.setItem('minutesLearning', JSON.stringify(minutesLearning + extraMinutesLearning));
-    navigation.goBack();
+    navigation.navigate('Home');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
-        <TouchableOpacity onPress={() => exitDailyStudy()}>
+        <TouchableOpacity onPress={() => exitTest()}>
           <Icon name="md-close-outline" size={40} />
         </TouchableOpacity>
         <Progress.Bar
@@ -795,11 +661,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
       </View>
       <View style={{ alignSelf: 'center' }}>{renderQuestions()}</View>
       {modalVisible && (
-        <Modal
-          isVisible={modalVisible}
-          onBackdropPress={() => hideModal(todaysRevision[cardNum])}
-          style={{ margin: 0 }}
-        >
+        <Modal isVisible={modalVisible} onBackdropPress={() => hideModal(cards[cardNum])} style={{ margin: 0 }}>
           {correct.current === true ? (
             <View style={styles.correctModalView}>
               <View
@@ -816,15 +678,11 @@ export default function DailyStudyScreen({ route, navigation }: any) {
                 <Icon2 name="check" size={35} color="#FEB1C3" />
               </View>
               <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
-                  {todaysRevision[cardNum]['chinese']}
-                </Text>
+                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{cards[cardNum]['chinese']}</Text>
                 <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {pinyin(todaysRevision[cardNum]['chinese'])}
+                  {pinyin(cards[cardNum]['chinese'])}
                 </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {todaysRevision[cardNum]['english']}
-                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{cards[cardNum]['english']}</Text>
               </View>
             </View>
           ) : (
@@ -843,15 +701,11 @@ export default function DailyStudyScreen({ route, navigation }: any) {
                 <Icon2 name="cross" size={35} color="#94BAF4" />
               </View>
               <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
-                  {todaysRevision[cardNum]['chinese']}
-                </Text>
+                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{cards[cardNum]['chinese']}</Text>
                 <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {pinyin(todaysRevision[cardNum]['chinese'])}
+                  {pinyin(cards[cardNum]['chinese'])}
                 </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {todaysRevision[cardNum]['english']}
-                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{cards[cardNum]['english']}</Text>
               </View>
             </View>
           )}

@@ -103,7 +103,7 @@ export default function CardInfoScreen({ route, navigation }: any) {
             <Text>{card.timesReviewed}</Text>
 
             <Text style={styles.title}>Success Rate</Text>
-            <Text>{100*(card.timesCorrect / card.timesReviewed)}%</Text>
+            <Text>{100 * (card.timesCorrect / card.timesReviewed)}%</Text>
             {/* TODO: fix, allow multiple tags as array */}
             {/* <Text style={styles.title}>Tags</Text>
             {card.tag && card.tag.map((item: any) => {

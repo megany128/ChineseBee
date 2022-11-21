@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { db } from '../config/firebase';
-import { push, ref, set, onValue } from 'firebase/database';
+import { push, ref, set, onValue, update } from 'firebase/database';
 import * as Progress from 'react-native-progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlipCard from 'react-native-flip-card';
@@ -32,13 +32,13 @@ export default function HomeScreen({ route, navigation }: any) {
   const [minutesLearning, setMinutesLearning] = useState(0);
   const [dayStreak, setDayStreak] = useState(0);
 
-  const [allCards, setAllCards]: any = useState([])
+  const [allCards, setAllCards]: any = useState([]);
 
-  const todaysRevision = useRef()
+  const todaysRevision = useRef();
 
   // TODO: modal to set this
-  const newCardLimit = 5
-  const reviewLimit = 5
+  const newCardLimit = 5;
+  const reviewLimit = 5;
 
   // shuffles cards in an array through recursion
   const shuffleCards: any = (array: []) => {
@@ -53,61 +53,83 @@ export default function HomeScreen({ route, navigation }: any) {
   };
 
   const generateTodaysRevision = () => {
-    console.log('\nGENERATING TODAYS REVISION...\n')
+    console.log('\nGENERATING TODAYS REVISION...\n');
     return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
 
-      let allCards: any = Object.values(cardItems)
-      setAllCards(Object.values(cardItems))
+      let allCards: any = Object.values(cardItems);
+      setAllCards(Object.values(cardItems));
 
       // gets cards that are not new but are due this session
       // TODO: fix bug - sometimes one card is there twice
       let reviewArray = allCards.filter((obj: { dueDate: number; timesReviewed: number }) => {
         return obj.dueDate === 0 && obj.timesReviewed > 0;
-      })
+      });
 
-      console.log('REVIEW ARRAY')
-      console.log('============')
+      console.log('REVIEW ARRAY');
+      console.log('============');
       for (let i = 0; i < reviewArray.length; i++) {
-        console.log('card' + (i+1) + ':')
-        console.log(reviewArray[i].chinese + ' / ' + reviewArray[i].english + ' / due: ' + reviewArray[i].dueDate + ' / times reviewed: ' + reviewArray[i].timesReviewed)
+        console.log('card' + (i + 1) + ':');
+        console.log(
+          reviewArray[i].chinese +
+            ' / ' +
+            reviewArray[i].english +
+            ' / due: ' +
+            reviewArray[i].dueDate +
+            ' / times reviewed: ' +
+            reviewArray[i].timesReviewed
+        );
       }
 
-      console.log(' ')
+      console.log(' ');
 
       // gets cards that are new
       let newCardArray = allCards.filter((obj: { timesReviewed: number }) => {
         return obj.timesReviewed === 0;
       });
 
-      console.log('NEW CARD ARRAY')
-      console.log('==============')
+      console.log('NEW CARD ARRAY');
+      console.log('==============');
       for (let i = 0; i < newCardArray.length; i++) {
-        console.log('card' + (i+1) + ':')
-        console.log(newCardArray[i].chinese + ' / ' + newCardArray[i].english + ' / due: ' + newCardArray[i].dueDate + ' / times reviewed: ' + newCardArray[i].timesReviewed)
+        console.log('card' + (i + 1) + ':');
+        console.log(
+          newCardArray[i].chinese +
+            ' / ' +
+            newCardArray[i].english +
+            ' / due: ' +
+            newCardArray[i].dueDate +
+            ' / times reviewed: ' +
+            newCardArray[i].timesReviewed
+        );
       }
 
-      console.log(' ')
+      console.log(' ');
 
       // sets today's revision to review cards and new cards randomised
       let combinedCards: any = [...reviewArray.slice(0, reviewLimit), ...newCardArray.slice(0, newCardLimit)];
       let todaysRevisionTemp: any = [...shuffleCards(combinedCards)];
-      todaysRevision.current = todaysRevisionTemp
+      todaysRevision.current = todaysRevisionTemp;
 
-      console.log('FULL ARRAY')
-      console.log('==========')
+      console.log('FULL ARRAY');
+      console.log('==========');
       for (let i = 0; i < todaysRevisionTemp.length; i++) {
-        console.log('card' + (i+1) + ':')
-        console.log(todaysRevisionTemp[i].chinese + ' / ' + todaysRevisionTemp[i].english + ' / ' + (todaysRevisionTemp[i].timesReviewed === 0 ? 'new' : 'revision'))
+        console.log('card' + (i + 1) + ':');
+        console.log(
+          todaysRevisionTemp[i].chinese +
+            ' / ' +
+            todaysRevisionTemp[i].english +
+            ' / ' +
+            (todaysRevisionTemp[i].timesReviewed === 0 ? 'new' : 'revision')
+        );
       }
     });
-  }
+  };
 
   // TODO: only generate new cards when last time opened was in the past
   useEffect(() => {
-    generateTodaysRevision()
-  }, [])
+    generateTodaysRevision();
+  }, []);
 
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
@@ -127,14 +149,28 @@ export default function HomeScreen({ route, navigation }: any) {
         AsyncStorage.setItem('dailyStudyProgress', '0');
         AsyncStorage.setItem('dayStreak', JSON.stringify(streak));
 
-        generateTodaysRevision()
+        generateTodaysRevision();
+
+        return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
+          let data = querySnapShot.val() || {};
+          let cardItems = { ...data };
+
+          let allCards: any = Object.values(cardItems);
+
+          for (let i = 0; i < allCards.length; i++) {
+            update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + allCards[i].key), {
+              dueDate: allCards[i].dueDate - 1,
+            });
+          }
+        });
+        // TODO: for every card in the db, decrease duedate by 1
       }
     } else {
       console.log('first time opening');
       AsyncStorage.setItem('dailyStudyProgress', '0');
       AsyncStorage.setItem('dayStreak', '1');
 
-      generateTodaysRevision()
+      generateTodaysRevision();
     }
     console.log('already opened today');
     console.log('set time opened to:', format(utcToZonedTime(new Date(), 'Asia/Singapore'), 'dd/MM/yy hh:mm'));
@@ -194,7 +230,12 @@ export default function HomeScreen({ route, navigation }: any) {
           </View>
 
           {/* TODO: little bee at end of progress bar */}
-          <TouchableOpacity style={styles.todaysRevision} onPress={() => navigation.navigate('DailyStudyScreen', {todaysRevision: todaysRevision.current, allCards: allCards})}>
+          <TouchableOpacity
+            style={styles.todaysRevision}
+            onPress={() =>
+              navigation.navigate('DailyStudyScreen', { todaysRevision: todaysRevision.current, allCards: allCards })
+            }
+          >
             <Text style={styles.revisionText}>今天的复习</Text>
             <Progress.Bar
               progress={progress}

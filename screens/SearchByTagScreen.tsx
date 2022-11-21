@@ -229,7 +229,10 @@ export default function SearchByTagScreen({ route, navigation }: any) {
       case 1:
         setFilteredCards(
           cardArray.sort(
-            (obj1: { timesReviewed: number, timesCorrect: number }, obj2: { timesReviewed: number, timesCorrect: number }) => (obj2.timesCorrect / obj2.timesReviewed) - (obj1.timesCorrect / obj1.timesReviewed)
+            (
+              obj1: { timesReviewed: number; timesCorrect: number },
+              obj2: { timesReviewed: number; timesCorrect: number }
+            ) => obj2.timesCorrect / obj2.timesReviewed - obj1.timesCorrect / obj1.timesReviewed
           )
         );
         getStarred(starredFilter);
@@ -238,7 +241,10 @@ export default function SearchByTagScreen({ route, navigation }: any) {
       case 2:
         setFilteredCards(
           cardArray.sort(
-            (obj1: { timesReviewed: number, timesCorrect: number }, obj2: { timesReviewed: number, timesCorrect: number }) => (obj2.timesCorrect / obj2.timesReviewed) - (obj1.timesCorrect / obj1.timesReviewed)
+            (
+              obj1: { timesReviewed: number; timesCorrect: number },
+              obj2: { timesReviewed: number; timesCorrect: number }
+            ) => obj2.timesCorrect / obj2.timesReviewed - obj1.timesCorrect / obj1.timesReviewed
           )
         );
         getStarred(starredFilter);

@@ -22,15 +22,15 @@ export default function StartTestScreen({ route, navigation }: any) {
   const [starredCards, setStarredCards] = useState(false);
   const [readingETOC, setReadingETOC] = useState(false);
   const [readingCTOE, setReadingCTOE] = useState(false);
-  const [listeningETOC, setListeningETOC] = useState(false);
+  const [listeningCTOC, setListeningCTOC] = useState(false);
   const [listeningCTOE, setListeningCTOE] = useState(false);
   const [typingETOC, setTypingETOC] = useState(false);
   const [handwritingETOC, setHandwritingETOC] = useState(false);
 
-  const [error, setError] = useState('')
+  const [error, setError] = useState('');
 
   const [allCards, setAllCards]: any = useState([]);
-  const [testCards, setTestCards]: any = useState([])
+  const [testCards, setTestCards]: any = useState([]);
 
   // variations of question numbers the user can choose
   const [questionNumberOptions, setQuestionNumberOptions] = useState([
@@ -64,8 +64,8 @@ export default function StartTestScreen({ route, navigation }: any) {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
       setAllCards(Object.values(cardItems));
-    })
-  }, [])
+    });
+  }, []);
 
   // shuffles cards in an array through recursion
   const shuffleCards: any = (array: []) => {
@@ -80,43 +80,65 @@ export default function StartTestScreen({ route, navigation }: any) {
   };
 
   const generateTest = () => {
-    console.log('\nGENERATING TEST')
-    console.log('===============')
-    console.log('number of questions:', numberOfQuestions)
-    console.log('starred cards only:', starredCards)
-    console.log('tags:', tags.length > 0 ? tags : 'none')
+    console.log('\nGENERATING TEST');
+    console.log('===============');
+    console.log('number of questions:', numberOfQuestions);
+    console.log('starred cards only:', starredCards);
+    console.log('tags:', tags.length > 0 ? tags : 'none');
     if (numberOfQuestions === '') {
-      setError('Please specify number of questions')
-    } else if (!readingETOC && !readingCTOE && !listeningETOC && !listeningCTOE && !typingETOC && !handwritingETOC) {
-      setError('Please select at least one question type')
+      setError('Please specify number of questions');
+    } else if (!readingETOC && !readingCTOE && !listeningCTOC && !listeningCTOE && !typingETOC && !handwritingETOC) {
+      setError('Please select at least one question type');
     } else {
-      let testCardArray = starredCards ? (allCards.filter((obj: { starred: boolean }) => {
-        return obj.starred === true;
-      })) : allCards
+      let testCardArray = starredCards
+        ? allCards.filter((obj: { starred: boolean }) => {
+            return obj.starred === true;
+          })
+        : allCards;
 
-      console.log('after star filter:', testCardArray.length)
-  
-      testCardArray = tags.length > 0 ? (testCardArray.filter((obj: { tag: string }) => {
-        return tags.includes(obj.tag);
-      })) : testCardArray
+      console.log('after star filter:', testCardArray.length);
 
-      console.log('after tags:', testCardArray.length)
+      testCardArray =
+        tags.length > 0
+          ? testCardArray.filter((obj: { tag: string }) => {
+              return tags.includes(obj.tag);
+            })
+          : testCardArray;
 
-      testCardArray = shuffleCards(testCardArray).slice(0, 5)
-      console.log('after randomising + selecting ' + numberOfQuestions + ' cards: ' + testCardArray.length)
-  
-      console.log(' ')
+      console.log('after tags:', testCardArray.length);
+
+      testCardArray = shuffleCards(testCardArray).slice(0, numberOfQuestions);
+      console.log('after randomising + selecting ' + numberOfQuestions + ' cards: ' + testCardArray.length);
+
+      console.log(' ');
       for (let i = 0; i < testCardArray.length; i++) {
-        console.log('card' + (i+1) + ':')
-        console.log(testCardArray[i].chinese + ' / ' + testCardArray[i].english + ' / ' + (testCardArray[i].starred ? 'starred' : 'not starred') + (testCardArray[i].tag ? (' / ' + testCardArray[i].tag) : ''))
+        console.log('card' + (i + 1) + ':');
+        console.log(
+          testCardArray[i].chinese +
+            ' / ' +
+            testCardArray[i].english +
+            ' / ' +
+            (testCardArray[i].starred ? 'starred' : 'not starred') +
+            (testCardArray[i].tag ? ' / ' + testCardArray[i].tag : '')
+        );
       }
+      navigation.navigate('TestScreen', {
+        allCards: allCards,
+        cards: testCardArray,
+        readingETOC: readingETOC,
+        readingCTOE: readingCTOE,
+        listeningCTOC: listeningCTOC,
+        listeningCTOE: listeningCTOE,
+        typingETOC: typingETOC,
+        handwritingETOC: handwritingETOC,
+      });
     }
     // 3. navigate to test screen w/ cards & question types allowed
     // 4. create array of question types
     // 5. for each card in card array, generate random number out of question type array length
     // 6. set card array[i] to that number
     // 7. in render function: map card array, use conditional rendering
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -216,12 +238,12 @@ export default function StartTestScreen({ route, navigation }: any) {
           />
 
           <CheckBox
-            title="Listening (English → Chinese)"
-            checked={listeningETOC}
+            title="Listening (Chinese → Chinese)"
+            checked={listeningCTOC}
             containerStyle={{ backgroundColor: 'white', borderWidth: 0, marginLeft: 30 }}
             textStyle={{ fontWeight: '400', color: '#C4C4C4' }}
             checkedColor="#C4C4C4"
-            onPress={() => setListeningETOC(!listeningETOC)}
+            onPress={() => setListeningCTOC(!listeningCTOC)}
           />
 
           <CheckBox
@@ -252,10 +274,7 @@ export default function StartTestScreen({ route, navigation }: any) {
           />
         </View>
 
-        {
-          error && 
-          <Text style={styles.error}>{error}</Text>
-        }
+        {error && <Text style={styles.error}>{error}</Text>}
 
         <View style={{ alignSelf: 'center' }}>
           <TouchableOpacity style={styles.button} onPress={() => generateTest()}>
@@ -329,6 +348,6 @@ const styles = StyleSheet.create({
   error: {
     color: '#D54826FF',
     marginVertical: 20,
-    marginLeft: 30
+    marginLeft: 30,
   },
 });
