@@ -1,4 +1,4 @@
-import { StyleSheet, SafeAreaView, Dimensions, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { StyleSheet, SafeAreaView, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
@@ -29,6 +29,21 @@ export default function CardInfoScreen({ route, navigation }: any) {
       setStarred(cardItem.starred);
     });
   }, []);
+
+  const getMastery = () => {
+    if (card.timesReviewed > 0) {
+      let successRate = card.timesCorrect / card.timesReviewed;
+      if (successRate < 0.4) {
+        return 'Struggling';
+      } else if (successRate < 0.7) {
+        return 'Learning';
+      } else {
+        return 'Mastered';
+      }
+    } else {
+      return 'New';
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -99,16 +114,8 @@ export default function CardInfoScreen({ route, navigation }: any) {
             <Text style={styles.title}>Definition</Text>
             <Text>{card.english}</Text>
 
-            <Text style={styles.title}>Times Studied</Text>
-            <Text>{card.timesReviewed}</Text>
-
-            <Text style={styles.title}>Success Rate</Text>
-            <Text>{100 * (card.timesCorrect / card.timesReviewed)}%</Text>
-            {/* TODO: fix, allow multiple tags as array */}
-            {/* <Text style={styles.title}>Tags</Text>
-            {card.tag && card.tag.map((item: any) => {
-              <Text>{card.tag[item]}</Text>
-            })} */}
+            <Text style={styles.title}>Mastery Level</Text>
+            <Text>{getMastery()}</Text>
             {/* <Text style={styles.title}>Example Phrases</Text> */}
 
             <TouchableOpacity

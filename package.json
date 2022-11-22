@@ -29,6 +29,7 @@
     "dotenv": "^16.0.1",
     "expo": "~46.0.9",
     "expo-asset": "~8.6.1",
+    "expo-chart-kit": "^1.2.4",
     "expo-constants": "~13.2.4",
     "expo-font": "~10.2.0",
     "expo-linear-gradient": "~11.4.0",
@@ -61,7 +62,8 @@
     "react-native-swipeable": "github:jshanson7/react-native-swipeable",
     "react-native-web": "~0.18.7",
     "react-native-webview": "^11.23.1",
-    "react-navigation-header-buttons": "^10.0.0"
+    "react-navigation-header-buttons": "^10.0.0",
+    "react-native-svg": "12.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

@@ -145,6 +145,7 @@ export default function HomeScreen({ route, navigation }: any) {
         console.log('first time opening today');
         AsyncStorage.setItem('dailyStudyProgress', '0');
         AsyncStorage.setItem('dayStreak', JSON.stringify(streak));
+        AsyncStorage.setItem('minutesLearning', '0');
 
         generateTodaysRevision();
 

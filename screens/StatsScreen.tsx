@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, SafeAreaView, Text, View } from 'react-native';
+import { StyleSheet, SafeAreaView, Text, View, ScrollView } from 'react-native';
 import {
   LineChart,
   BarChart,
@@ -14,86 +14,172 @@ import { getAuth } from 'firebase/auth';
 
 export default function StatsScreen({ route, navigation }: any) {
   const auth = getAuth();
-  const data = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-    datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43],
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
-        strokeWidth: 2, // optional
-      },
-    ],
-    legend: ['Rainy Days'], // optional
-  };
-
-  const chartConfig = {
-    backgroundGradientFrom: '#1E2923',
-    backgroundGradientFromOpacity: 0,
-    backgroundGradientTo: '#08130D',
-    backgroundGradientToOpacity: 0.5,
-    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2, // optional, default 3
-    barPercentage: 0.5,
-    useShadowColorFromDataset: false, // optional
-  };
 
   const [vocabSize, setVocabSize] = useState(0);
-  const [mastered, setMastered] = useState(0);
+  const [masteredCards, setMasteredCards] = useState(0);
+  const [learningCards, setLearningCards] = useState(0);
+  const [strugglingCards, setStrugglingCards] = useState(0);
+  const [newCards, setNewCards] = useState(0);
+
+  const readingSuccess = useRef(0);
+  const listeningSuccess = useRef(0);
+  const typingSuccess = useRef(0);
+  const writingSuccess = useRef(0);
+
+  const cardMastery = [
+    {
+      name: 'mastered',
+      cards: masteredCards,
+      color: '#FFCB44',
+      legendFontColor: '#FFCB44',
+      legendFontSize: 15,
+    },
+    {
+      name: 'learning',
+      cards: learningCards,
+      color: '#FEB1C3',
+      legendFontColor: '#FEB1C3',
+      legendFontSize: 15,
+    },
+    {
+      name: 'struggling',
+      cards: strugglingCards,
+      color: '#94BAF4',
+      legendFontColor: '#94BAF4',
+      legendFontSize: 15,
+    },
+    {
+      name: 'new',
+      cards: newCards,
+      color: '#C4C4C4',
+      legendFontColor: '#C4C4C4',
+      legendFontSize: 15,
+    },
+  ];
+
+  const questionTypes = {
+    labels: ['Reading', 'Listening', 'Typing', 'Writing'],
+    datasets: [
+      {
+        data: [
+          100 * readingSuccess.current,
+          100 * listeningSuccess.current,
+          100 * typingSuccess.current,
+          100 * writingSuccess.current,
+        ],
+      },
+    ],
+  };
 
   // CHARTS:
-  // activity per day (monday - sunday)
+  // pie chart of number of questions: mastered, learning, struggling, new
   // comparison of question type success rates
 
   useEffect(() => {
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
+    return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
-      let cardItems = { ...data };
+      let user = { ...data };
 
-      let allCards: any = Object.values(cardItems);
-      let masteredCards = allCards.filter((obj: any) => {
+      let allCards: any = Object.values(user.cards);
+      let masteredCardsTemp = allCards.filter((obj: any) => {
         return obj.timesCorrect / obj.timesReviewed > 0.7;
       });
 
+      let learningCardsTemp = allCards.filter((obj: any) => {
+        return obj.timesCorrect / obj.timesReviewed > 0.4 && obj.timesCorrect / obj.timesReviewed < 0.7;
+      });
+
+      let strugglingCardsTemp = allCards.filter((obj: any) => {
+        return obj.timesCorrect / obj.timesReviewed > 0 && obj.timesCorrect / obj.timesReviewed < 0.4;
+      });
+
+      let newCardsTemp = allCards.filter((obj: any) => {
+        return obj.timesCorrect / obj.timesReviewed === 0;
+      });
+
       setVocabSize(allCards.length);
-      setMastered(masteredCards.length);
+      setMasteredCards(masteredCardsTemp.length);
+      setLearningCards(learningCardsTemp.length);
+      setStrugglingCards(strugglingCardsTemp.length);
+      setNewCards(newCardsTemp.length);
+
+      if (user.totalReadingETOC + user.totalReadingCTOE > 0)
+        readingSuccess.current =
+          (user.correctReadingETOC + user.correctReadingCTOE) / (user.totalReadingETOC + user.totalReadingCTOE);
+      if (user.totalListeningCTOC + user.totalListeningCTOE > 0)
+        listeningSuccess.current =
+          (user.correctListeningCTOC + user.correctListeningCTOE) / (user.totalListeningCTOC + user.totalListeningCTOE);
+      if (user.totalTypingETOC > 0) typingSuccess.current = user.correctTypingETOC / user.totalTypingETOC;
+      if (user.totalHandwritingETOC > 0)
+        writingSuccess.current = user.correctHandwritingETOC / user.totalHandwritingETOC;
+
+      console.log('reading success rate:', readingSuccess.current);
+      console.log('listening success rate:', listeningSuccess.current);
+      console.log('typing success rate:', typingSuccess.current);
+      console.log('handwriting success rate:', writingSuccess.current);
     });
   }, []);
 
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.navigation}>
-          <Text style={styles.header}>STATS</Text>
-        </View>
-        <View style={{ marginHorizontal: 40 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              backgroundColor: 'transparent',
-              width: 340,
-              justifyContent: 'space-between',
-              alignSelf: 'center',
-              marginVertical: 10,
-              marginTop: 20,
-            }}
-          >
-            <View style={styles.cardsStudied}>
-              <Text style={styles.bigText}>{vocabSize}</Text>
-              <Text style={styles.subtitle}>cards in vocab</Text>
-            </View>
-            <View style={styles.cardsMastered}>
-              <Text style={styles.bigText}>{mastered}</Text>
-              <Text style={styles.subtitle}>cards mastered</Text>
-            </View>
+        <ScrollView style={{ width: 400 }}>
+          <View style={styles.navigation}>
+            <Text style={styles.header}>STATS</Text>
           </View>
+          <View style={{ marginHorizontal: 40 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                backgroundColor: 'transparent',
+                width: 340,
+                justifyContent: 'space-between',
+                alignSelf: 'center',
+                marginVertical: 10,
+                marginTop: 20,
+              }}
+            >
+              <View style={styles.cardsStudied}>
+                <Text style={styles.bigText}>{vocabSize}</Text>
+                <Text style={styles.subtitle}>cards in vocab</Text>
+              </View>
+              <View style={styles.cardsMastered}>
+                <Text style={styles.bigText}>{masteredCards}</Text>
+                <Text style={styles.subtitle}>cards mastered</Text>
+              </View>
+            </View>
+            <PieChart
+              style={{ marginTop: 10 }}
+              data={cardMastery}
+              width={340}
+              height={235}
+              chartConfig={{
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              }}
+              accessor={'cards'}
+              backgroundColor={'transparent'}
+              paddingLeft="10"
+            />
 
-          {/* <LineChart
-            data={data}
-            width={340}
-            height={220}
-            chartConfig={chartConfig}
-          /> */}
-        </View>
+            <BarChart
+              style={{ marginTop: 10, backgroundColor: 'transparent' }}
+              data={questionTypes}
+              width={340}
+              height={250}
+              yAxisLabel=""
+              chartConfig={{
+                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                decimalPlaces: 0,
+                backgroundColor: 'white',
+                backgroundGradientFrom: 'white',
+                backgroundGradientFromOpacity: 0,
+                backgroundGradientTo: 'transparent',
+                backgroundGradientToOpacity: 0,
+              }}
+              yAxisSuffix="%"
+            />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );

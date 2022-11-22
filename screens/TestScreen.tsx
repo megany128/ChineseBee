@@ -11,7 +11,7 @@ import {
 import Modal from 'react-native-modal';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
-import { ref, update } from 'firebase/database';
+import { ref, update, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import * as Progress from 'react-native-progress';
 import { Input } from 'react-native-elements';
@@ -80,6 +80,30 @@ export default function TestScreen({ route, navigation }: any) {
   //     setTimeout(() => hideModal(cards[cardNum]), 1500);
   //   }
   // });
+
+  useEffect(() => {
+    return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
+      let data = querySnapShot.val() || [];
+      let user = { ...data };
+      correctReadingETOC.current = user.correctReadingETOC;
+      totalReadingETOC.current = user.totalReadingETOC;
+
+      correctReadingCTOE.current = user.correctReadingCTOE;
+      totalReadingCTOE.current = user.totalReadingCTOE;
+
+      correctListeningCTOC.current = user.correctListeningCTOC;
+      totalListeningCTOC.current = user.totalListeningCTOC;
+
+      correctListeningCTOE.current = user.correctListeningCTOE;
+      totalListeningCTOE.current = user.totalListeningCTOE;
+
+      correctTypingETOC.current = user.correctTypingETOC;
+      totalTypingETOC.current = user.totalTypingETOC;
+
+      correctHandwritingETOC.current = user.correctHandwritingETOC;
+      totalHandwritingETOC.current = user.totalHandwritingETOC;
+    });
+  });
 
   // gets cards from database when screen loads and creates array of cards to revise
   useEffect(() => {
@@ -277,18 +301,38 @@ export default function TestScreen({ route, navigation }: any) {
                   case 'ReadingETOC':
                     correctReadingETOC.current += 1;
                     totalReadingETOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctReadingETOC: correctReadingETOC.current,
+                      totalReadingETOC: totalReadingETOC.current,
+                    });
                     break;
                   case 'ReadingCTOE':
                     correctReadingCTOE.current += 1;
                     totalReadingCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctReadingCTOE: correctReadingCTOE.current,
+                      totalReadingCTOE: totalReadingCTOE.current,
+                    });
                     break;
                   case 'ListeningCTOC':
                     correctListeningCTOC.current += 1;
                     totalListeningCTOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctListeningCTOC: correctListeningCTOC.current,
+                      totalListeningCTOC: totalListeningCTOC.current,
+                    });
                     break;
                   case 'ListeningCTOE':
                     correctListeningCTOE.current += 1;
                     totalListeningCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctListeningCTOE: correctListeningCTOE.current,
+                      totalListeningCTOE: totalListeningCTOE.current,
+                    });
                     break;
                   default:
                     break;
@@ -308,15 +352,31 @@ export default function TestScreen({ route, navigation }: any) {
                 switch (cardType) {
                   case 'ReadingETOC':
                     totalReadingETOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalReadingETOC: totalReadingETOC.current,
+                    });
                     break;
                   case 'ReadingCTOE':
                     totalReadingCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalReadingCTOE: totalReadingCTOE.current,
+                    });
                     break;
                   case 'ListeningCTOC':
                     totalListeningCTOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalListeningCTOC: totalListeningCTOC.current,
+                    });
                     break;
                   case 'ListeningCTOE':
                     totalListeningCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalListeningCTOE: totalListeningCTOE.current,
+                    });
                     break;
                   default:
                     break;
@@ -402,8 +462,14 @@ export default function TestScreen({ route, navigation }: any) {
             let mistakes = JSON.parse(event.nativeEvent.data);
             if (mistakes < 3) {
               correctHandwritingETOC.current += 1;
+              update(ref(db, '/students/' + auth.currentUser?.uid), {
+                correctHandwritingETOC: totalHandwritingETOC.current,
+              });
             }
             totalHandwritingETOC.current += 1;
+            update(ref(db, '/students/' + auth.currentUser?.uid), {
+              totalHandwritingETOC: totalHandwritingETOC.current,
+            });
           }}
         />
       </View>
@@ -604,10 +670,19 @@ export default function TestScreen({ route, navigation }: any) {
               onSubmitEditing={() => {
                 value.typingAnswer === cards[cardNum]['chinese']
                   ? ((correct.current = true),
-                    (correctHandwritingETOC.current += 1),
+                    (correctTypingETOC.current += 1),
+                    (totalTypingETOC.current += 1),
+                    setModalVisible(true),
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctTypingETOC: correctTypingETOC.current,
+                      totalTypingETOC: totalTypingETOC.current,
+                    }))
+                  : ((correct.current = false),
                     (totalHandwritingETOC.current += 1),
-                    setModalVisible(true))
-                  : ((correct.current = false), (totalHandwritingETOC.current += 1), setModalVisible(true));
+                    setModalVisible(true),
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalTypingETOC: totalTypingETOC.current,
+                    }));
               }}
             />
           </View>

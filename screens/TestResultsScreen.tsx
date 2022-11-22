@@ -103,9 +103,7 @@ export default function TestResultsScreen({ route, navigation }: any) {
                       {cardItem['tag']}
                     </Text>
                   </TouchableOpacity>
-                ) : (
-                  null
-                )}
+                ) : null}
               </View>
             </View>
           </View>

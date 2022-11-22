@@ -62,10 +62,12 @@ export default function CardsScreen({ route, navigation }: any) {
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TouchableOpacity onPress={() => {
+                <TouchableOpacity
+                  onPress={() => {
                     setStarred(!starred);
                     updateStarred(cardItem);
-                  }}>
+                  }}
+                >
                   <Icon
                     name={starred ? 'star' : 'staro'}
                     size={25}
@@ -82,9 +84,7 @@ export default function CardsScreen({ route, navigation }: any) {
                       {cardItem['tag']}
                     </Text>
                   </TouchableOpacity>
-                ) : (
-                  null
-                )}
+                ) : null}
               </View>
             </View>
           </View>

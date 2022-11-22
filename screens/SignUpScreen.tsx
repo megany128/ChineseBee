@@ -59,6 +59,24 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
         set(ref(db, '/students/' + data.user.uid), {
           name: value.name.trim(),
           uid: data.user.uid,
+
+          correctReadingETOC: 0,
+          totalReadingETOC: 0,
+
+          correctReadingCTOE: 0,
+          totalReadingCTOE: 0,
+
+          correctListeningCTOC: 0,
+          totalListeningCTOC: 0,
+
+          correctListeningCTOE: 0,
+          totalListeningCTOE: 0,
+
+          correctTypingETOC: 0,
+          totalTypingETOC: 0,
+
+          correctHandwritingETOC: 0,
+          totalHandwritingETOC: 0,
         });
       })
       .catch((error) => {
