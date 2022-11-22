@@ -26,6 +26,7 @@ import Icon3 from 'react-native-vector-icons/FontAwesome';
 
 var pinyin = require('chinese-to-pinyin');
 
+// TODO: update card correct + total numbers
 moment().format();
 export default function TestScreen({ route, navigation }: any) {
   // initialises current user & auth
@@ -128,24 +129,6 @@ export default function TestScreen({ route, navigation }: any) {
       return (
         <View style={{ flex: 1 }}>
           <Question key={cards[cardNum]} card={cards[cardNum]} />
-
-          {/* {typingQuestion && 
-            <Input
-            inputContainerStyle={styles.inputStyle}
-            containerStyle={styles.control}
-            value={value.typingAnswer}
-            onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
-            style={styles.inputText}
-            autoFocus={true}
-            blurOnSubmit={true}
-            autoCompleteType=""
-            onSubmitEditing={() => {
-              value.typingAnswer === cards[cardNum]['chinese']
-                ? ((correct.current = true), setModalVisible(true))
-                : ((correct.current = false), setModalVisible(true));
-            }}
-          />
-          } */}
         </View>
       );
     }
@@ -170,7 +153,27 @@ export default function TestScreen({ route, navigation }: any) {
         </View>
         <View style={{ marginTop: 30 }}>
           <Text style={{ textAlign: 'center', fontSize: 36, fontWeight: '700' }}>good job!</Text>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              navigation.navigate('TestResultsScreen', {
+                correctCards: correctCards.current,
+                incorrectCards: incorrectCards.current,
+                correctReadingETOC: correctReadingETOC.current,
+                totalReadingETOC: totalReadingETOC.current,
+                correctReadingCTOE: correctReadingCTOE.current,
+                totalReadingCTOE: totalReadingCTOE.current,
+                correctListeningCTOC: correctListeningCTOC.current,
+                totalListeningCTOC: totalListeningCTOC.current,
+                correctListeningCTOE: correctListeningCTOE.current,
+                totalListeningCTOE: totalListeningCTOE.current,
+                correctTypingETOC: correctTypingETOC.current,
+                totalTypingETOC: totalTypingETOC.current,
+                correctHandwritingETOC: correctHandwritingETOC.current,
+                totalHandwritingETOC: totalHandwritingETOC.current,
+              })
+            }
+          >
             <Text style={styles.buttonText}>RESULTS →</Text>
           </TouchableOpacity>
         </View>
@@ -182,7 +185,7 @@ export default function TestScreen({ route, navigation }: any) {
     newQuestion.current = true;
   }, []);
 
-  const generateRandomAnswers = (type: string, card: any) => {
+  const generateRandomAnswers = (type: string, card: any, cardType: string) => {
     // if it's a new question, generate new answers
     if (newQuestion.current) {
       // generates correct answer option (1 - 4)
@@ -192,6 +195,7 @@ export default function TestScreen({ route, navigation }: any) {
       // generates random cards for wrong answers
       let i = 0;
       for (i; i < 3; i++) {
+        console.log('allCards.length:', allCards.length);
         // for the first wrong answer, keeps on generating a random number until it does not share an english/chinese
         // translation with the correct answer
         if (i === 0) {
@@ -271,6 +275,27 @@ export default function TestScreen({ route, navigation }: any) {
                 console.log('correct');
                 correct.current = true;
                 setModalVisible(true);
+
+                switch (cardType) {
+                  case 'ReadingETOC':
+                    correctReadingETOC.current += 1;
+                    totalReadingETOC.current += 1;
+                    break;
+                  case 'ReadingCTOE':
+                    correctReadingCTOE.current += 1;
+                    totalReadingCTOE.current += 1;
+                    break;
+                  case 'ListeningCTOC':
+                    correctListeningCTOC.current += 1;
+                    totalListeningCTOC.current += 1;
+                    break;
+                  case 'ListeningCTOE':
+                    correctListeningCTOE.current += 1;
+                    totalListeningCTOE.current += 1;
+                    break;
+                  default:
+                    break;
+                }
               }}
             >
               <Text style={styles.answerChoice}>{type === 'english' ? card.english : card.chinese}</Text>
@@ -278,7 +303,28 @@ export default function TestScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={styles.answerChoiceBox}
-              onPress={() => (console.log('wrong'), (correct.current = false), setModalVisible(true))}
+              onPress={() => {
+                console.log('wrong');
+                correct.current = false;
+                setModalVisible(true);
+
+                switch (cardType) {
+                  case 'ReadingETOC':
+                    totalReadingETOC.current += 1;
+                    break;
+                  case 'ReadingCTOE':
+                    totalReadingCTOE.current += 1;
+                    break;
+                  case 'ListeningCTOC':
+                    totalListeningCTOC.current += 1;
+                    break;
+                  case 'ListeningCTOE':
+                    totalListeningCTOE.current += 1;
+                    break;
+                  default:
+                    break;
+                }
+              }}
             >
               <Text style={styles.answerChoice}>
                 {j >= correctAnswerOption.current ? answers.current![j - 1][type] : answers.current![j][type]}
@@ -288,7 +334,7 @@ export default function TestScreen({ route, navigation }: any) {
         </View>
       ));
     } else {
-      return <Text>NA</Text>;
+      return null;
     }
   };
 
@@ -356,6 +402,11 @@ export default function TestScreen({ route, navigation }: any) {
           injectedJavaScript={INJECTED_JAVASCRIPT}
           onMessage={(event) => {
             console.log('number of mistakes: ' + event.nativeEvent.data);
+            let mistakes = JSON.parse(event.nativeEvent.data);
+            if (mistakes < 3) {
+              correctHandwritingETOC.current += 1;
+            }
+            totalHandwritingETOC.current += 1;
           }}
         />
       </View>
@@ -400,7 +451,7 @@ export default function TestScreen({ route, navigation }: any) {
         <View style={{ marginTop: 100 }}>
           <Text style={styles.newCard}>{card.card.chinese}</Text>
           <Text style={styles.instructions}>Chinese → English</Text>
-          <View style={styles.answers}>{generateRandomAnswers('english', card.card)}</View>
+          <View style={styles.answers}>{generateRandomAnswers('english', card.card, 'ReadingCTOE')}</View>
         </View>
       </View>
     );
@@ -422,7 +473,7 @@ export default function TestScreen({ route, navigation }: any) {
         <View style={{ marginTop: 100 }}>
           <Text style={styles.newCard}>{card.card.english}</Text>
           <Text style={styles.instructions}>English → Chinese</Text>
-          <View style={styles.answers}>{generateRandomAnswers('chinese', card.card)}</View>
+          <View style={styles.answers}>{generateRandomAnswers('chinese', card.card, 'ReadingETOC')}</View>
         </View>
       </View>
     );
@@ -459,7 +510,9 @@ export default function TestScreen({ route, navigation }: any) {
             <Icon3 name="volume-up" size={60} color="white" />
           </TouchableOpacity>
           <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → Chinese</Text>
-          <View style={[styles.answers, { marginTop: 20 }]}>{generateRandomAnswers('chinese', card.card)}</View>
+          <View style={[styles.answers, { marginTop: 20 }]}>
+            {generateRandomAnswers('chinese', card.card, 'ListeningCTOC')}
+          </View>
         </View>
       </View>
     );
@@ -493,7 +546,9 @@ export default function TestScreen({ route, navigation }: any) {
             <Icon3 name="volume-up" size={60} color="white" />
           </TouchableOpacity>
           <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → English</Text>
-          <View style={[styles.answers, { marginTop: 20 }]}>{generateRandomAnswers('english', card.card)}</View>
+          <View style={[styles.answers, { marginTop: 20 }]}>
+            {generateRandomAnswers('english', card.card, 'ListeningCTOE')}
+          </View>
         </View>
       </View>
     );
@@ -551,8 +606,11 @@ export default function TestScreen({ route, navigation }: any) {
               autoCompleteType=""
               onSubmitEditing={() => {
                 value.typingAnswer === cards[cardNum]['chinese']
-                  ? ((correct.current = true), setModalVisible(true))
-                  : ((correct.current = false), setModalVisible(true));
+                  ? ((correct.current = true),
+                    (correctHandwritingETOC.current += 1),
+                    (totalHandwritingETOC.current += 1),
+                    setModalVisible(true))
+                  : ((correct.current = false), (totalHandwritingETOC.current += 1), setModalVisible(true));
               }}
             />
           </View>

@@ -54,7 +54,7 @@ export default function StatsScreen({ route, navigation }: any) {
         return obj.timesCorrect / obj.timesReviewed > 0.7;
       });
 
-      setVocabSize(allCards.length());
+      setVocabSize(allCards.length);
       setMastered(masteredCards.length);
     });
   }, []);

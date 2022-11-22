@@ -26,6 +26,7 @@ export type RootStackParamList = {
   ProfileScreen: undefined;
   VerifyAccountScreen: undefined;
   TestScreen: undefined;
+  TestResultsScreen: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<

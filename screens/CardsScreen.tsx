@@ -282,8 +282,6 @@ export default function CardsScreen({ route, navigation }: any) {
           <Icon name={starredFilter ? 'star' : 'staro'} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
         </TouchableOpacity>
       </View>
-      {/* TODO: add swipe to delete */}
-      {/* TODO: add tag screen */}
       <FlatList
         style={styles.cardList}
         contentContainerStyle={styles.contentContainerStyle}
