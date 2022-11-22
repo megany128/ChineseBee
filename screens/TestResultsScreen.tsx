@@ -104,7 +104,7 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     </Text>
                   </TouchableOpacity>
                 ) : (
-                  <View></View>
+                  null
                 )}
               </View>
             </View>

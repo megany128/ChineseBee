@@ -11,23 +11,20 @@ import {
 import Modal from 'react-native-modal';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, update } from 'firebase/database';
 import { db } from '../config/firebase';
-import moment from 'moment';
 import * as Progress from 'react-native-progress';
 import { Input } from 'react-native-elements';
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
 
-import Icon from 'react-native-vector-icons/Ionicons';
-import Icon2 from 'react-native-vector-icons/Entypo';
-import Icon3 from 'react-native-vector-icons/FontAwesome';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 var pinyin = require('chinese-to-pinyin');
 
-// TODO: update card correct + total numbers
-moment().format();
 export default function TestScreen({ route, navigation }: any) {
   // initialises current user & auth
   const { user } = useAuthentication();
@@ -507,7 +504,7 @@ export default function TestScreen({ route, navigation }: any) {
             }}
             onPress={() => Speech.speak(card.card.chinese, { language: 'zh-CN' })}
           >
-            <Icon3 name="volume-up" size={60} color="white" />
+            <FontAwesome name="volume-up" size={60} color="white" />
           </TouchableOpacity>
           <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → Chinese</Text>
           <View style={[styles.answers, { marginTop: 20 }]}>
@@ -543,7 +540,7 @@ export default function TestScreen({ route, navigation }: any) {
             }}
             onPress={() => Speech.speak(card.card.chinese, { language: 'zh-CN' })}
           >
-            <Icon3 name="volume-up" size={60} color="white" />
+            <FontAwesome name="volume-up" size={60} color="white" />
           </TouchableOpacity>
           <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → English</Text>
           <View style={[styles.answers, { marginTop: 20 }]}>
@@ -689,7 +686,7 @@ export default function TestScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => exitTest()}>
-          <Icon name="md-close-outline" size={40} />
+          <Ionicons name="md-close-outline" size={40} />
         </TouchableOpacity>
         <Progress.Bar
           progress={progress}
@@ -717,7 +714,7 @@ export default function TestScreen({ route, navigation }: any) {
                   alignItems: 'center',
                 }}
               >
-                <Icon2 name="check" size={35} color="#FEB1C3" />
+                <Entypo name="check" size={35} color="#FEB1C3" />
               </View>
               <View style={{ flexDirection: 'column', marginLeft: 20 }}>
                 <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{cards[cardNum]['chinese']}</Text>
@@ -740,7 +737,7 @@ export default function TestScreen({ route, navigation }: any) {
                   alignItems: 'center',
                 }}
               >
-                <Icon2 name="cross" size={35} color="#94BAF4" />
+                <Entypo name="cross" size={35} color="#94BAF4" />
               </View>
               <View style={{ flexDirection: 'column', marginLeft: 20 }}>
                 <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{cards[cardNum]['chinese']}</Text>

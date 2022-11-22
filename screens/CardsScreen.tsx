@@ -40,6 +40,7 @@ export default function CardsScreen({ route, navigation }: any) {
 
   // creates a Card component
   const Card = ({ cardItem, id }: any) => {
+    const [starred, setStarred] = useState(cardItem.starred);
     return (
       <View>
         <Pressable onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
@@ -61,9 +62,12 @@ export default function CardsScreen({ route, navigation }: any) {
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TouchableOpacity onPress={() => updateStarred(cardItem)}>
+                <TouchableOpacity onPress={() => {
+                    setStarred(!starred);
+                    updateStarred(cardItem);
+                  }}>
                   <Icon
-                    name={cardItem['starred'] ? 'star' : 'staro'}
+                    name={starred ? 'star' : 'staro'}
                     size={25}
                     color="#FFCB44"
                     style={{ marginTop: 8, marginRight: 10 }}
@@ -79,7 +83,7 @@ export default function CardsScreen({ route, navigation }: any) {
                     </Text>
                   </TouchableOpacity>
                 ) : (
-                  <View></View>
+                  null
                 )}
               </View>
             </View>
@@ -90,13 +94,14 @@ export default function CardsScreen({ route, navigation }: any) {
   };
 
   // TODO: applying starred doesn't happen immediately
+  // TODO: add idiom property and display visually. also add test option for idioms only
   // toggles a card's starred status
   const updateStarred = (cardItem: any) => {
     console.log(cardItem['starred']);
     console.log(starredFilter);
     if (cardItem['starred'] && starredFilter === true) {
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
-        starred: false,
+        starred: !cardItem['starred'],
       });
       getStarred(starredFilter);
       console.log('filtered cards:', filteredCards);
@@ -108,12 +113,12 @@ export default function CardsScreen({ route, navigation }: any) {
       );
     } else if (cardItem['starred']) {
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
-        starred: false,
+        starred: !cardItem['starred'],
       });
     } else {
       console.log('updating');
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
-        starred: true,
+        starred: !cardItem['starred'],
       });
       getStarred(starredFilter);
     }
