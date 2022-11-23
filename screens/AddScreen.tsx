@@ -11,13 +11,13 @@ import {
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
 import { getAuth, signOut } from 'firebase/auth';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { RootStackScreenProps } from '../types';
 import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
 import { db, storage } from '../config/firebase';
 import moment from 'moment';
 import Modal from 'react-native-modal';
-import Icon2 from 'react-native-vector-icons/Entypo';
+import Entypo from 'react-native-vector-icons/Entypo';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
@@ -99,6 +99,8 @@ export default function AddScreen({ route, navigation }: any) {
         timesCorrect: 0,
         timesReviewed: 0,
         dueDate: 0,
+        // TODO: edit
+        idiom: false,
       });
 
       // adds the card's key as a field
@@ -120,7 +122,7 @@ export default function AddScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="chevron-back" size={40} />
+          <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
         <Text style={styles.header}>ADD CARD</Text>
       </View>
@@ -198,7 +200,7 @@ export default function AddScreen({ route, navigation }: any) {
                   alignItems: 'center',
                 }}
               >
-                <Icon2 name="check" size={35} color="#FFCB44" />
+                <Entypo name="check" size={35} color="#FFCB44" />
               </View>
               <Text
                 style={{ color: 'white', fontWeight: '600', fontSize: 18, textAlignVertical: 'center', marginLeft: 20 }}

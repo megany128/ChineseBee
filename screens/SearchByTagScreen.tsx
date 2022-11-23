@@ -410,10 +410,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FEB1C3',
     borderRadius: 20,
-    width: 55,
     height: 25,
     marginTop: 10,
     marginRight: 10,
+    paddingHorizontal: 15,
   },
   searchBar: {
     height: 40,

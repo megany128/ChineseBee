@@ -5,7 +5,6 @@ import {
   Text,
   View,
   RefreshControl,
-  Pressable,
   TextInput,
   TouchableOpacity,
   FlatList,
@@ -43,7 +42,7 @@ export default function CardsScreen({ route, navigation }: any) {
     const [starred, setStarred] = useState(cardItem.starred);
     return (
       <View>
-        <Pressable onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
+        <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -88,7 +87,7 @@ export default function CardsScreen({ route, navigation }: any) {
               </View>
             </View>
           </View>
-        </Pressable>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -265,7 +264,7 @@ export default function CardsScreen({ route, navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
-        <Text style={styles.header}>CARDS</Text>
+        <Text style={styles.header}>VOCAB LIST</Text>
       </View>
       <View style={{ backgroundColor: 'transparent', zIndex: 1000, flexDirection: 'row' }}>
         <TextInput
@@ -322,10 +321,9 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 32,
     fontWeight: '700',
-    marginLeft: 20,
   },
   navigation: {
-    marginLeft: 20,
+    marginLeft: 30,
     marginTop: 20,
     flexDirection: 'row',
     backgroundColor: 'transparent',
@@ -399,7 +397,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FEB1C3',
     borderRadius: 20,
-    width: 55,
+    paddingHorizontal: 15,
     height: 25,
     marginTop: 10,
     marginRight: 10,

@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FEB1C3',
     borderRadius: 20,
-    width: 55,
+    paddingHorizontal: 15,
     height: 25,
     marginTop: 10,
     marginRight: 10,

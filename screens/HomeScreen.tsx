@@ -349,8 +349,8 @@ export default function HomeScreen({ route, navigation }: any) {
                 borderRadius: 50,
                 marginHorizontal: 10,
               }}
+              onPress={() => navigation.navigate('SharedDecksScreen')}
             >
-              {/* TODO: shared cards */}
               <MaterialCommunityIcons name="cards-outline" size={60} color="#FFFFFF" />
             </TouchableOpacity>
           </View>

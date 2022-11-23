@@ -45,6 +45,9 @@ export default function CardInfoScreen({ route, navigation }: any) {
     }
   };
 
+  // TODO: in route.params, add myCard true vs false. if myCard, show things like mastery, delete, starred etc
+  // but if not, give option to add card
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={{ justifyContent: 'flex-start', backgroundColor: 'transparent' }}>
@@ -141,10 +144,6 @@ export default function CardInfoScreen({ route, navigation }: any) {
             </TouchableOpacity>
           </View>
         </View>
-        {/* options: edit, delete, view stroke animation, view mastery level
-        incl dictionary definition
-        view similar words: new cards using hanzi.getExamples
-        can add these cards */}
       </View>
     </SafeAreaView>
   );
@@ -187,9 +186,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FEB1C3',
     borderRadius: 20,
-    width: 55,
     height: 25,
     marginTop: 10,
     marginLeft: 20,
+    paddingHorizontal: 15,
   },
 });

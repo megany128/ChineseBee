@@ -921,9 +921,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FEB1C3',
     borderRadius: 20,
-    width: 55,
     height: 25,
     marginLeft: 10,
+    paddingHorizontal: 15,
   },
   newCardIndicator: {
     justifyContent: 'center',

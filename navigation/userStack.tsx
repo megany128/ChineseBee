@@ -24,6 +24,8 @@ import ProfileScreen from '../screens/ProfileScreen';
 import VerifyAccountScreen from '../screens/VerifyAccountScreen';
 import TestScreen from '../screens/TestScreen';
 import TestResultsScreen from '../screens/TestResultsScreen';
+import SharedDecksScreen from '../screens/SharedDecksScreen';
+import DeckInfoScreen from '../screens/DeckInfoScreen';
 
 const Stack = createStackNavigator();
 
@@ -45,7 +47,7 @@ function BottomTabNavigator() {
         name="Cards"
         component={CardsScreen}
         options={({ navigation }: RootTabScreenProps<'Cards'>) => ({
-          title: 'Cards',
+          title: 'Vocab List',
           tabBarIcon: ({ color }) => <TabBarIcon name="cards" color={color} />,
           headerRight: () => (
             <Pressable
@@ -103,6 +105,8 @@ export default function UserStack() {
         <Stack.Screen name="VerifyAccountScreen" component={VerifyAccountScreen} />
         <Stack.Screen name="TestScreen" component={TestScreen} />
         <Stack.Screen name="TestResultsScreen" component={TestResultsScreen} />
+        <Stack.Screen name="SharedDecksScreen" component={SharedDecksScreen} />
+        <Stack.Screen name="DeckInfoScreen" component={DeckInfoScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

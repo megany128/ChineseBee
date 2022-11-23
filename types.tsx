@@ -27,6 +27,8 @@ export type RootStackParamList = {
   VerifyAccountScreen: undefined;
   TestScreen: undefined;
   TestResultsScreen: undefined;
+  SharedDecksScreen: undefined;
+  DeckInfoScreen: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<
