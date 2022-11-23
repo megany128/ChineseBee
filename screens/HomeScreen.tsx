@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { db } from '../config/firebase';
-import { push, ref, set, onValue, update } from 'firebase/database';
+import { query, ref, set, onValue, update } from 'firebase/database';
 import * as Progress from 'react-native-progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlipCard from 'react-native-flip-card';
@@ -34,6 +34,9 @@ export default function HomeScreen({ route, navigation }: any) {
 
   const [allCards, setAllCards]: any = useState([]);
 
+  const [WOTDCards, setWOTDCards]: any = useState([]);
+  const [IOTDCards, setIOTDCards]: any = useState([]);
+
   const todaysRevision = useRef();
 
   // TODO: modal to set this
@@ -54,12 +57,23 @@ export default function HomeScreen({ route, navigation }: any) {
 
   const generateTodaysRevision = () => {
     console.log('\nGENERATING TODAYS REVISION...\n');
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
+    onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
 
-      let allCards: any = Object.values(cardItems);
-      setAllCards(Object.values(cardItems));
+      let allCardsTemp: any = Object.values(cardItems);
+      setAllCards(allCardsTemp);
+      setWOTDCards(
+        allCardsTemp.filter((obj: any) => {
+          return !obj.idiom;
+        })
+      );
+
+      setIOTDCards(
+        allCardsTemp.filter((obj: any) => {
+          return obj.idiom;
+        })
+      );
 
       // gets cards that are not new but are due this session
       // TODO: fix bug - sometimes one card is there twice
@@ -120,6 +134,30 @@ export default function HomeScreen({ route, navigation }: any) {
             (todaysRevisionTemp[i].timesReviewed === 0 ? 'new' : 'revision')
         );
       }
+    });
+
+    const data = query(ref(db, '/sharedCards'));
+    return onValue(data, (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let deckItems = { ...data };
+
+      // uses state to set cards to the data just retrieved
+      let decks: any = Object.values(deckItems);
+
+      for (let deck = 0; deck < decks.length; deck++) {
+        if (decks[deck].cards) {
+          let cards: any = Object.values(decks[deck].cards);
+          for (let card = 0; card < cards.length; card++) {
+            if (cards[card].idiom) {
+              setIOTDCards([...IOTDCards, cards[card]]);
+            } else {
+              setWOTDCards([...WOTDCards, cards[card]]);
+            }
+          }
+        }
+      }
+      setIOTDCards(shuffleCards(IOTDCards));
+      setWOTDCards(shuffleCards(WOTDCards));
     });
   };
 
@@ -254,29 +292,37 @@ export default function HomeScreen({ route, navigation }: any) {
               width: 380,
               justifyContent: 'space-between',
               alignSelf: 'center',
-              marginVertical: 10,
             }}
           >
             <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
-              {/* Face Side */}
-              {/* TODO: add indicator 'word of the day' and 'idiom of the day'*/}
-              <View style={styles.wordOfTheDay}>
-                <Text style={styles.wordOfTheDayText}>中文</Text>
+              <View style={styles.card}>
+                <Text style={styles.WOTDChn}>{WOTDCards[0].chinese}</Text>
+                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
+                  WORD OF THE DAY
+                </Text>
               </View>
-              {/* Back Side */}
-              <View style={styles.wordOfTheDay}>
-                <Text style={styles.wordOfTheDayText}>Chinese</Text>
+
+              <View style={styles.card}>
+                <Text style={styles.WOTDEng}>{WOTDCards[0].english}</Text>
+                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
+                  WORD OF THE DAY
+                </Text>
               </View>
             </FlipCard>
 
             <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
-              {/* Face Side */}
-              <View style={styles.wordOfTheDay}>
-                <Text style={styles.idiomOfTheDayText}>四脚{'\n'}朝天</Text>
+              <View style={styles.card}>
+                <Text style={styles.IOTDChn}>{IOTDCards[0].chinese}</Text>
+                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
+                  IDIOM OF THE DAY
+                </Text>
               </View>
-              {/* Back Side */}
-              <View style={styles.wordOfTheDay}>
-                <Text style={styles.idiomOfTheDayText}>Chinese</Text>
+
+              <View style={styles.card}>
+                <Text style={styles.IOTDEng}>{IOTDCards[0].english}</Text>
+                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
+                  IDIOM OF THE DAY
+                </Text>
               </View>
             </FlipCard>
           </View>
@@ -390,28 +436,46 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFCB44',
     alignSelf: 'center',
   },
-  wordOfTheDay: {
+  card: {
     width: 160,
-    height: 160,
+    height: 190,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#C4C4C4',
     justifyContent: 'center',
     alignSelf: 'center',
   },
-  wordOfTheDayText: {
+  WOTDEng: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FEB1C3',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    marginHorizontal: 10,
+  },
+  WOTDChn: {
     fontSize: 48,
     fontWeight: '800',
     color: '#FEB1C3',
     textAlign: 'center',
     textAlignVertical: 'center',
+    marginHorizontal: 10,
   },
-  idiomOfTheDayText: {
-    fontSize: 36,
+  IOTDEng: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#94BAF4',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    marginHorizontal: 10,
+  },
+  IOTDChn: {
+    fontSize: 48,
     fontWeight: '800',
     color: '#94BAF4',
     textAlign: 'center',
     textAlignVertical: 'center',
+    marginHorizontal: 10,
   },
   revisionText: {
     fontSize: 40,
@@ -430,7 +494,6 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 20,
     marginTop: 20,
-    marginBottom: 30,
     zIndex: 0,
     backgroundColor: 'white',
     borderWidth: 1,
@@ -460,5 +523,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 20,
     marginLeft: 20,
+    marginTop: 20,
   },
 });
