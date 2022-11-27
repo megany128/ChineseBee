@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -15,6 +15,7 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
 import { ref, onValue, orderByChild, query, update } from 'firebase/database';
 import { db } from '../config/firebase';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 var pinyin = require('chinese-to-pinyin');
 
@@ -34,6 +35,11 @@ export default function CardsScreen({ route, navigation }: any) {
 
   const [starredFilter, setStarredFilter] = useState(false);
   const [sortStyle, setSortStyle] = useState(0);
+
+  const userType = useRef('');
+  const classCode = useRef('');
+  const [classDecks, setClassDecks] = useState([]);
+  const [filteredClassDecks, setFilteredClassDecks] = useState([]);
 
   // creates a Card component
   const Card = ({ cardItem, id }: any) => {
@@ -144,7 +150,23 @@ export default function CardsScreen({ route, navigation }: any) {
 
   // gets cards from database when screen loads
   useEffect(() => {
-    loadNewData();
+    // TODO: fix
+    return onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
+      let data = querySnapShot.val() || [];
+      let user = { ...data };
+      userType.current = user.type;
+      classCode.current = user.classCode;
+
+      if (user.type === 'student') {
+        loadNewData();
+      } else {
+        // teacher stuff here
+        let decks: any = Object.values(user.decks);
+        console.log('decks:', decks);
+        setClassDecks(decks);
+        setFilteredClassDecks(decks);
+      }
+    });
   }, []);
 
   // searches Cards using search term and sets filteredCards to search results
@@ -161,6 +183,24 @@ export default function CardsScreen({ route, navigation }: any) {
           obj.chinese.includes(text) ||
           pinyin(obj.chinese, { removeTone: true }).toLowerCase().includes(text) ||
           pinyin(obj.chinese, { removeTone: true, removeSpace: true }).toLowerCase().includes(text)
+        );
+      })
+    );
+  };
+
+  // searches Cards using search term and sets filteredCards to search results
+  const searchDecks = (text: string) => {
+    // sets the search term to the current search box input
+    setSearch(text);
+
+    // applies the search: sets filteredCards to Cards in cardArray that contain the search term
+    // since Card is an object, checks if any of the english, chinese, and pinyin properties include the search term
+    setFilteredClassDecks(
+      classDecks.filter((obj: { name: string }) => {
+        return (
+          obj.name.toLowerCase().includes(text) ||
+          pinyin(obj.name, { removeTone: true }).toLowerCase().includes(text) ||
+          pinyin(obj.name, { removeTone: true, removeSpace: true }).toLowerCase().includes(text)
         );
       })
     );
@@ -260,50 +300,106 @@ export default function CardsScreen({ route, navigation }: any) {
     }
   };
 
+  // creates a Student component
+  const Deck = ({ deckItem }: any) => {
+    return (
+      <View style={{ backgroundColor: 'transparent' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('StudentInfoScreen', deckItem)}>
+          <View style={styles.cardContainer}>
+            <Text style={styles.deckName}>{deckItem['name']}</Text>
+            <View
+              style={{
+                width: 270,
+                height: 100,
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                alignContent: 'flex-end',
+                flex: 1,
+                marginRight: 10,
+                backgroundColor: 'transparent',
+              }}
+            >
+              <Ionicons name="chevron-forward" size={40} color="#C4C4C4" />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
-        <Text style={styles.header}>CARDS</Text>
+        <Text style={styles.header}>{userType.current === 'student' ? 'CARDS' : 'CLASS DECKS'}</Text>
       </View>
-      <View style={{ backgroundColor: 'transparent', zIndex: 1000, flexDirection: 'row' }}>
-        <TextInput
-          style={styles.searchBar}
-          value={search}
-          placeholder="search"
-          underlineColorAndroid="transparent"
-          onChangeText={(text) => searchCards(text)}
-          textAlign="left"
-          placeholderTextColor="#C4C4C4"
-          autoCapitalize="none"
-          autoComplete="off"
-          autoCorrect={false}
-        />
-        <TouchableOpacity style={styles.sortButton} onPress={() => applySort()}>
-          <Icon2 name={getSortIcon()} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.starButton} onPress={() => applyStarredFilter()}>
-          <Icon name={starredFilter ? 'star' : 'staro'} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
-        </TouchableOpacity>
-      </View>
-      <FlatList
-        style={styles.cardList}
-        contentContainerStyle={styles.contentContainerStyle}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
-        data={cardKeys}
-        keyExtractor={(item) => item}
-        renderItem={({ item }) => <Card id={item} cardItem={filteredCards[item as keyof typeof cards]} />}
-        ListEmptyComponent={() =>
-          !starredFilter ? (
-            <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No cards yet!</Text>
-          ) : !search ? (
-            <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No favourited cards!</Text>
-          ) : null
-        }
-      />
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen')}>
-        <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
-      </TouchableOpacity>
+      {userType.current === 'student' ? (
+        <View style={{ backgroundColor: 'transparent' }}>
+          <View style={{ backgroundColor: 'transparent', zIndex: 1000, flexDirection: 'row' }}>
+            <TextInput
+              style={styles.searchBar}
+              value={search}
+              placeholder="search"
+              underlineColorAndroid="transparent"
+              onChangeText={(text) => searchCards(text)}
+              textAlign="left"
+              placeholderTextColor="#C4C4C4"
+              autoCapitalize="none"
+              autoComplete="off"
+              autoCorrect={false}
+            />
+            <TouchableOpacity style={styles.sortButton} onPress={() => applySort()}>
+              <Icon2 name={getSortIcon()} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.starButton} onPress={() => applyStarredFilter()}>
+              <Icon name={starredFilter ? 'star' : 'staro'} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            style={styles.cardList}
+            contentContainerStyle={styles.contentContainerStyle}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
+            data={cardKeys}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => <Card id={item} cardItem={filteredCards[item as keyof typeof cards]} />}
+            ListEmptyComponent={() =>
+              !starredFilter ? (
+                <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No cards yet!</Text>
+              ) : !search ? (
+                <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No favourited cards!</Text>
+              ) : null
+            }
+          />
+          <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen')}>
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View>
+          {/* TODO: customise to decks */}
+          <TextInput
+            style={[styles.searchBar, { width: 350 }]}
+            value={search}
+            placeholder="search"
+            underlineColorAndroid="transparent"
+            onChangeText={(text) => searchDecks(text)}
+            textAlign="left"
+            placeholderTextColor="#C4C4C4"
+            autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect={false}
+          />
+          <FlatList
+            style={styles.cardList}
+            contentContainerStyle={[styles.contentContainerStyle, { marginLeft: 10 }]}
+            showsVerticalScrollIndicator={false}
+            data={filteredClassDecks}
+            keyExtractor={(item) => item}
+            renderItem={({ item }: any) => <Deck deckItem={item} />}
+            ListEmptyComponent={() => <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No results...</Text>}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -412,5 +508,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingLeft: 20,
     zIndex: 2,
+  },
+  deckName: {
+    fontWeight: '700',
+    marginLeft: 20,
+    alignSelf: 'center',
+    fontSize: 18,
   },
 });

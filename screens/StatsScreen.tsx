@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, SafeAreaView, Text, View, ScrollView } from 'react-native';
-import { BarChart, PieChart } from 'react-native-chart-kit';
+import { BarChart } from 'react-native-chart-kit';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase/auth';

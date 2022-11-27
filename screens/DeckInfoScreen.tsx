@@ -1,19 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-  RefreshControl,
-  Pressable,
-  TouchableOpacity,
-  FlatList,
-  Alert,
-} from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, Pressable, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
-import { getAuth, signOut } from 'firebase/auth';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import Icon2 from 'react-native-vector-icons/FontAwesome';
+import { getAuth } from 'firebase/auth';
 import Icon3 from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 

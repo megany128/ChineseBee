@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { Text, View } from '../components/Themed';
 import Icon from 'react-native-vector-icons/AntDesign';
-import Icon2 from 'react-native-vector-icons/Feather';
 import { RootTabScreenProps } from '../types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth, signOut } from 'firebase/auth';
@@ -328,7 +327,9 @@ export default function HomeScreen({ route, navigation }: any) {
     setFilteredStudents(
       myStudents.filter((obj: { name: string }) => {
         return (
-          obj.name.toLowerCase().includes(text) || pinyin(obj.name, { removeTone: true }).toLowerCase().includes(text)
+          obj.name.toLowerCase().includes(text) ||
+          pinyin(obj.name, { removeTone: true }).toLowerCase().includes(text) ||
+          pinyin(obj.name, { removeTone: true, removeSpace: true }).toLowerCase().includes(text)
         );
       })
     );
@@ -547,8 +548,7 @@ export default function HomeScreen({ route, navigation }: any) {
             </TouchableOpacity>
           </View>
           <View style={{ backgroundColor: 'transparent', width: 360 }}>
-            <Text style={styles.title}>CLASS CODE</Text>
-            {/* TODO: generate class code */}
+            <Text style={[styles.title, { marginTop: 0 }]}>CLASS CODE</Text>
             <Text style={styles.classCode}>{classCode.current}</Text>
             <Text style={styles.title}>STUDENTS</Text>
             <TextInput
