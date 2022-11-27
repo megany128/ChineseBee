@@ -10,13 +10,11 @@ import {
   FlatList,
 } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
-import { RootTabScreenProps } from '../types';
-import { ref, set, onValue, orderByChild, query, update } from 'firebase/database';
+import { ref, onValue, orderByChild, query, update } from 'firebase/database';
 import { db } from '../config/firebase';
-import { SwipeListView } from 'react-native-swipe-list-view';
 
 var pinyin = require('chinese-to-pinyin');
 
@@ -41,10 +39,10 @@ export default function CardsScreen({ route, navigation }: any) {
   const Card = ({ cardItem, id }: any) => {
     const [starred, setStarred] = useState(cardItem.starred);
     return (
-      <View>
+      <View style={{ backgroundColor: 'transparent' }}>
         <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
           <View style={styles.cardContainer}>
-            <View style={{ flexDirection: 'column' }}>
+            <View style={{ flexDirection: 'column', backgroundColor: 'transparent' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>
               <Text style={styles.pinyin}>{pinyin(cardItem['chinese'])}</Text>
               <Text style={styles.english}>{cardItem['english']}</Text>
@@ -58,6 +56,7 @@ export default function CardsScreen({ route, navigation }: any) {
                 alignContent: 'flex-end',
                 flex: 1,
                 marginRight: 10,
+                backgroundColor: 'transparent',
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -264,7 +263,7 @@ export default function CardsScreen({ route, navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
-        <Text style={styles.header}>VOCAB LIST</Text>
+        <Text style={styles.header}>CARDS</Text>
       </View>
       <View style={{ backgroundColor: 'transparent', zIndex: 1000, flexDirection: 'row' }}>
         <TextInput

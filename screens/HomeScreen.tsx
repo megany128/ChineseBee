@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, StyleSheet, TouchableOpacity, Button, ScrollView } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+  RefreshControl,
+  TextInput,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { Text, View } from '../components/Themed';
 import Icon from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/Feather';
@@ -17,6 +27,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 var isPast = require('date-fns/isPast');
 var format = require('date-fns/format');
+var pinyin = require('chinese-to-pinyin');
 
 const { utcToZonedTime } = require('date-fns-tz');
 
@@ -26,6 +37,7 @@ export default function HomeScreen({ route, navigation }: any) {
   const auth = getAuth();
 
   const [name, setName] = useState(String);
+  const userType = useRef('');
   const [progress, setProgress] = useState(0);
 
   const [cardsStudied, setCardsStudied] = useState(0);
@@ -34,14 +46,20 @@ export default function HomeScreen({ route, navigation }: any) {
 
   const [allCards, setAllCards]: any = useState([]);
 
-  const [WOTDCards, setWOTDCards]: any = useState([]);
-  const [IOTDCards, setIOTDCards]: any = useState([]);
+  const WOTDCards: any = useRef([]);
+  const IOTDCards: any = useRef([]);
 
   const todaysRevision = useRef();
 
   // TODO: modal to set this
   const newCardLimit = 5;
   const reviewLimit = 5;
+
+  const classCode = useRef('');
+  const [myStudents, setMyStudents]: any = useState([]);
+  const [refreshing, setRefreshing] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filteredStudents, setFilteredStudents]: any = useState([]);
 
   // shuffles cards in an array through recursion
   const shuffleCards: any = (array: []) => {
@@ -63,17 +81,13 @@ export default function HomeScreen({ route, navigation }: any) {
 
       let allCardsTemp: any = Object.values(cardItems);
       setAllCards(allCardsTemp);
-      setWOTDCards(
-        allCardsTemp.filter((obj: any) => {
-          return !obj.idiom;
-        })
-      );
+      WOTDCards.current = allCardsTemp.filter((obj: any) => {
+        return !obj.idiom;
+      });
 
-      setIOTDCards(
-        allCardsTemp.filter((obj: any) => {
-          return obj.idiom;
-        })
-      );
+      IOTDCards.current = allCardsTemp.filter((obj: any) => {
+        return obj.idiom;
+      });
 
       // gets cards that are not new but are due this session
       // TODO: fix bug - sometimes one card is there twice
@@ -149,23 +163,26 @@ export default function HomeScreen({ route, navigation }: any) {
           let cards: any = Object.values(decks[deck].cards);
           for (let card = 0; card < cards.length; card++) {
             if (cards[card].idiom) {
-              setIOTDCards([...IOTDCards, cards[card]]);
+              console.log('iotd candidate', cards[card]);
+              IOTDCards.current = [...IOTDCards.current, cards[card]];
             } else {
-              setWOTDCards([...WOTDCards, cards[card]]);
+              console.log('wotd candidate', cards[card]);
+              WOTDCards.current = [...WOTDCards.current, cards[card]];
             }
           }
         }
       }
-      setIOTDCards(shuffleCards(IOTDCards));
-      setWOTDCards(shuffleCards(WOTDCards));
+      IOTDCards.current = shuffleCards(IOTDCards.current);
+      WOTDCards.current = shuffleCards(WOTDCards.current);
     });
   };
 
   // TODO: only generate new cards when last time opened was in the past
   useEffect(() => {
-    generateTodaysRevision();
+    if (userType.current === 'student') generateTodaysRevision();
   }, []);
 
+  // TODO: fix - doesn't reset at midnight
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
@@ -218,22 +235,51 @@ export default function HomeScreen({ route, navigation }: any) {
   };
 
   useEffect(() => {
-    getStats();
-    const willFocusSubscription = navigation.addListener('focus', () => {
-      console.log('getting stats');
+    if (userType.current === 'student') {
       getStats();
+      const willFocusSubscription = navigation.addListener('focus', () => {
+        console.log('getting stats');
+        getStats();
+      });
+
+      return willFocusSubscription;
+    } else {
+      loadNewUserData();
+    }
+  }, []);
+
+  const loadNewUserData = () => {
+    setRefreshing(true);
+    // TODO: change to /teachers
+    onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let user = { ...data };
+      classCode.current = user.classCode;
     });
 
-    return willFocusSubscription;
-  }, []);
+    return onValue(ref(db, '/students/'), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let students = { ...data };
+
+      let allStudents: any = Object.values(students);
+      allStudents = allStudents.filter((student: any) => {
+        return student.classCode === classCode.current;
+      });
+      setMyStudents(allStudents);
+      setFilteredStudents(allStudents);
+      setRefreshing(false);
+    });
+  };
 
   useEffect(() => {
     console.log('use effect');
     console.log(auth.currentUser?.uid);
+    // TODO: set to: if students/uid doesnt work, set to teacher/uid
     return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || [];
-      let name = { ...data };
-      setName(name.name);
+      let user = { ...data };
+      setName(user.name);
+      userType.current = user.type;
 
       // TODO: generate daily review list here instead
 
@@ -242,7 +288,50 @@ export default function HomeScreen({ route, navigation }: any) {
     });
   }, []);
 
-  return (
+  // searches Students using search term and sets filteredCards to search results
+  const searchStudents = (text: string) => {
+    // sets the search term to the current search box input
+    setSearch(text);
+
+    // applies the search: sets filteredCards to Cards in cardArray that contain the search term
+    // since Card is an object, checks if any of the english, chinese, and pinyin properties include the search term
+    setFilteredStudents(
+      myStudents.filter((obj: { name: string }) => {
+        return (
+          obj.name.toLowerCase().includes(text) || pinyin(obj.name, { removeTone: true }).toLowerCase().includes(text)
+        );
+      })
+    );
+  };
+
+  // creates a Student component
+  const Student = ({ studentItem, id }: any) => {
+    return (
+      <View style={{ backgroundColor: 'transparent' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('StudentInfoScreen', studentItem)}>
+          <View style={styles.cardContainer}>
+            <Text style={styles.studentName}>{studentItem['name']}</Text>
+            <View
+              style={{
+                width: 270,
+                height: 100,
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                alignContent: 'flex-end',
+                flex: 1,
+                marginRight: 10,
+                backgroundColor: 'transparent',
+              }}
+            >
+              <Ionicons name="chevron-forward" size={40} color="#C4C4C4" />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  return userType.current === 'student' ? (
     <LinearGradient colors={['rgba(255,203,68,0.2)', 'rgba(255,255,255,0.3)']} style={styles.container}>
       <SafeAreaView>
         <ScrollView>
@@ -296,14 +385,15 @@ export default function HomeScreen({ route, navigation }: any) {
           >
             <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
               <View style={styles.card}>
-                <Text style={styles.WOTDChn}>{WOTDCards[0].chinese}</Text>
+                <Text style={styles.WOTDChn}>{WOTDCards.current[0].chinese}</Text>
                 <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
                   WORD OF THE DAY
                 </Text>
               </View>
 
               <View style={styles.card}>
-                <Text style={styles.WOTDEng}>{WOTDCards[0].english}</Text>
+                <Text style={styles.WOTDEng}>{pinyin(WOTDCards.current[0].chinese)}</Text>
+                <Text style={styles.definition}>{WOTDCards.current[0].english}</Text>
                 <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
                   WORD OF THE DAY
                 </Text>
@@ -312,14 +402,15 @@ export default function HomeScreen({ route, navigation }: any) {
 
             <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
               <View style={styles.card}>
-                <Text style={styles.IOTDChn}>{IOTDCards[0].chinese}</Text>
+                <Text style={styles.IOTDChn}>{IOTDCards.current[0].chinese}</Text>
                 <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
                   IDIOM OF THE DAY
                 </Text>
               </View>
 
               <View style={styles.card}>
-                <Text style={styles.IOTDEng}>{IOTDCards[0].english}</Text>
+                <Text style={styles.IOTDEng}>{pinyin(IOTDCards.current[0].chinese)}</Text>
+                <Text style={styles.definition}>{IOTDCards.current[0].english}</Text>
                 <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
                   IDIOM OF THE DAY
                 </Text>
@@ -403,6 +494,61 @@ export default function HomeScreen({ route, navigation }: any) {
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
+  ) : (
+    <LinearGradient colors={['rgba(255,203,68,0.2)', 'rgba(255,255,255,0.3)']} style={styles.container}>
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <SafeAreaView>
+          <View
+            style={{
+              flexDirection: 'row',
+              backgroundColor: 'transparent',
+              justifyContent: 'space-between',
+              width: 370,
+              alignSelf: 'center',
+            }}
+          >
+            <View style={{ flexDirection: 'row', backgroundColor: 'transparent' }}>
+              <Text style={styles.greeting}>你好,</Text>
+              <Text style={[styles.greeting, { color: '#FFCB44' }]}>{name}</Text>
+              <Text style={styles.greeting}>!</Text>
+            </View>
+            <TouchableOpacity style={{ alignSelf: 'center' }} onPress={() => navigation.navigate('ProfileScreen')}>
+              <Ionicons name="person-circle-outline" size={35} style={{ marginRight: 10 }} />
+            </TouchableOpacity>
+          </View>
+          <View style={{ backgroundColor: 'transparent', width: 360 }}>
+            <Text style={styles.title}>CLASS CODE</Text>
+            {/* TODO: generate class code */}
+            <Text style={styles.classCode}>ABCD123</Text>
+            <Text style={styles.title}>STUDENTS</Text>
+            <TextInput
+              style={styles.searchBar}
+              value={search}
+              placeholder="search"
+              underlineColorAndroid="transparent"
+              onChangeText={(text: any) => searchStudents(text)}
+              textAlign="left"
+              placeholderTextColor="#C4C4C4"
+              autoCapitalize="none"
+              autoComplete="off"
+              autoCorrect={false}
+            />
+            <FlatList
+              style={styles.cardList}
+              contentContainerStyle={styles.contentContainerStyle}
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewUserData} />}
+              data={filteredStudents}
+              keyExtractor={(item) => item.uid}
+              renderItem={({ item }) => <Student studentItem={item} />}
+              ListEmptyComponent={() => (
+                <Text>{search ? 'No results' : 'No students yet! Invite them to your class using the class code'}</Text>
+              )}
+            />
+          </View>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
+    </LinearGradient>
   );
 }
 
@@ -477,6 +623,15 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     marginHorizontal: 10,
   },
+  definition: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'black',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    marginHorizontal: 10,
+    marginTop: 10,
+  },
   revisionText: {
     fontSize: 40,
     fontWeight: '800',
@@ -524,5 +679,55 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginLeft: 20,
     marginTop: 20,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 20,
+    marginHorizontal: 10,
+  },
+  classCode: {
+    fontSize: 24,
+    fontWeight: '400',
+    marginLeft: 10,
+  },
+  cardList: {
+    alignSelf: 'center',
+    zIndex: 1,
+    marginTop: -5,
+  },
+  contentContainerStyle: {
+    backgroundColor: 'transparent',
+    marginTop: 20,
+    marginLeft: 10,
+  },
+  cardContainer: {
+    flexDirection: 'row',
+    width: 350,
+    height: 100,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'flex-start',
+    borderColor: '#C4C4C4',
+    marginVertical: 10,
+    zIndex: 0,
+  },
+  studentName: {
+    fontWeight: '700',
+    marginLeft: 20,
+    alignSelf: 'center',
+    fontSize: 18,
+  },
+  searchBar: {
+    height: 40,
+    width: 350,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C4C4C4',
+    marginLeft: 10,
+    backgroundColor: 'white',
+    marginTop: 20,
+    paddingLeft: 20,
+    zIndex: 2,
   },
 });

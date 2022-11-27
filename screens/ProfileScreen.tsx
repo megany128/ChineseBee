@@ -45,7 +45,7 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: '#FFF8F3', flex: 1 }}>
+    <SafeAreaView style={{ backgroundColor: 'white', flex: 1 }}>
       <ScrollView style={styles.container} horizontal={false}>
         <View style={styles.container}>
           <View style={styles.navigation}>
@@ -195,7 +195,7 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F3',
+    backgroundColor: 'white',
     paddingBottom: 20,
   },
   header: {

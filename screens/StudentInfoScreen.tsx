@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, SafeAreaView, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, SafeAreaView, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import {
   LineChart,
   BarChart,
@@ -11,9 +11,12 @@ import {
 import { push, ref, set, onValue, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase/auth';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-export default function StatsScreen({ route, navigation }: any) {
+export default function StudentInfoScreen({ route, navigation }: any) {
   const auth = getAuth();
+
+  const student = route.params;
 
   const [vocabSize, setVocabSize] = useState(0);
   const [masteredCards, setMasteredCards] = useState(0);
@@ -76,47 +79,59 @@ export default function StatsScreen({ route, navigation }: any) {
   // comparison of question type success rates
 
   useEffect(() => {
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
+    return onValue(ref(db, '/students/' + student.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let user = { ...data };
 
-      let allCards: any = Object.values(user.cards);
-      let masteredCardsTemp = allCards.filter((obj: any) => {
-        return obj.timesCorrect / obj.timesReviewed > 0.7;
-      });
+      if (user.cards) {
+        let allCards: any = Object.values(user.cards);
+        let masteredCardsTemp = allCards.filter((obj: any) => {
+          return obj.timesCorrect / obj.timesReviewed > 0.7;
+        });
 
-      let learningCardsTemp = allCards.filter((obj: any) => {
-        return obj.timesCorrect / obj.timesReviewed > 0.4 && obj.timesCorrect / obj.timesReviewed < 0.7;
-      });
+        let learningCardsTemp = allCards.filter((obj: any) => {
+          return obj.timesCorrect / obj.timesReviewed > 0.4 && obj.timesCorrect / obj.timesReviewed < 0.7;
+        });
 
-      let strugglingCardsTemp = allCards.filter((obj: any) => {
-        return obj.timesCorrect / obj.timesReviewed > 0 && obj.timesCorrect / obj.timesReviewed < 0.4;
-      });
+        let strugglingCardsTemp = allCards.filter((obj: any) => {
+          return obj.timesCorrect / obj.timesReviewed > 0 && obj.timesCorrect / obj.timesReviewed < 0.4;
+        });
 
-      let newCardsTemp = allCards.filter((obj: any) => {
-        return obj.timesCorrect / obj.timesReviewed === 0;
-      });
+        let newCardsTemp = allCards.filter((obj: any) => {
+          return obj.timesCorrect / obj.timesReviewed === 0;
+        });
 
-      setVocabSize(allCards.length);
-      setMasteredCards(masteredCardsTemp.length);
-      setLearningCards(learningCardsTemp.length);
-      setStrugglingCards(strugglingCardsTemp.length);
-      setNewCards(newCardsTemp.length);
+        setVocabSize(allCards.length);
+        setMasteredCards(masteredCardsTemp.length);
+        setLearningCards(learningCardsTemp.length);
+        setStrugglingCards(strugglingCardsTemp.length);
+        setNewCards(newCardsTemp.length);
 
-      if (user.totalReadingETOC + user.totalReadingCTOE > 0)
-        readingSuccess.current =
-          (user.correctReadingETOC + user.correctReadingCTOE) / (user.totalReadingETOC + user.totalReadingCTOE);
-      if (user.totalListeningCTOC + user.totalListeningCTOE > 0)
-        listeningSuccess.current =
-          (user.correctListeningCTOC + user.correctListeningCTOE) / (user.totalListeningCTOC + user.totalListeningCTOE);
-      if (user.totalTypingETOC > 0) typingSuccess.current = user.correctTypingETOC / user.totalTypingETOC;
-      if (user.totalHandwritingETOC > 0)
-        writingSuccess.current = user.correctHandwritingETOC / user.totalHandwritingETOC;
+        if (user.totalReadingETOC + user.totalReadingCTOE > 0)
+          readingSuccess.current =
+            (user.correctReadingETOC + user.correctReadingCTOE) / (user.totalReadingETOC + user.totalReadingCTOE);
+        if (user.totalListeningCTOC + user.totalListeningCTOE > 0)
+          listeningSuccess.current =
+            (user.correctListeningCTOC + user.correctListeningCTOE) /
+            (user.totalListeningCTOC + user.totalListeningCTOE);
+        if (user.totalTypingETOC > 0) typingSuccess.current = user.correctTypingETOC / user.totalTypingETOC;
+        if (user.totalHandwritingETOC > 0)
+          writingSuccess.current = user.correctHandwritingETOC / user.totalHandwritingETOC;
 
-      console.log('reading success rate:', readingSuccess.current);
-      console.log('listening success rate:', listeningSuccess.current);
-      console.log('typing success rate:', typingSuccess.current);
-      console.log('handwriting success rate:', writingSuccess.current);
+        console.log('reading success rate:', readingSuccess.current);
+        console.log('listening success rate:', listeningSuccess.current);
+        console.log('typing success rate:', typingSuccess.current);
+        console.log('handwriting success rate:', writingSuccess.current);
+      } else {
+        Alert.alert('Oh no!', user.name + ' has not added any cards to their vocab yet!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+        ]);
+      }
     });
   }, []);
 
@@ -125,7 +140,10 @@ export default function StatsScreen({ route, navigation }: any) {
       <SafeAreaView style={styles.container}>
         <ScrollView style={{ width: 400 }} showsVerticalScrollIndicator={false}>
           <View style={styles.navigation}>
-            <Text style={styles.header}>STATS</Text>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={40} />
+            </TouchableOpacity>
+            <Text style={styles.header}>{student.name.toUpperCase()}'S STATS</Text>
           </View>
           <View style={{ marginHorizontal: 40 }}>
             <Text style={styles.sectionTitle}>VOCAB</Text>
@@ -145,6 +163,7 @@ export default function StatsScreen({ route, navigation }: any) {
                 <Text style={styles.bigText}>{vocabSize}</Text>
                 <Text style={styles.subtitle}>cards in vocab</Text>
               </View>
+
               <View style={styles.cardsMastered}>
                 <Text style={styles.bigText}>{masteredCards}</Text>
                 <Text style={styles.subtitle}>cards mastered</Text>
@@ -168,7 +187,7 @@ export default function StatsScreen({ route, navigation }: any) {
               style={{ marginTop: 10, backgroundColor: 'transparent' }}
               data={questionTypes}
               width={340}
-              height={200}
+              height={250}
               yAxisLabel=""
               chartConfig={{
                 color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
@@ -198,6 +217,11 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     marginLeft: 20,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: 10,
   },
   navigation: {
     marginLeft: 20,
@@ -234,10 +258,5 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     textAlignVertical: 'center',
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 10,
   },
 });

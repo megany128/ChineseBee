@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth, signOut } from 'firebase/auth';
-import Icon from 'react-native-vector-icons/AntDesign';
-import Icon2 from 'react-native-vector-icons/FontAwesome';
-import Icon3 from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { RootTabScreenProps } from '../types';
 import { ref, set, onValue, orderByChild, query, update } from 'firebase/database';
@@ -66,7 +66,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
             >
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TouchableOpacity onPress={() => updateStarred(cardItem)}>
-                  <Icon
+                  <AntDesign
                     name={cardItem['starred'] ? 'star' : 'staro'}
                     size={25}
                     color="#FFCB44"
@@ -272,7 +272,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon3 name="chevron-back" size={40} />
+          <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
         <Text style={styles.header}>{tagSearch}</Text>
       </View>
@@ -290,10 +290,15 @@ export default function SearchByTagScreen({ route, navigation }: any) {
           autoCorrect={false}
         />
         <TouchableOpacity style={styles.sortButton} onPress={() => applySort()}>
-          <Icon2 name={getSortIcon()} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
+          <FontAwesome name={getSortIcon()} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.starButton} onPress={() => applyStarredFilter()}>
-          <Icon name={starredFilter ? 'star' : 'staro'} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
+          <AntDesign
+            name={starredFilter ? 'star' : 'staro'}
+            size={20}
+            color="#FFFFFF"
+            style={{ alignSelf: 'center' }}
+          />
         </TouchableOpacity>
       </View>
       {/* TODO: add swipe to delete */}

@@ -29,6 +29,7 @@ export type RootStackParamList = {
   TestResultsScreen: undefined;
   SharedDecksScreen: undefined;
   DeckInfoScreen: undefined;
+  StudentInfoScreen: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<

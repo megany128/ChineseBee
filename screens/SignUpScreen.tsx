@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -25,6 +25,8 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
     error: '',
   });
 
+  const [userType, setUserType] = useState('student');
+
   const onFooterLinkPress = () => {
     navigation.navigate('SignInScreen');
   };
@@ -46,63 +48,104 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       return;
     }
 
-    await createUserWithEmailAndPassword(auth, value.email.trim(), value.password.trim())
-      .then(async (data) => {
-        // TODO: use firebase for this instead of asyncstorage since progress should be carried over multiple devices
-        AsyncStorage.setItem('dailyStudyProgress', '0');
-        AsyncStorage.setItem('cardsStudied', '0');
-        AsyncStorage.setItem('minutesLearning', '0');
-        AsyncStorage.setItem('dayStreak', '0');
-        await updateProfile(auth.currentUser!, {
-          displayName: value.name.trim(),
+    if (userType === 'student') {
+      AsyncStorage.setItem('userType', 'student');
+      await createUserWithEmailAndPassword(auth, value.email.trim(), value.password.trim())
+        .then(async (data) => {
+          // TODO: use firebase for this instead of asyncstorage since progress should be carried over multiple devices
+          AsyncStorage.setItem('dailyStudyProgress', '0');
+          AsyncStorage.setItem('cardsStudied', '0');
+          AsyncStorage.setItem('minutesLearning', '0');
+          AsyncStorage.setItem('dayStreak', '0');
+          await updateProfile(auth.currentUser!, {
+            displayName: value.name.trim(),
+          });
+          set(ref(db, '/students/' + data.user.uid), {
+            name: value.name.trim(),
+            uid: data.user.uid,
+            type: 'student',
+
+            correctReadingETOC: 0,
+            totalReadingETOC: 0,
+
+            correctReadingCTOE: 0,
+            totalReadingCTOE: 0,
+
+            correctListeningCTOC: 0,
+            totalListeningCTOC: 0,
+
+            correctListeningCTOE: 0,
+            totalListeningCTOE: 0,
+
+            correctTypingETOC: 0,
+            totalTypingETOC: 0,
+
+            correctHandwritingETOC: 0,
+            totalHandwritingETOC: 0,
+          });
+        })
+        .catch((error) => {
+          if (error.message.includes('email-already-in-use')) {
+            setValue({
+              ...value,
+              error: 'Email already in use',
+            });
+          } else if (error.message.includes('weak-password')) {
+            setValue({
+              ...value,
+              error: 'Password must be at least 6 characters',
+            });
+          } else if (error.message.includes('invalid-email')) {
+            setValue({
+              ...value,
+              error: 'Please enter a valid email',
+            });
+          } else {
+            setValue({
+              ...value,
+              error: error.message,
+            });
+            return;
+          }
         });
-        set(ref(db, '/students/' + data.user.uid), {
-          name: value.name.trim(),
-          uid: data.user.uid,
-
-          correctReadingETOC: 0,
-          totalReadingETOC: 0,
-
-          correctReadingCTOE: 0,
-          totalReadingCTOE: 0,
-
-          correctListeningCTOC: 0,
-          totalListeningCTOC: 0,
-
-          correctListeningCTOE: 0,
-          totalListeningCTOE: 0,
-
-          correctTypingETOC: 0,
-          totalTypingETOC: 0,
-
-          correctHandwritingETOC: 0,
-          totalHandwritingETOC: 0,
+    } else {
+      AsyncStorage.setItem('userType', 'teacher');
+      await createUserWithEmailAndPassword(auth, value.email.trim(), value.password.trim())
+        .then(async (data) => {
+          await updateProfile(auth.currentUser!, {
+            displayName: value.name.trim(),
+          });
+          set(ref(db, '/teachers/' + data.user.uid), {
+            name: value.name.trim(),
+            uid: data.user.uid,
+            type: 'teacher',
+          });
+        })
+        .catch((error) => {
+          if (error.message.includes('email-already-in-use')) {
+            setValue({
+              ...value,
+              error: 'Email already in use',
+            });
+          } else if (error.message.includes('weak-password')) {
+            setValue({
+              ...value,
+              error: 'Password must be at least 6 characters',
+            });
+          } else if (error.message.includes('invalid-email')) {
+            setValue({
+              ...value,
+              error: 'Please enter a valid email',
+            });
+          } else {
+            setValue({
+              ...value,
+              error: error.message,
+            });
+            return;
+          }
         });
-      })
-      .catch((error) => {
-        if (error.message.includes('email-already-in-use')) {
-          setValue({
-            ...value,
-            error: 'Email already in use',
-          });
-        } else if (error.message.includes('weak-password')) {
-          setValue({
-            ...value,
-            error: 'Password must be at least 6 characters',
-          });
-        } else if (error.message.includes('invalid-email')) {
-          setValue({
-            ...value,
-            error: 'Please enter a valid email',
-          });
-        } else {
-          setValue({
-            ...value,
-            error: error.message,
-          });
-          return;
-        }
-      });
+    }
   }
 
   return (
@@ -114,6 +157,29 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
         <View style={styles.container}>
           <Text style={styles.title}>sign up</Text>
           {value.error && <Text style={styles.error}>{value.error}</Text>}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: 320,
+              marginBottom: 20,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setUserType('student')}
+              style={userType === 'student' ? styles.selectedButton : styles.unselectedButton}
+            >
+              <Text style={userType === 'student' ? styles.selectedText : styles.unselectedText}>student</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setUserType('teacher')}
+              style={userType === 'teacher' ? styles.selectedButton : styles.unselectedButton}
+            >
+              <Text style={userType === 'teacher' ? styles.selectedText : styles.unselectedText}>teacher</Text>
+            </TouchableOpacity>
+          </View>
+
           <TextInput
             style={styles.input}
             placeholder="name"
@@ -221,6 +287,28 @@ const styles = StyleSheet.create({
     color: '#D54826FF',
     marginLeft: 30,
     marginBottom: 20,
+  },
+  selectedButton: {
+    backgroundColor: '#FEB1C3',
+    width: 150,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  unselectedButton: {
+    backgroundColor: 'transparent',
+    width: 150,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FEB1C3',
+  },
+  selectedText: {
+    color: 'white',
+    textAlign: 'center',
+  },
+  unselectedText: {
+    color: '#FEB1C3',
+    textAlign: 'center',
   },
 });
 
