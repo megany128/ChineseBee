@@ -28,6 +28,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 var isPast = require('date-fns/isPast');
 var format = require('date-fns/format');
 var pinyin = require('chinese-to-pinyin');
+var voucher_codes = require('voucher-code-generator');
 
 const { utcToZonedTime } = require('date-fns-tz');
 
@@ -250,11 +251,42 @@ export default function HomeScreen({ route, navigation }: any) {
 
   const loadNewUserData = () => {
     setRefreshing(true);
-    // TODO: change to /teachers
-    onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
+    onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let user = { ...data };
       classCode.current = user.classCode;
+      console.log('classcode:', classCode.current);
+      if (!user.classCode) {
+        console.log('classcode2:', classCode.current);
+        let unique = false;
+        let newCode = [''];
+        while (!unique) {
+          console.log('generating referral code');
+          newCode = voucher_codes.generate({
+            length: 6,
+            count: 1,
+          });
+          unique = true;
+          onValue(ref(db, '/teachers'), (querySnapShot) => {
+            let data = querySnapShot.val() || {};
+            let userData = { ...data };
+
+            Object.values(userData).map((teacher: any) => {
+              if (teacher.classCode === newCode[0] && teacher.uid != auth.currentUser?.uid) {
+                console.log('matching:', teacher.name);
+                unique = false;
+              }
+            });
+          });
+          console.log(unique);
+          console.log('classcode:', classCode.current);
+          if (unique && !classCode.current) {
+            update(ref(db, '/teachers/' + auth.currentUser?.uid), {
+              classCode: newCode[0],
+            });
+          }
+        }
+      }
     });
 
     return onValue(ref(db, '/students/'), async (querySnapShot) => {
@@ -280,8 +312,6 @@ export default function HomeScreen({ route, navigation }: any) {
       let user = { ...data };
       setName(user.name);
       userType.current = user.type;
-
-      // TODO: generate daily review list here instead
 
       let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
       setProgress(parseFloat(dailyStudyProgress));
@@ -519,7 +549,7 @@ export default function HomeScreen({ route, navigation }: any) {
           <View style={{ backgroundColor: 'transparent', width: 360 }}>
             <Text style={styles.title}>CLASS CODE</Text>
             {/* TODO: generate class code */}
-            <Text style={styles.classCode}>ABCD123</Text>
+            <Text style={styles.classCode}>{classCode.current}</Text>
             <Text style={styles.title}>STUDENTS</Text>
             <TextInput
               style={styles.searchBar}
