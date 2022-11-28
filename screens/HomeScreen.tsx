@@ -179,7 +179,16 @@ export default function HomeScreen({ route, navigation }: any) {
 
   // TODO: only generate new cards when last time opened was in the past
   useEffect(() => {
-    if (userType.current === 'student') generateTodaysRevision();
+    onValue(ref(db, '/userRoles'), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let userRoles = { ...data };
+
+      userType.current = userRoles[auth.currentUser!.uid];
+    });
+  }, []);
+
+  useEffect(() => {
+    generateTodaysRevision();
   }, []);
 
   // TODO: fix - doesn't reset at midnight
@@ -283,6 +292,10 @@ export default function HomeScreen({ route, navigation }: any) {
             update(ref(db, '/teachers/' + auth.currentUser?.uid), {
               classCode: newCode[0],
             });
+
+            update(ref(db, '/classCodes/'), {
+              [newCode[0]]: auth.currentUser?.uid,
+            });
           }
         }
       }
@@ -303,14 +316,10 @@ export default function HomeScreen({ route, navigation }: any) {
   };
 
   useEffect(() => {
-    console.log('use effect');
-    console.log(auth.currentUser?.uid);
-    // TODO: set to: if students/uid doesnt work, set to teacher/uid
     return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || [];
       let user = { ...data };
       setName(user.name);
-      userType.current = user.type;
 
       let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
       setProgress(parseFloat(dailyStudyProgress));
@@ -414,42 +423,53 @@ export default function HomeScreen({ route, navigation }: any) {
               alignSelf: 'center',
             }}
           >
-            <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
-              <View style={styles.card}>
-                <Text style={styles.WOTDChn}>{WOTDCards.current[0].chinese}</Text>
-                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
-                  WORD OF THE DAY
-                </Text>
-              </View>
+            {WOTDCards.current && (
+              <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
+                <View style={styles.card}>
+                  <Text style={styles.WOTDChn}>{WOTDCards.current[0].chinese}</Text>
+                  <Text
+                    style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
+                  >
+                    WORD OF THE DAY
+                  </Text>
+                </View>
 
-              <View style={styles.card}>
-                <Text style={styles.WOTDEng}>{pinyin(WOTDCards.current[0].chinese)}</Text>
-                <Text style={styles.definition}>{WOTDCards.current[0].english}</Text>
-                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
-                  WORD OF THE DAY
-                </Text>
-              </View>
-            </FlipCard>
+                <View style={styles.card}>
+                  <Text style={styles.WOTDEng}>{pinyin(WOTDCards.current[0].chinese)}</Text>
+                  <Text style={styles.definition}>{WOTDCards.current[0].english}</Text>
+                  <Text
+                    style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
+                  >
+                    WORD OF THE DAY
+                  </Text>
+                </View>
+              </FlipCard>
+            )}
+            {IOTDCards.current && (
+              <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
+                <View style={styles.card}>
+                  <Text style={styles.IOTDChn}>{IOTDCards.current[0].chinese}</Text>
+                  <Text
+                    style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
+                  >
+                    IDIOM OF THE DAY
+                  </Text>
+                </View>
 
-            <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
-              <View style={styles.card}>
-                <Text style={styles.IOTDChn}>{IOTDCards.current[0].chinese}</Text>
-                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
-                  IDIOM OF THE DAY
-                </Text>
-              </View>
-
-              <View style={styles.card}>
-                <Text style={styles.IOTDEng}>{pinyin(IOTDCards.current[0].chinese)}</Text>
-                <Text style={styles.definition}>{IOTDCards.current[0].english}</Text>
-                <Text style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}>
-                  IDIOM OF THE DAY
-                </Text>
-              </View>
-            </FlipCard>
+                <View style={styles.card}>
+                  <Text style={styles.IOTDEng}>{pinyin(IOTDCards.current[0].chinese)}</Text>
+                  <Text style={styles.definition}>{IOTDCards.current[0].english}</Text>
+                  <Text
+                    style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
+                  >
+                    IDIOM OF THE DAY
+                  </Text>
+                </View>
+              </FlipCard>
+            )}
           </View>
 
-          <TouchableOpacity style={styles.stats}>
+          <View style={styles.stats}>
             <View
               style={{
                 flex: 1,
@@ -460,22 +480,19 @@ export default function HomeScreen({ route, navigation }: any) {
               }}
             >
               <View style={{ flexDirection: 'column', backgroundColor: 'transparent', marginRight: 50 }}>
-                {/* TODO: customise */}
                 <Text style={styles.cardsStudied}>{cardsStudied}</Text>
                 <Text style={{ textAlign: 'center', fontWeight: '600' }}>cards{'\n'}studied</Text>
               </View>
               <View style={{ flexDirection: 'column', backgroundColor: 'transparent', marginRight: 50 }}>
-                {/* TODO: customise */}
                 <Text style={styles.minutesLearning}>{minutesLearning}</Text>
                 <Text style={{ textAlign: 'center', fontWeight: '600' }}>minutes{'\n'}learning</Text>
               </View>
               <View style={{ flexDirection: 'column', backgroundColor: 'transparent' }}>
-                {/* TODO: customise */}
                 <Text style={styles.streak}>{dayStreak}</Text>
                 <Text style={{ textAlign: 'center', fontWeight: '600' }}>day{'\n'}streak</Text>
               </View>
             </View>
-          </TouchableOpacity>
+          </View>
 
           <Text style={styles.quickActionsHeader}>QUICK ACTIONS</Text>
           <View style={styles.quickActions}>
@@ -678,12 +695,12 @@ const styles = StyleSheet.create({
     width: 350,
     height: 120,
     borderRadius: 20,
-    marginTop: 20,
     zIndex: 0,
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: '#C4C4C4',
     alignSelf: 'center',
+    marginTop: 20,
   },
   cardsStudied: {
     color: '#FFCB44',

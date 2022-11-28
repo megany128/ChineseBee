@@ -74,10 +74,6 @@ export default function StudentInfoScreen({ route, navigation }: any) {
     ],
   };
 
-  // CHARTS:
-  // pie chart of number of questions: mastered, learning, struggling, new
-  // comparison of question type success rates
-
   useEffect(() => {
     return onValue(ref(db, '/students/' + student.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || {};

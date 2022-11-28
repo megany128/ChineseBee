@@ -13,7 +13,7 @@ import { Input } from 'react-native-elements';
 import { getAuth, signOut } from 'firebase/auth';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { RootStackScreenProps } from '../types';
-import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
+import { push, ref, limitToLast, query, onValue, update, orderByChild } from 'firebase/database';
 import { db, storage } from '../config/firebase';
 import moment from 'moment';
 import Modal from 'react-native-modal';
@@ -22,27 +22,19 @@ import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
-export default function AddScreen({ route, navigation }: any) {
+export default function AddCardTeacher({ route, navigation }: any) {
   // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
-  var hanzi = require('hanzi');
+
+  const { deck } = route.params;
 
   const [modalVisible, setModalVisible] = useState(false);
-
-  const [tagOptions, setTagOptions]: any = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [english, setEnglish]: any = useState('');
   const [chinese, setChinese]: any = useState('');
   const [tag, setTag]: any = useState(route.params);
-  const teacherUID = useState('');
 
   const [error, setError] = useState(String);
-
-  // useEffect(() => {
-  //   hanzi.start();
-  // }, []);
 
   useEffect(() => {
     if (modalVisible) {
@@ -50,24 +42,13 @@ export default function AddScreen({ route, navigation }: any) {
     }
   });
 
-  useEffect(() => {
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
-      let data = querySnapShot.val() || [];
-      let tags = { ...data };
-
-      let tagOptionsTemp1: any = Object.keys(tags);
-      let tagOptionsTemp2 = [];
-      for (let tag = 1; tag < tagOptionsTemp1.length + 1; tag++) {
-        tagOptionsTemp2[tag] = { label: tagOptionsTemp1[tag - 1], value: tagOptionsTemp1[tag - 1] };
-      }
-      tagOptionsTemp2[0] = { label: '', value: '' };
-      setTagOptions(tagOptionsTemp2);
-    });
-  }, []);
-
   // gets the key of the last card created
   const getKey = () => {
-    var cardRef = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), limitToLast(1));
+    var cardRef = query(
+      ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards'),
+      orderByChild('createdAt')
+    );
+    cardRef = query(cardRef, limitToLast(1));
     let key = '';
     onValue(cardRef, (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -91,29 +72,23 @@ export default function AddScreen({ route, navigation }: any) {
       console.log(english + ' / ' + chinese);
 
       // adds a card to the database
-      push(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), {
+      push(ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards'), {
         english: english,
         chinese: chinese,
-        tag: tag,
-        starred: false,
         createdAt: moment().valueOf(),
-        timesCorrect: 0,
-        timesReviewed: 0,
-        dueDate: 0,
         // TODO: edit
         idiom: false,
       });
 
       // adds the card's key as a field
       const key = getKey();
-      update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + key), {
+      update(ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards/' + key), {
         key,
       });
 
       // resets the text inputs
       setEnglish('');
       setChinese('');
-      setTag(route.params ? route.params : '');
 
       setModalVisible(true);
     }
@@ -147,38 +122,6 @@ export default function AddScreen({ route, navigation }: any) {
             onChangeText={(text) => setEnglish(text)}
             autoCompleteType=""
             style={styles.inputText}
-          />
-
-          <DropDownPicker
-            open={dropdownOpen}
-            searchable={true}
-            value={tag}
-            items={tagOptions}
-            setOpen={setDropdownOpen}
-            setValue={setTag}
-            setItems={setTagOptions}
-            placeholder="Tags (Optional)"
-            style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
-            containerStyle={[styles.control, { marginHorizontal: 20 }]}
-            textStyle={styles.inputText}
-            dropDownContainerStyle={styles.dropdownStyle}
-            placeholderStyle={{
-              fontWeight: '400',
-              color: '#C4C4C4',
-            }}
-            zIndex={2000}
-            zIndexInverse={2000}
-            itemSeparatorStyle={{ borderColor: 'red' }}
-            searchPlaceholder="Search tags or type to add a new tag..."
-            searchContainerStyle={{
-              borderBottomColor: '#C4C4C4',
-            }}
-            searchPlaceholderTextColor="#C4C4C4"
-            searchTextInputStyle={{
-              borderRadius: 20,
-              borderColor: '#C4C4C4',
-            }}
-            addCustomItem={true}
           />
 
           <View style={{ alignSelf: 'center', marginTop: 30 }}>

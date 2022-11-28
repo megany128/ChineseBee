@@ -1,54 +1,21 @@
 import { StyleSheet, SafeAreaView, Dimensions, TouchableOpacity, Alert } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import EditScreenInfo from '../components/EditScreenInfo';
+import React from 'react';
 import { Text, View } from '../components/Themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import * as Speech from 'expo-speech';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { ref, set, onValue, remove, query, update } from 'firebase/database';
+import { ref, remove } from 'firebase/database';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase/auth';
 
 var pinyin = require('chinese-to-pinyin');
 
-// TODO: add field - myCard. if myCard is true, allow for star, edit, delete. If false, just view.
-
-export default function CardInfoScreen({ route, navigation }: any) {
+export default function CardInfoScreenTeacher({ route, navigation }: any) {
   const auth = getAuth();
-  const card = route.params;
-  const [starred, setStarred] = useState(card.starred);
+  const { card, deck } = route.params;
   console.log(card);
-
-  useEffect(() => {
-    const data = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
-    return onValue(data, (querySnapShot) => {
-      let data = querySnapShot.val() || {};
-      let cardItem = { ...data };
-
-      // uses state to set cards to the data just retrieved
-      setStarred(cardItem.starred);
-    });
-  }, []);
-
-  const getMastery = () => {
-    if (card.timesReviewed > 0) {
-      let successRate = card.timesCorrect / card.timesReviewed;
-      if (successRate < 0.4) {
-        return 'Struggling';
-      } else if (successRate < 0.7) {
-        return 'Learning';
-      } else {
-        return 'Mastered';
-      }
-    } else {
-      return 'New';
-    }
-  };
-
-  // TODO: in route.params, add myCard true vs false. if myCard, show things like mastery, delete, starred etc
-  // but if not, give option to add card
 
   return (
     <SafeAreaView style={styles.container}>
@@ -76,15 +43,8 @@ export default function CardInfoScreen({ route, navigation }: any) {
               alignItems: 'center',
             }}
           >
-            <TouchableOpacity onPress={() => navigation.navigate('EditScreen', card)}>
+            <TouchableOpacity onPress={() => navigation.navigate('EditTeacher', { card: card, deck: deck })}>
               <FontAwesome5 name="pen" size={25} style={{ marginRight: 20 }} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), { starred: !starred })
-              }
-            >
-              <AntDesign name={starred ? 'star' : 'staro'} size={30} color="white" />
             </TouchableOpacity>
           </View>
         </View>
@@ -119,10 +79,6 @@ export default function CardInfoScreen({ route, navigation }: any) {
             <Text style={styles.title}>Definition</Text>
             <Text>{card.english}</Text>
 
-            <Text style={styles.title}>Mastery Level</Text>
-            <Text>{getMastery()}</Text>
-            {/* <Text style={styles.title}>Example Phrases</Text> */}
-
             <TouchableOpacity
               style={styles.button}
               onPress={() =>
@@ -135,7 +91,9 @@ export default function CardInfoScreen({ route, navigation }: any) {
                   {
                     text: 'OK',
                     onPress: () => {
-                      remove(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
+                      remove(
+                        ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards/' + card.key)
+                      );
                       navigation.goBack();
                     },
                   },

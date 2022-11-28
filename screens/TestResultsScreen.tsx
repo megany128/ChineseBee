@@ -136,7 +136,7 @@ export default function TestResultsScreen({ route, navigation }: any) {
             data={correctCards}
             keyExtractor={(item) => item.key}
             renderItem={({ item }) => <Card cardItem={item} />}
-            ListEmptyComponent={() => <Text style={{ marginTop: -10 }}>None correct</Text>}
+            ListEmptyComponent={() => <Text>None correct</Text>}
             horizontal={true}
           />
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

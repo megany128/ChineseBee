@@ -138,35 +138,48 @@ export default function CardsScreen({ route, navigation }: any) {
 
       // uses state to set cards to the data just retrieved
       setCards(cardItems);
+      if (cardItems) {
+        let newArray: any = Object.values(cardItems).reverse();
 
-      let newArray: any = Object.values(cardItems).reverse();
-
-      // uses state to set cardArray and filteredCards to the reverse of this data
-      setCardArray(newArray);
-      setFilteredCards(newArray);
-      setRefreshing(false);
+        // uses state to set cardArray and filteredCards to the reverse of this data
+        setCardArray(newArray);
+        setFilteredCards(newArray);
+        setRefreshing(false);
+      }
     });
   };
 
   // gets cards from database when screen loads
   useEffect(() => {
-    // TODO: fix
-    return onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
-      let data = querySnapShot.val() || [];
-      let user = { ...data };
-      userType.current = user.type;
-      classCode.current = user.classCode;
+    onValue(ref(db, '/userRoles'), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let userRoles = { ...data };
 
-      if (user.type === 'student') {
-        loadNewData();
-      } else {
-        // teacher stuff here
-        let decks: any = Object.values(user.decks);
-        console.log('decks:', decks);
-        setClassDecks(decks);
-        setFilteredClassDecks(decks);
+      userType.current = userRoles[auth.currentUser!.uid];
+
+      if (userRoles[auth.currentUser!.uid] === 'teacher') {
+        return onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
+          let data = querySnapShot.val() || [];
+          let user = { ...data };
+          classCode.current = user.classCode;
+
+          if (user.type === 'student') {
+          } else {
+            // teacher stuff here
+            if (user.decks) {
+              let decks: any = Object.values(user.decks);
+              console.log('decks:', decks);
+              setClassDecks(decks);
+              setFilteredClassDecks(decks);
+            }
+          }
+        });
       }
     });
+  }, []);
+
+  useEffect(() => {
+    loadNewData();
   }, []);
 
   // searches Cards using search term and sets filteredCards to search results
@@ -304,7 +317,7 @@ export default function CardsScreen({ route, navigation }: any) {
   const Deck = ({ deckItem }: any) => {
     return (
       <View style={{ backgroundColor: 'transparent' }}>
-        <TouchableOpacity onPress={() => navigation.navigate('StudentInfoScreen', deckItem)}>
+        <TouchableOpacity onPress={() => navigation.navigate('ClassDeckInfoScreen', { deck: deckItem })}>
           <View style={styles.cardContainer}>
             <Text style={styles.deckName}>{deckItem['name']}</Text>
             <View
@@ -376,7 +389,6 @@ export default function CardsScreen({ route, navigation }: any) {
         </View>
       ) : (
         <View>
-          {/* TODO: customise to decks */}
           <TextInput
             style={[styles.searchBar, { width: 350 }]}
             value={search}
@@ -394,10 +406,13 @@ export default function CardsScreen({ route, navigation }: any) {
             contentContainerStyle={[styles.contentContainerStyle, { marginLeft: 10 }]}
             showsVerticalScrollIndicator={false}
             data={filteredClassDecks}
-            keyExtractor={(item) => item}
+            keyExtractor={(item: any) => item.key}
             renderItem={({ item }: any) => <Deck deckItem={item} />}
             ListEmptyComponent={() => <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No results...</Text>}
           />
+          <TouchableOpacity style={[styles.addButton, { bottom: 80 }]} onPress={() => navigation.navigate('AddDeck')}>
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
+          </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
@@ -438,6 +453,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     zIndex: 1,
     marginTop: -5,
+    marginBottom: 50,
   },
   contentContainerStyle: {
     padding: 24,
@@ -468,7 +484,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     position: 'absolute',
-    bottom: 15,
+    bottom: 80,
   },
   starButton: {
     borderRadius: 30,

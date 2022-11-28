@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView, StyleSheet, Text, View, RefreshControl, TouchableOpacity, FlatList } from 'react-native';
 import { getAuth } from 'firebase/auth';
 
@@ -10,6 +10,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
   const auth = getAuth();
   const [allDecks, setAllDecks] = useState([]);
   const [refreshing, setRefreshing] = useState(true);
+  const classCode = useRef('');
 
   useEffect(() => {
     loadNewData();
@@ -18,7 +19,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
   const loadNewData = () => {
     const data = query(ref(db, '/sharedCards'));
     setRefreshing(true);
-    return onValue(data, (querySnapShot) => {
+    onValue(data, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let deckItems = { ...data };
 
@@ -28,6 +29,29 @@ export default function SharedDecksScreen({ route, navigation }: any) {
 
       console.log('all decks new:', decks);
       setRefreshing(false);
+    });
+
+    onValue(ref(db, '/students/' + auth?.currentUser?.uid), (querySnapShot) => {
+      let data2 = querySnapShot.val() || {};
+      let userData = { ...data2 };
+
+      classCode.current = userData.classCode;
+      console.log('class code is', userData.classCode);
+
+      onValue(ref(db, '/classCodes/'), (querySnapShot) => {
+        let data3 = querySnapShot.val() || {};
+        let user: any = { ...data3 };
+
+        console.log('teacher is', userData.classCode);
+        let teacher = user[userData.classCode];
+        console.log('teacher is', teacher);
+
+        onValue(ref(db, '/teachers/' + teacher + '/decks'), (querySnapShot) => {
+          let data4 = querySnapShot.val() || {};
+          let decks = Object.values(data4);
+          console.log(decks);
+        });
+      });
     });
   };
 
@@ -55,7 +79,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
-        <Text style={styles.header}>CLASS DECKS</Text>
+        <Text style={styles.header}>SHARED DECKS</Text>
       </View>
       <FlatList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}

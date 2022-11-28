@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, SafeAreaView, Text, View, ScrollView } from 'react-native';
-import { BarChart } from 'react-native-chart-kit';
+import { BarChart, PieChart } from 'react-native-chart-kit';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase/auth';
@@ -19,8 +19,9 @@ export default function StatsScreen({ route, navigation }: any) {
   const [typingSuccess, setTypingSuccess]: any = useState(0);
   const [writingSuccess, setWritingSuccess]: any = useState(0);
 
-  const userType = useRef('');
+  const [userType, setUserType] = useState('student');
   const classCode = useRef('');
+  const classDecks = useRef(0);
   const [myStudents, setMyStudents]: any = useState([]);
 
   const cardMastery = [
@@ -64,108 +65,118 @@ export default function StatsScreen({ route, navigation }: any) {
   };
 
   useEffect(() => {
-    // TODO: set to: if students/uid doesnt work, set to teacher/uid
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
-      let data = querySnapShot.val() || [];
-      let user = { ...data };
-      userType.current = user.type;
-    });
-  }, []);
+    onValue(ref(db, '/userRoles'), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let userRoles = { ...data };
 
-  useEffect(() => {
-    if (userType.current === 'student') {
-      return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
-        let data = querySnapShot.val() || {};
-        let user = { ...data };
+      setUserType(userRoles[auth.currentUser!.uid]);
 
-        let allCards: any = Object.values(user.cards);
-        let masteredCardsTemp = allCards.filter((obj: any) => {
-          return obj.timesCorrect / obj.timesReviewed > 0.7;
-        });
+      console.log('user type is', userRoles[auth.currentUser!.uid]);
 
-        let learningCardsTemp = allCards.filter((obj: any) => {
-          return obj.timesCorrect / obj.timesReviewed > 0.4 && obj.timesCorrect / obj.timesReviewed < 0.7;
-        });
-
-        let strugglingCardsTemp = allCards.filter((obj: any) => {
-          return obj.timesCorrect / obj.timesReviewed > 0 && obj.timesCorrect / obj.timesReviewed < 0.4;
-        });
-
-        let newCardsTemp = allCards.filter((obj: any) => {
-          return obj.timesCorrect / obj.timesReviewed === 0;
-        });
-
-        setVocabSize(allCards.length);
-        setMasteredCards(masteredCardsTemp.length);
-        setLearningCards(learningCardsTemp.length);
-        setStrugglingCards(strugglingCardsTemp.length);
-        setNewCards(newCardsTemp.length);
-
-        if (user.totalReadingETOC + user.totalReadingCTOE > 0)
-          setReadingSuccess(user.correctReadingETOC + user.correctReadingCTOE) /
-            (user.totalReadingETOC + user.totalReadingCTOE);
-        if (user.totalListeningCTOC + user.totalListeningCTOE > 0)
-          setListeningSuccess(user.correctListeningCTOC + user.correctListeningCTOE) /
-            (user.totalListeningCTOC + user.totalListeningCTOE);
-        if (user.totalTypingETOC > 0) setTypingSuccess(user.correctTypingETOC / user.totalTypingETOC);
-        if (user.totalHandwritingETOC > 0) setWritingSuccess(user.correctHandwritingETOC / user.totalHandwritingETOC);
-
-        console.log('reading success rate:', readingSuccess);
-        console.log('listening success rate:', listeningSuccess);
-        console.log('typing success rate:', typingSuccess);
-        console.log('handwriting success rate:', writingSuccess);
-      });
-    } else {
-      console.log('average of class stats');
-
-      // get class code
-      onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
-        let data = querySnapShot.val() || {};
-        let user = { ...data };
-        classCode.current = user.classCode;
-
-        // average of class' stats
-        return onValue(ref(db, '/students/'), async (querySnapShot) => {
+      if (userRoles[auth.currentUser!.uid] === 'student') {
+        return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
           let data = querySnapShot.val() || {};
-          let students = { ...data };
+          let user = { ...data };
 
-          let allStudents: any = Object.values(students);
-          allStudents = allStudents.filter((student: any) => {
-            return student.classCode === user.classCode;
-          });
-          setMyStudents(allStudents);
+          if (user.cards) {
+            let allCards: any = Object.values(user.cards);
+            let masteredCardsTemp = allCards.filter((obj: any) => {
+              return obj.timesCorrect / obj.timesReviewed > 0.7;
+            });
 
-          let correctReading = 0;
-          let correctListening = 0;
-          let correctTyping = 0;
-          let correctWriting = 0;
+            let learningCardsTemp = allCards.filter((obj: any) => {
+              return obj.timesCorrect / obj.timesReviewed > 0.4 && obj.timesCorrect / obj.timesReviewed < 0.7;
+            });
 
-          let totalReading = 0;
-          let totalListening = 0;
-          let totalTyping = 0;
-          let totalWriting = 0;
+            let strugglingCardsTemp = allCards.filter((obj: any) => {
+              return obj.timesCorrect / obj.timesReviewed > 0 && obj.timesCorrect / obj.timesReviewed < 0.4;
+            });
 
-          for (let student = 0; student < allStudents.length; student++) {
-            let studentStats = allStudents[student];
-            // console.log('studentStats', studentStats)
-            correctWriting += studentStats.correctHandwritingETOC;
-            correctListening += studentStats.correctListeningCTOC + studentStats.correctListeningCTOE;
-            correctReading += studentStats.correctReadingCTOE + studentStats.correctReadingETOC;
-            correctTyping += studentStats.correctTypingETOC;
+            let newCardsTemp = allCards.filter((obj: any) => {
+              return obj.timesCorrect / obj.timesReviewed === 0;
+            });
 
-            totalWriting += studentStats.totalHandwritingETOC;
-            totalListening += studentStats.totalListeningCTOC + studentStats.totalListeningCTOE;
-            totalReading += studentStats.totalReadingCTOE + studentStats.totalReadingETOC;
-            totalTyping += studentStats.totalTypingETOC;
+            setVocabSize(allCards.length);
+            setMasteredCards(masteredCardsTemp.length);
+            setLearningCards(learningCardsTemp.length);
+            setStrugglingCards(strugglingCardsTemp.length);
+            setNewCards(newCardsTemp.length);
+
+            if (user.totalReadingETOC + user.totalReadingCTOE > 0)
+              setReadingSuccess(
+                (user.correctReadingETOC + user.correctReadingCTOE) / (user.totalReadingETOC + user.totalReadingCTOE)
+              );
+            if (user.totalListeningCTOC + user.totalListeningCTOE > 0)
+              setListeningSuccess(
+                (user.correctListeningCTOC + user.correctListeningCTOE) /
+                  (user.totalListeningCTOC + user.totalListeningCTOE)
+              );
+            if (user.totalTypingETOC > 0) setTypingSuccess(user.correctTypingETOC / user.totalTypingETOC);
+            if (user.totalHandwritingETOC > 0)
+              setWritingSuccess(user.correctHandwritingETOC / user.totalHandwritingETOC);
+
+            console.log('reading success rate:', readingSuccess);
+            console.log('listening success rate:', listeningSuccess);
+            console.log('typing success rate:', typingSuccess);
+            console.log('handwriting success rate:', writingSuccess);
+          }
+        });
+      } else {
+        // get class code
+        onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
+          let data = querySnapShot.val() || {};
+          let user = { ...data };
+          classCode.current = user.classCode;
+          if (user.decks) {
+            let decks = Object.values(user.decks);
+            classDecks.current = decks.length;
           }
 
-          if (totalWriting > 0) setWritingSuccess(correctWriting / totalWriting);
-          if (totalListening > 0) setListeningSuccess(correctListening / totalListening);
-          if (totalReading > 0) setReadingSuccess(correctReading / totalReading);
-          if (totalTyping > 0) setTypingSuccess(correctTyping / totalTyping);
+          // average of class' stats
+          return onValue(ref(db, '/students/'), async (querySnapShot) => {
+            let data = querySnapShot.val() || {};
+            let students = { ...data };
+
+            if (students) {
+              let allStudents: any = Object.values(students);
+              allStudents = allStudents.filter((student: any) => {
+                return student.classCode === user.classCode;
+              });
+              setMyStudents(allStudents);
+
+              let correctReading = 0;
+              let correctListening = 0;
+              let correctTyping = 0;
+              let correctWriting = 0;
+
+              let totalReading = 0;
+              let totalListening = 0;
+              let totalTyping = 0;
+              let totalWriting = 0;
+
+              for (let student = 0; student < allStudents.length; student++) {
+                let studentStats = allStudents[student];
+
+                correctWriting += studentStats.correctHandwritingETOC;
+                correctListening += studentStats.correctListeningCTOC + studentStats.correctListeningCTOE;
+                correctReading += studentStats.correctReadingCTOE + studentStats.correctReadingETOC;
+                correctTyping += studentStats.correctTypingETOC;
+
+                totalWriting += studentStats.totalHandwritingETOC;
+                totalListening += studentStats.totalListeningCTOC + studentStats.totalListeningCTOE;
+                totalReading += studentStats.totalReadingCTOE + studentStats.totalReadingETOC;
+                totalTyping += studentStats.totalTypingETOC;
+              }
+
+              if (totalWriting > 0) setWritingSuccess(correctWriting / totalWriting);
+              if (totalListening > 0) setListeningSuccess(correctListening / totalListening);
+              if (totalReading > 0) setReadingSuccess(correctReading / totalReading);
+              if (totalTyping > 0) setTypingSuccess(correctTyping / totalTyping);
+            }
+          });
         });
-      });
-    }
+      }
+    });
   }, []);
 
   return (
@@ -173,10 +184,10 @@ export default function StatsScreen({ route, navigation }: any) {
       <SafeAreaView style={styles.container}>
         <ScrollView style={{ width: 400 }} showsVerticalScrollIndicator={false}>
           <View style={styles.navigation}>
-            <Text style={styles.header}>{userType.current === 'student' ? 'STATS' : 'CLASS STATS'}</Text>
+            <Text style={styles.header}>{userType === 'student' ? 'STATS' : 'CLASS STATS'}</Text>
           </View>
           <View style={{ marginHorizontal: 40 }}>
-            <Text style={styles.sectionTitle}>{userType.current === 'student' ? 'VOCAB' : 'CLASS'}</Text>
+            <Text style={styles.sectionTitle}>{userType === 'student' ? 'VOCAB' : 'CLASS'}</Text>
             <View
               style={{
                 flexDirection: 'row',
@@ -190,17 +201,31 @@ export default function StatsScreen({ route, navigation }: any) {
               }}
             >
               <View style={styles.cardsStudied}>
-                <Text style={styles.bigText}>{userType.current === 'student' ? vocabSize : myStudents.length}</Text>
-                <Text style={styles.subtitle}>
-                  {userType.current === 'student' ? 'cards in vocab' : 'students in class'}
-                </Text>
+                <Text style={styles.bigText}>{userType === 'student' ? vocabSize : myStudents.length}</Text>
+                <Text style={styles.subtitle}>{userType === 'student' ? 'cards in vocab' : 'students in class'}</Text>
               </View>
               <View style={styles.cardsMastered}>
-                {/* nnn4 */}
-                <Text style={styles.bigText}>{masteredCards}</Text>
-                <Text style={styles.subtitle}>{userType.current === 'student' ? 'cards mastered' : 'class decks'}</Text>
+                <Text style={styles.bigText}>{userType === 'student' ? masteredCards : classDecks.current}</Text>
+                <Text style={styles.subtitle}>{userType === 'student' ? 'cards mastered' : 'class decks'}</Text>
               </View>
             </View>
+            {userType === 'student' && (
+              <View>
+                <Text style={styles.sectionTitle}>MASTERY</Text>
+                <PieChart
+                  style={{ marginTop: 10 }}
+                  data={cardMastery}
+                  width={340}
+                  height={180}
+                  chartConfig={{
+                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                  }}
+                  accessor={'cards'}
+                  backgroundColor={'transparent'}
+                  paddingLeft="10"
+                />
+              </View>
+            )}
             <Text style={styles.sectionTitle}>QUESTION TYPE MASTERY</Text>
             <BarChart
               style={{ marginTop: 10, backgroundColor: 'transparent' }}

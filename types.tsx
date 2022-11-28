@@ -30,6 +30,11 @@ export type RootStackParamList = {
   SharedDecksScreen: undefined;
   DeckInfoScreen: undefined;
   StudentInfoScreen: undefined;
+  ClassDeckInfoScreen: undefined;
+  AddDeck: undefined;
+  CardInfoScreenTeacher: undefined;
+  AddCardTeacher: undefined;
+  EditTeacher: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<

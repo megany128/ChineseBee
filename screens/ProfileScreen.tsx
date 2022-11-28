@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, SafeAreaView, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
 import { getAuth, signOut, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
@@ -9,11 +9,13 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function ProfileScreen({ navigation }: any) {
   const auth = getAuth();
+  const userType = useRef('');
 
   const [value, setValue] = React.useState({
     email: '',
     error: '',
     name: '',
+    classCode: '',
   });
 
   useEffect(() => {
@@ -21,16 +23,36 @@ export default function ProfileScreen({ navigation }: any) {
   }, []);
 
   const getData = async () => {
-    return await onValue(ref(db, '/students/' + auth?.currentUser?.uid), (querySnapShot) => {
+    onValue(ref(db, '/userRoles'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
-      let userData = { ...data };
+      let userRoles = { ...data };
 
-      // TODO: add class code
-      setValue({
-        ...value,
-        name: userData.name,
-        email: auth?.currentUser?.email!,
-      });
+      userType.current = userRoles[auth.currentUser!.uid];
+
+      if (userRoles[auth.currentUser!.uid] === 'student') {
+        return await onValue(ref(db, '/students/' + auth?.currentUser?.uid), (querySnapShot) => {
+          let data = querySnapShot.val() || {};
+          let userData = { ...data };
+
+          setValue({
+            ...value,
+            name: userData.name,
+            email: auth?.currentUser?.email!,
+            classCode: userData.classCode,
+          });
+        });
+      } else {
+        return await onValue(ref(db, '/teachers/' + auth?.currentUser?.uid), (querySnapShot) => {
+          let data = querySnapShot.val() || {};
+          let userData = { ...data };
+
+          setValue({
+            ...value,
+            name: userData.name,
+            email: auth?.currentUser?.email!,
+          });
+        });
+      }
     });
   };
 
@@ -80,10 +102,16 @@ export default function ProfileScreen({ navigation }: any) {
                   }
                   try {
                     updateProfile(auth.currentUser!, { displayName: nativeEvent.text.trim() });
-                    // setValue({ ...value, name: nativeEvent.text.trim()});
-                    update(ref(db, '/users/' + auth.currentUser?.uid), {
-                      name: nativeEvent.text.trim(),
-                    });
+                    {
+                      userType.current === 'student'
+                        ? update(ref(db, '/students/' + auth.currentUser?.uid), {
+                            name: nativeEvent.text.trim(),
+                          })
+                        : update(ref(db, '/teachers/' + auth.currentUser?.uid), {
+                            name: nativeEvent.text.trim(),
+                          });
+                    }
+
                     getData();
                   } catch (error: any) {
                     setValue({
@@ -103,10 +131,15 @@ export default function ProfileScreen({ navigation }: any) {
                   }
                   try {
                     updateProfile(auth.currentUser!, { displayName: nativeEvent.text.trim() });
-                    // setValue({ ...value, name: nativeEvent.text.trim()});
-                    update(ref(db, '/users/' + auth.currentUser?.uid), {
-                      name: nativeEvent.text.trim(),
-                    });
+                    {
+                      userType.current === 'student'
+                        ? update(ref(db, '/students/' + auth.currentUser?.uid), {
+                            name: nativeEvent.text.trim(),
+                          })
+                        : update(ref(db, '/teachers/' + auth.currentUser?.uid), {
+                            name: nativeEvent.text.trim(),
+                          });
+                    }
                     getData();
                   } catch (error: any) {
                     setValue({
@@ -142,6 +175,51 @@ export default function ProfileScreen({ navigation }: any) {
                 editable={false}
               />
             </View>
+            {userType.current === 'student' && (
+              <View>
+                <Text style={{ marginLeft: 30, marginBottom: 10, fontWeight: '700', color: '#2A3242', marginTop: 10 }}>
+                  Class Code
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="class code"
+                  placeholderTextColor="#C4C4C4"
+                  onChangeText={(text) => setValue({ ...value, classCode: text })}
+                  value={value.classCode}
+                  underlineColorAndroid="transparent"
+                  autoCapitalize="none"
+                  defaultValue={auth?.currentUser?.displayName!}
+                  onSubmitEditing={({ nativeEvent }) => {
+                    console.log(nativeEvent.text);
+                    try {
+                      update(ref(db, '/students/' + auth.currentUser?.uid), {
+                        classCode: nativeEvent.text.trim(),
+                      });
+                      getData();
+                    } catch (error: any) {
+                      setValue({
+                        ...value,
+                        error: error.message,
+                      });
+                    }
+                  }}
+                  onBlur={({ nativeEvent }) => {
+                    console.log(nativeEvent.text);
+                    try {
+                      update(ref(db, '/students/' + auth.currentUser?.uid), {
+                        classCode: nativeEvent.text.trim(),
+                      });
+                      getData();
+                    } catch (error: any) {
+                      setValue({
+                        ...value,
+                        error: error.message,
+                      });
+                    }
+                  }}
+                />
+              </View>
+            )}
             <View
               style={{
                 marginLeft: 30,

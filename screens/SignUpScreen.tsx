@@ -83,6 +83,9 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             correctHandwritingETOC: 0,
             totalHandwritingETOC: 0,
           });
+          set(ref(db, '/userRoles/'), {
+            [data.user.uid]: 'student',
+          });
         })
         .catch((error) => {
           if (error.message.includes('email-already-in-use')) {
@@ -119,6 +122,9 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             name: value.name.trim(),
             uid: data.user.uid,
             type: 'teacher',
+          });
+          set(ref(db, '/userRoles/'), {
+            [data.user.uid]: 'teacher',
           });
         })
         .catch((error) => {

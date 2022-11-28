@@ -27,6 +27,11 @@ import TestResultsScreen from '../screens/TestResultsScreen';
 import SharedDecksScreen from '../screens/SharedDecksScreen';
 import DeckInfoScreen from '../screens/DeckInfoScreen';
 import StudentInfoScreen from '../screens/StudentInfoScreen';
+import ClassDeckInfoScreen from '../screens/ClassDeckInfoScreen';
+import AddDeck from '../screens/AddDeck';
+import CardInfoScreenTeacher from '../screens/CardInfoScreenTeacher';
+import AddCardTeacher from '../screens/AddCardTeacher';
+import EditTeacher from '../screens/EditTeacher';
 
 const Stack = createStackNavigator();
 
@@ -109,6 +114,11 @@ export default function UserStack() {
         <Stack.Screen name="SharedDecksScreen" component={SharedDecksScreen} />
         <Stack.Screen name="DeckInfoScreen" component={DeckInfoScreen} />
         <Stack.Screen name="StudentInfoScreen" component={StudentInfoScreen} />
+        <Stack.Screen name="ClassDeckInfoScreen" component={ClassDeckInfoScreen} />
+        <Stack.Screen name="AddDeck" component={AddDeck} />
+        <Stack.Screen name="CardInfoScreenTeacher" component={CardInfoScreenTeacher} />
+        <Stack.Screen name="AddCardTeacher" component={AddCardTeacher} />
+        <Stack.Screen name="EditTeacher" component={EditTeacher} />
       </Stack.Navigator>
     </NavigationContainer>
   );

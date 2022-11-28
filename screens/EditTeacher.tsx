@@ -8,33 +8,27 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, update, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
-import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
-export default function EditScreen({ route, navigation }: any) {
+export default function EditTeacher({ route, navigation }: any) {
   // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
-  var hanzi = require('hanzi');
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const card: any = route.params;
+  const { card, deck } = route.params;
+
+  const [cardInfo, setCardInfo] = useState(card);
 
   const [english, setEnglish]: any = useState(card.english);
   const [chinese, setChinese]: any = useState(card.chinese);
-  const [tag, setTag]: any = useState(card.tag);
-
-  const [tagOptions, setTagOptions]: any = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [error, setError] = useState(String);
 
@@ -43,21 +37,6 @@ export default function EditScreen({ route, navigation }: any) {
       setTimeout(() => setModalVisible(false), 700);
     }
   });
-
-  useEffect(() => {
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
-      let data = querySnapShot.val() || [];
-      let tags = { ...data };
-
-      let tagOptionsTemp1: any = Object.keys(tags);
-      let tagOptionsTemp2 = [];
-      for (let tag = 1; tag < tagOptionsTemp1.length + 1; tag++) {
-        tagOptionsTemp2[tag] = { label: tagOptionsTemp1[tag - 1], value: tagOptionsTemp1[tag - 1] };
-      }
-      tagOptionsTemp2[0] = { label: '', value: '' };
-      setTagOptions(tagOptionsTemp2);
-    });
-  }, []);
 
   // adds a card with data from the text inputs
   const updateCard = () => {
@@ -73,18 +52,21 @@ export default function EditScreen({ route, navigation }: any) {
       console.log(english + ' / ' + chinese);
 
       // updates card in database
-      update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), {
+      update(ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards/' + card.key), {
         english: english,
         chinese: chinese,
-        tag: tag,
+      }).then(() => {
+        onValue(
+          ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards/' + card.key),
+          async (querySnapShot) => {
+            let data = querySnapShot.val() || [];
+            let cardTemp = { ...data };
+
+            navigation.pop(1);
+            navigation.navigate('CardInfoScreenTeacher', { card: cardTemp, deck: deck });
+          }
+        );
       });
-
-      card.english = english;
-      card.chinese = chinese;
-      card.tag = tag;
-
-      navigation.pop(1);
-      navigation.navigate('CardInfoScreen', card);
     }
   };
 
@@ -116,38 +98,6 @@ export default function EditScreen({ route, navigation }: any) {
             onChangeText={(text) => setEnglish(text)}
             autoCompleteType=""
             style={styles.inputText}
-          />
-
-          <DropDownPicker
-            open={dropdownOpen}
-            searchable={true}
-            value={tag}
-            items={tagOptions}
-            setOpen={setDropdownOpen}
-            setValue={setTag}
-            setItems={setTagOptions}
-            placeholder="Tags (Optional)"
-            style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
-            containerStyle={[styles.control, { marginHorizontal: 20 }]}
-            textStyle={styles.inputText}
-            dropDownContainerStyle={styles.dropdownStyle}
-            placeholderStyle={{
-              fontWeight: '400',
-              color: '#C4C4C4',
-            }}
-            zIndex={2000}
-            zIndexInverse={2000}
-            itemSeparatorStyle={{ borderColor: 'red' }}
-            searchPlaceholder="Search tags or type to add a new tag..."
-            searchContainerStyle={{
-              borderBottomColor: '#C4C4C4',
-            }}
-            searchPlaceholderTextColor="#C4C4C4"
-            searchTextInputStyle={{
-              borderRadius: 20,
-              borderColor: '#C4C4C4',
-            }}
-            addCustomItem={true}
           />
 
           <View style={{ alignSelf: 'center' }}>
@@ -200,6 +150,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignSelf: 'center',
+    marginTop: 10,
   },
   buttonText: {
     color: 'white',
