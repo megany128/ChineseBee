@@ -45,8 +45,8 @@ export default function HomeScreen({ route, navigation }: any) {
 
   const [allCards, setAllCards]: any = useState([]);
 
-  const WOTDCards: any = useRef([]);
-  const IOTDCards: any = useRef([]);
+  const [WOTDCards, setWOTDCards]: any = useState([{ english: 'house', chinese: '家' }]);
+  const [IOTDCards, setIOTDCards]: any = useState([{ english: 'be worried about others', chinese: '关心他人' }]);
 
   const todaysRevision = useRef();
   const newCardsLength = useRef(0);
@@ -82,14 +82,14 @@ export default function HomeScreen({ route, navigation }: any) {
 
       let allCardsTemp: any = Object.values(cardItems);
       setAllCards(allCardsTemp);
-      WOTDCards.current = allCardsTemp.filter((obj: any) => {
-        return !obj.idiom;
-      });
+      // TODO: (later) fix this is sue
+      // setWOTDCards(allCardsTemp.filter((obj: any) => {
+      //   return !obj.idiom;
+      // }))
 
-      IOTDCards.current = allCardsTemp.filter((obj: any) => {
-        return obj.idiom;
-      });
-
+      // setIOTDCards(allCardsTemp.filter((obj: any) => {
+      //   return obj.idiom;
+      // }))
       // gets cards that are not new but are due this session
       let reviewArray = allCardsTemp.filter((obj: { dueDate: number; timesReviewed: number }) => {
         return obj.dueDate === 0 && obj.timesReviewed > 0;
@@ -169,16 +169,16 @@ export default function HomeScreen({ route, navigation }: any) {
           for (let card = 0; card < cards.length; card++) {
             if (cards[card].idiom) {
               console.log('iotd candidate', cards[card]);
-              IOTDCards.current = [...IOTDCards.current, cards[card]];
+              setIOTDCards([...IOTDCards, cards[card]]);
             } else {
               console.log('wotd candidate', cards[card]);
-              WOTDCards.current = [...WOTDCards.current, cards[card]];
+              setWOTDCards([...WOTDCards, cards[card]]);
             }
           }
         }
       }
-      IOTDCards.current = shuffleCards(IOTDCards.current);
-      WOTDCards.current = shuffleCards(WOTDCards.current);
+      setIOTDCards(() => shuffleCards(IOTDCards));
+      setWOTDCards(() => shuffleCards(WOTDCards));
     });
   };
 
@@ -433,10 +433,10 @@ export default function HomeScreen({ route, navigation }: any) {
               alignSelf: 'center',
             }}
           >
-            {WOTDCards.current && (
+            {WOTDCards && (
               <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
                 <View style={styles.card}>
-                  <Text style={styles.WOTDChn}>{WOTDCards.current[0].chinese}</Text>
+                  <Text style={styles.WOTDChn}>{WOTDCards[0].chinese}</Text>
                   <Text
                     style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
                   >
@@ -445,8 +445,8 @@ export default function HomeScreen({ route, navigation }: any) {
                 </View>
 
                 <View style={styles.card}>
-                  <Text style={styles.WOTDEng}>{pinyin(WOTDCards.current[0].chinese)}</Text>
-                  <Text style={styles.definition}>{WOTDCards.current[0].english}</Text>
+                  <Text style={styles.WOTDEng}>{pinyin(WOTDCards[0].chinese)}</Text>
+                  <Text style={styles.definition}>{WOTDCards[0].english}</Text>
                   <Text
                     style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
                   >
@@ -455,10 +455,10 @@ export default function HomeScreen({ route, navigation }: any) {
                 </View>
               </FlipCard>
             )}
-            {IOTDCards.current && (
+            {IOTDCards && (
               <FlipCard flipHorizontal={true} flipVertical={false} friction={10}>
                 <View style={styles.card}>
-                  <Text style={styles.IOTDChn}>{IOTDCards.current[0].chinese}</Text>
+                  <Text style={styles.IOTDChn}>{IOTDCards[0].chinese}</Text>
                   <Text
                     style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
                   >
@@ -467,8 +467,8 @@ export default function HomeScreen({ route, navigation }: any) {
                 </View>
 
                 <View style={styles.card}>
-                  <Text style={styles.IOTDEng}>{pinyin(IOTDCards.current[0].chinese)}</Text>
-                  <Text style={styles.definition}>{IOTDCards.current[0].english}</Text>
+                  <Text style={styles.IOTDEng}>{pinyin(IOTDCards[0].chinese)}</Text>
+                  <Text style={styles.definition}>{IOTDCards[0].english}</Text>
                   <Text
                     style={{ alignSelf: 'center', position: 'absolute', bottom: 10, fontSize: 12, color: '#C4C4C4' }}
                   >

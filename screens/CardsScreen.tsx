@@ -264,32 +264,32 @@ export default function CardsScreen({ route, navigation }: any) {
     switch (newSort) {
       // sorts by time created, then applies the starred filter and the search (within getStarred)
       case 0:
+        console.log('sorting by time created');
+
         setFilteredCards(
-          cardArray.sort((obj1: { createdAt: number }, obj2: { createdAt: number }) => obj2.createdAt - obj1.createdAt)
+          cardArray.sort(function (obj1: any, obj2: any) {
+            return obj2.createdAt - obj1.createdAt;
+          })
         );
         getStarred(starredFilter);
         break;
       // sorts by descending mastery, then applies the starred filter and the search (within getStarred)
       case 1:
+        console.log('sorting by descending mastery');
         setFilteredCards(
-          cardArray.sort(
-            (
-              obj1: { timesCorrect: number; timesReviewed: number },
-              obj2: { timesCorrect: number; timesReviewed: number }
-            ) => obj2.timesCorrect / obj2.timesReviewed - obj1.timesCorrect / obj1.timesReviewed
-          )
+          cardArray.sort(function (obj1: any, obj2: any) {
+            return obj2.timesCorrect / obj2.timesReviewed - obj1.timesCorrect / obj1.timesReviewed;
+          })
         );
         getStarred(starredFilter);
         break;
       // sorts by ascending mastery, then applies the starred filter and the search (within getStarred)
       case 2:
+        console.log('sorting by ascending mastery');
         setFilteredCards(
-          cardArray.sort(
-            (
-              obj1: { timesCorrect: number; timesReviewed: number },
-              obj2: { timesCorrect: number; timesReviewed: number }
-            ) => obj2.timesCorrect / obj2.timesReviewed - obj1.timesCorrect / obj1.timesReviewed
-          )
+          cardArray.sort(function (obj1: any, obj2: any) {
+            return obj1.timesCorrect / obj1.timesReviewed - obj2.timesCorrect / obj2.timesReviewed;
+          })
         );
         getStarred(starredFilter);
         break;
