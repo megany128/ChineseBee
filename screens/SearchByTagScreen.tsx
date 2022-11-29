@@ -46,7 +46,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
   const Card = ({ cardItem, id }: any) => {
     return (
       <View>
-        <Pressable onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
+        <Pressable onPress={() => navigation.navigate('CardInfoScreen', {card: cardItem, myCard: true})}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -127,8 +127,6 @@ export default function SearchByTagScreen({ route, navigation }: any) {
     return onValue(orderedData, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
-
-      // TODO: crash when editing
 
       // uses state to set cards to the data just retrieved
       setCards(
@@ -301,8 +299,6 @@ export default function SearchByTagScreen({ route, navigation }: any) {
           />
         </TouchableOpacity>
       </View>
-      {/* TODO: add swipe to delete */}
-      {/* TODO: add tag screen */}
       <FlatList
         style={styles.cardList}
         contentContainerStyle={styles.contentContainerStyle}

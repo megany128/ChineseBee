@@ -32,7 +32,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   const { user } = useAuthentication();
   const auth = getAuth();
 
-  // TODO: change to async storage
+  // TODO: (later) change to async storage
   const [progress, setProgress] = useState(0);
   const { todaysRevision, allCards } = route.params;
 
@@ -92,7 +92,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     setProgress(parseFloat(dailyStudyProgress));
     console.log('initial progress:', dailyStudyProgress);
 
-    // TODO: make sure card type is same when exiting and reentering
+    // TODO: (later) make sure card type is same when exiting and reentering
     setCurrentCardType((await AsyncStorage.getItem('cardType')) || '');
   };
 
@@ -263,7 +263,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
       // once list of answers has been generated, sets newQuestion to false to prevent the answers from constantly regenerating
       // with each rerender
       newQuestion.current = false;
-      // TODO: solution for when not enough cards match the criteria
+      // TODO: (later) solution for when not enough cards match the criteria
     }
     let answerOption = [0, 1, 2, 3];
 

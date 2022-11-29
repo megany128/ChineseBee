@@ -42,6 +42,7 @@
     "firebase": "^9.9.3",
     "hanzi": "^2.1.5",
     "hanzi-writer": "^3.3.0",
+    "is-chinese": "^2.0.0",
     "moment": "^2.29.4",
     "object-to-array-convert": "^1.1.0",
     "patch-package": "^6.5.0",

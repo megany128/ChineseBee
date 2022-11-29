@@ -13,13 +13,13 @@ import { getAuth } from 'firebase/auth';
 
 var pinyin = require('chinese-to-pinyin');
 
-// TODO: add field - myCard. if myCard is true, allow for star, edit, delete. If false, just view.
+// TODO: add field - myCard. if myCard is true, allow for star, edit, delete. If false, just
 
 export default function CardInfoScreen({ route, navigation }: any) {
   const auth = getAuth();
-  const card = route.params;
+  const {card, myCard} = route.params;
   const [starred, setStarred] = useState(card.starred);
-  console.log(card);
+  console.log(myCard);
 
   useEffect(() => {
     const data = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
@@ -47,9 +47,6 @@ export default function CardInfoScreen({ route, navigation }: any) {
     }
   };
 
-  // TODO: in route.params, add myCard true vs false. if myCard, show things like mastery, delete, starred etc
-  // but if not, give option to add card
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={{ justifyContent: 'flex-start', backgroundColor: 'transparent' }}>
@@ -68,7 +65,9 @@ export default function CardInfoScreen({ route, navigation }: any) {
           <TouchableOpacity style={{ marginRight: 5 }} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={40} color="white" />
           </TouchableOpacity>
-          <View
+          {
+            myCard && (
+              <View
             style={{
               justifyContent: 'space-between',
               backgroundColor: 'transparent',
@@ -87,6 +86,8 @@ export default function CardInfoScreen({ route, navigation }: any) {
               <AntDesign name={starred ? 'star' : 'staro'} size={30} color="white" />
             </TouchableOpacity>
           </View>
+            )
+          }
         </View>
         <View style={{ backgroundColor: 'white', height: 1000 }}>
           <View style={{ backgroundColor: 'transparent', marginHorizontal: 30, marginTop: 30 }}>
@@ -123,27 +124,29 @@ export default function CardInfoScreen({ route, navigation }: any) {
             <Text>{getMastery()}</Text>
             {/* <Text style={styles.title}>Example Phrases</Text> */}
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() =>
-                Alert.alert('Delete Card', 'Are you sure? This is irreversible', [
-                  {
-                    text: 'Cancel',
-                    onPress: () => console.log('Cancel Pressed'),
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      remove(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
-                      navigation.goBack();
-                    },
-                  },
-                ])
-              }
-            >
-              <Text style={styles.buttonText}>DELETE</Text>
-            </TouchableOpacity>
+                {myCard && (
+                  <TouchableOpacity
+                  style={styles.button}
+                  onPress={() =>
+                    Alert.alert('Delete Card', 'Are you sure? This is irreversible', [
+                      {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'OK',
+                        onPress: () => {
+                          remove(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
+                          navigation.goBack();
+                        },
+                      },
+                    ])
+                  }
+                >
+                  <Text style={styles.buttonText}>DELETE</Text>
+                </TouchableOpacity>
+                )}
           </View>
         </View>
       </View>

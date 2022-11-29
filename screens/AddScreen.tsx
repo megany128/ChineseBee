@@ -100,9 +100,9 @@ export default function AddScreen({ route, navigation }: any) {
         timesCorrect: 0,
         timesReviewed: 0,
         dueDate: 0,
-        // TODO: edit
-        idiom: false,
       });
+
+      // TODO: (later) add to IOTDCards and WOTDCards
 
       // adds the card's key as a field
       const key = getKey();

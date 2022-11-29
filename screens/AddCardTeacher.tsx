@@ -76,9 +76,9 @@ export default function AddCardTeacher({ route, navigation }: any) {
         english: english,
         chinese: chinese,
         createdAt: moment().valueOf(),
-        // TODO: edit
-        idiom: false,
       });
+
+      // TODO: (later) add to IOTDCards and WOTDCards
 
       // adds the card's key as a field
       const key = getKey();

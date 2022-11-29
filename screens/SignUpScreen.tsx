@@ -13,7 +13,7 @@ import {
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { StackScreenProps } from '@react-navigation/stack';
 import { db } from '../config/firebase';
-import { ref, set } from 'firebase/database';
+import { ref, set, update } from 'firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const auth = getAuth();
@@ -52,7 +52,7 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       AsyncStorage.setItem('userType', 'student');
       await createUserWithEmailAndPassword(auth, value.email.trim(), value.password.trim())
         .then(async (data) => {
-          // TODO: use firebase for this instead of asyncstorage since progress should be carried over multiple devices
+          // TODO: (later) use firebase for this instead of asyncstorage since progress should be carried over multiple devices
           AsyncStorage.setItem('dailyStudyProgress', '0');
           AsyncStorage.setItem('cardsStudied', '0');
           AsyncStorage.setItem('minutesLearning', '0');
@@ -83,7 +83,7 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             correctHandwritingETOC: 0,
             totalHandwritingETOC: 0,
           });
-          set(ref(db, '/userRoles/'), {
+          update(ref(db, '/userRoles/'), {
             [data.user.uid]: 'student',
           });
         })
@@ -118,12 +118,12 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
           await updateProfile(auth.currentUser!, {
             displayName: value.name.trim(),
           });
-          set(ref(db, '/teachers/' + data.user.uid), {
+          update(ref(db, '/teachers/' + data.user.uid), {
             name: value.name.trim(),
             uid: data.user.uid,
             type: 'teacher',
           });
-          set(ref(db, '/userRoles/'), {
+          update(ref(db, '/userRoles/'), {
             [data.user.uid]: 'teacher',
           });
         })

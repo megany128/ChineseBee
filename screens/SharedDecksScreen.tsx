@@ -8,9 +8,11 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function SharedDecksScreen({ route, navigation }: any) {
   const auth = getAuth();
-  const [allDecks, setAllDecks] = useState([]);
+  const [sharedDecks, setSharedDecks] = useState([]);
+  const [classDecks, setClassDecks]: any = useState([]);
   const [refreshing, setRefreshing] = useState(true);
   const classCode = useRef('');
+  const teacherID = useRef('')
 
   useEffect(() => {
     loadNewData();
@@ -25,7 +27,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
 
       // uses state to set cards to the data just retrieved
       let decks: any = Object.values(deckItems);
-      setAllDecks(decks);
+      setSharedDecks(decks);
 
       console.log('all decks new:', decks);
       setRefreshing(false);
@@ -42,26 +44,30 @@ export default function SharedDecksScreen({ route, navigation }: any) {
         let data3 = querySnapShot.val() || {};
         let user: any = { ...data3 };
 
-        console.log('teacher is', userData.classCode);
-        let teacher = user[userData.classCode];
-        console.log('teacher is', teacher);
+        let classCodeTemp = userData.classCode
+        console.log('code is', classCodeTemp);
+        let teacher = user[classCodeTemp];
+        console.log('teacher is', user[classCodeTemp]);
+        teacherID.current = teacher
 
         onValue(ref(db, '/teachers/' + teacher + '/decks'), (querySnapShot) => {
           let data4 = querySnapShot.val() || {};
           let decks = Object.values(data4);
-          console.log(decks);
+          setClassDecks(decks)
         });
       });
     });
   };
 
-  const Deck = ({ deck }: any) => {
+  const Deck = ({ deck, classDeck, teacherUID }: any) => {
     return (
       <View>
         <TouchableOpacity
           onPress={() =>
             navigation.navigate('DeckInfoScreen', {
               deck: deck,
+              classDeck: classDeck,
+              teacherUID: teacherUID
             })
           }
         >
@@ -84,12 +90,31 @@ export default function SharedDecksScreen({ route, navigation }: any) {
       <FlatList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
         numColumns={2}
-        style={styles.cardList}
+        style={[styles.cardList, {maxHeight: (sharedDecks.length / 2) * 170}]}
         contentContainerStyle={styles.contentContainerStyle}
         showsVerticalScrollIndicator={false}
-        data={allDecks}
+        data={sharedDecks}
         keyExtractor={(item) => item['key']}
-        renderItem={({ item }) => <Deck deck={item} />}
+        renderItem={({ item }) => <Deck deck={item} classDeck={false} teacherUID={''}/>}
+        ListEmptyComponent={() => <Text>There are no shared decks yet...</Text>}
+      />
+       <Text style={{
+        fontSize: 32,
+        fontWeight: '700',
+        marginLeft: 30,
+        marginTop: 20}}>
+          CLASS DECKS
+        </Text>
+        
+        <FlatList
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
+        numColumns={2}
+        style={[styles.cardList, {maxHeight: (classDecks.length / 2) * 170}]}
+        contentContainerStyle={styles.contentContainerStyle}
+        showsVerticalScrollIndicator={false}
+        data={classDecks}
+        keyExtractor={(item) => item['key']}
+        renderItem={({ item }) => <Deck deck={item} classDeck={true} teacherUID={teacherID.current}/>}
         ListEmptyComponent={() => <Text>Your teacher hasn't added any class decks yet...</Text>}
       />
     </SafeAreaView>

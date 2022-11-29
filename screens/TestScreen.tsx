@@ -278,7 +278,7 @@ export default function TestScreen({ route, navigation }: any) {
       // once list of answers has been generated, sets newQuestion to false to prevent the answers from constantly regenerating
       // with each rerender
       newQuestion.current = false;
-      // TODO: solution for when not enough cards match the criteria
+      // TODO: (later) solution for when not enough cards match the criteria
     }
     let answerOption = [0, 1, 2, 3];
 

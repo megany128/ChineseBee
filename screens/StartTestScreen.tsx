@@ -42,7 +42,7 @@ export default function StartTestScreen({ route, navigation }: any) {
     { label: '30', value: '30' },
   ]);
 
-  // TODO: add option for mastery (mastered, learning, struggling)
+  // TODO: (later) add option for mastery (mastered, learning, struggling)
   const [tagOptions, setTagOptions]: any = useState([]);
 
   useEffect(() => {

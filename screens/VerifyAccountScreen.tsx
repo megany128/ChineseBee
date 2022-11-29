@@ -23,7 +23,7 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
   };
 
   const deleteAccount = async () => {
-    // TODO: delete from class list as well
+    // TODO: (later) delete from class list as well
     Alert.alert('Are you sure?', 'This is irreversible!', [
       {
         text: 'Cancel',

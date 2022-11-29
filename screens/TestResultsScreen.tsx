@@ -29,7 +29,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 var pinyin = require('chinese-to-pinyin');
 
-// TODO: fix: when tap on card info and toggle starred, navigating back doesnt update it
+// TODO: (later) when tap on card info and toggle starred, navigating back doesnt update it
 export default function TestResultsScreen({ route, navigation }: any) {
   const {
     correctCards,
@@ -62,7 +62,7 @@ export default function TestResultsScreen({ route, navigation }: any) {
     const [starred, setStarred] = useState(cardItem.starred);
     return (
       <View>
-        <Pressable onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
+        <Pressable onPress={() => navigation.navigate('CardInfoScreen', {card: cardItem, myCard: true})}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>

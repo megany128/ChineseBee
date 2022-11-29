@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ref, onValue, update } from 'firebase/database';
 import { db } from '../config/firebase';
@@ -84,7 +84,7 @@ export default function EditScreen({ route, navigation }: any) {
       card.tag = tag;
 
       navigation.pop(1);
-      navigation.navigate('CardInfoScreen', card);
+      navigation.navigate('CardInfoScreen', {card: card, myCard: true});
     }
   };
 

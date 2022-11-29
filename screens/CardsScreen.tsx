@@ -46,7 +46,7 @@ export default function CardsScreen({ route, navigation }: any) {
     const [starred, setStarred] = useState(cardItem.starred);
     return (
       <View style={{ backgroundColor: 'transparent' }}>
-        <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', cardItem)}>
+        <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', {card: cardItem, myCard: true})}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column', backgroundColor: 'transparent' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -98,7 +98,6 @@ export default function CardsScreen({ route, navigation }: any) {
   };
 
   // TODO: applying starred doesn't happen immediately
-  // TODO: add idiom property and display visually. also add test option for idioms only
   // toggles a card's starred status
   const updateStarred = (cardItem: any) => {
     console.log(cardItem['starred']);

@@ -51,9 +51,9 @@ export default function HomeScreen({ route, navigation }: any) {
 
   const todaysRevision = useRef();
 
-  // TODO: modal to set this
+  // TODO: (later) modal to set this
   const newCardLimit = 5;
-  const reviewLimit = 5;
+  const reviewLimit = 20;
 
   const classCode = useRef('');
   const [myStudents, setMyStudents]: any = useState([]);
@@ -90,7 +90,6 @@ export default function HomeScreen({ route, navigation }: any) {
       });
 
       // gets cards that are not new but are due this session
-      // TODO: fix bug - sometimes one card is there twice
       let reviewArray = allCards.filter((obj: { dueDate: number; timesReviewed: number }) => {
         return obj.dueDate === 0 && obj.timesReviewed > 0;
       });
@@ -177,7 +176,7 @@ export default function HomeScreen({ route, navigation }: any) {
     });
   };
 
-  // TODO: only generate new cards when last time opened was in the past
+  // TODO: (later) only generate new cards when last time opened was in the past
   useEffect(() => {
     onValue(ref(db, '/userRoles'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -191,12 +190,12 @@ export default function HomeScreen({ route, navigation }: any) {
     generateTodaysRevision();
   }, []);
 
-  // TODO: fix - doesn't reset at midnight
+  // TODO:(later) fix - doesn't reset at midnight
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
 
-    // TODO: use firebase instead since user shld be able to access over multiple devices
+    // TODO: (later) use firebase instead since user shld be able to access over multiple devices
     let lastTimeOpened = await AsyncStorage.getItem('lastTimeOpened');
     let streak = JSON.parse((await AsyncStorage.getItem('dayStreak')) || '0') + 1;
     console.log(lastTimeOpened);
@@ -225,7 +224,6 @@ export default function HomeScreen({ route, navigation }: any) {
             });
           }
         });
-        // TODO: for every card in the db, decrease duedate by 1
       }
     } else {
       console.log('first time opening');
@@ -394,7 +392,7 @@ export default function HomeScreen({ route, navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* TODO: little bee at end of progress bar */}
+          {/* TODO: (later) little bee at end of progress bar */}
           <TouchableOpacity
             style={styles.todaysRevision}
             onPress={() =>
