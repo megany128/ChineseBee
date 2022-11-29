@@ -150,6 +150,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
 
   // gets cards from database when screen loads
   useEffect(() => {
+    console.log('tag is', JSON.stringify(tagSearch));
     loadNewData();
   }, []);
 

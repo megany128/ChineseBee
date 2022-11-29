@@ -17,6 +17,7 @@ import moment from 'moment';
 import Modal from 'react-native-modal';
 import Entypo from 'react-native-vector-icons/Entypo';
 import isChinese from 'is-chinese';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
@@ -30,7 +31,9 @@ export default function AddCardTeacher({ route, navigation }: any) {
 
   const [english, setEnglish]: any = useState('');
   const [chinese, setChinese]: any = useState('');
-  const [tag, setTag]: any = useState(route.params);
+  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [dropdownOpen2, setDropdownOpen2] = useState(false);
+  const [idiom, setIdiom]: any = useState('');
 
   const [error, setError] = useState(String);
 
@@ -38,6 +41,16 @@ export default function AddCardTeacher({ route, navigation }: any) {
     if (modalVisible) {
       setTimeout(() => setModalVisible(false), 700);
     }
+    setIdiomOptions([
+      {
+        label: 'Idiom',
+        value: true,
+      },
+      {
+        label: 'Phrase/Word',
+        value: false,
+      },
+    ]);
   });
 
   // gets the key of the last card created
@@ -67,6 +80,8 @@ export default function AddCardTeacher({ route, navigation }: any) {
       setError('Chinese definition missing!');
     } else if (!isChinese(chinese)) {
       setError('Please make sure the Chinese definition only contains Chinese characters');
+    } else if (idiom === '') {
+      setError('Please indicate if the Card is an idiom or a phrase/word');
     } else {
       setError('');
       console.log(english + ' / ' + chinese);
@@ -76,6 +91,7 @@ export default function AddCardTeacher({ route, navigation }: any) {
         english: english,
         chinese: chinese,
         createdAt: moment().valueOf(),
+        idiom: idiom,
       });
 
       // TODO: (later) add to IOTDCards and WOTDCards
@@ -122,6 +138,26 @@ export default function AddCardTeacher({ route, navigation }: any) {
             onChangeText={(text) => setEnglish(text)}
             autoCompleteType=""
             style={styles.inputText}
+          />
+
+          <DropDownPicker
+            open={dropdownOpen2}
+            value={idiom}
+            items={idiomOptions}
+            setOpen={setDropdownOpen2}
+            setValue={setIdiom}
+            setItems={setIdiomOptions}
+            placeholder="Idiom or phrase/word?"
+            style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
+            containerStyle={[styles.control, { marginHorizontal: 20 }]}
+            textStyle={styles.inputText}
+            dropDownContainerStyle={styles.dropdownStyle}
+            placeholderStyle={{
+              fontWeight: '400',
+              color: '#C4C4C4',
+            }}
+            zIndex={2000}
+            zIndexInverse={2000}
           />
 
           <View style={{ alignSelf: 'center', marginTop: 30 }}>

@@ -90,11 +90,16 @@ export default function CardInfoScreen({ route, navigation }: any) {
             <View style={{ backgroundColor: 'transparent', flexDirection: 'row' }}>
               <Text style={styles.chinese}>{card.chinese}</Text>
               {card.tag ? (
-                <TouchableOpacity style={styles.tag}>
+                <TouchableOpacity style={styles.tag} onPress={() => navigation.navigate('SearchByTagScreen', card.tag)}>
                   <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
                     {card.tag}
                   </Text>
                 </TouchableOpacity>
+              ) : null}
+              {card.idiom ? (
+                <View style={[styles.tag, { backgroundColor: '#94BAF4' }]}>
+                  <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>Idiom</Text>
+                </View>
               ) : null}
             </View>
             <View style={{ backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>

@@ -15,7 +15,6 @@ var pinyin = require('chinese-to-pinyin');
 export default function CardInfoScreenTeacher({ route, navigation }: any) {
   const auth = getAuth();
   const { card, deck } = route.params;
-  console.log(card);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,12 +51,15 @@ export default function CardInfoScreenTeacher({ route, navigation }: any) {
           <View style={{ backgroundColor: 'transparent', marginHorizontal: 30, marginTop: 30 }}>
             <View style={{ backgroundColor: 'transparent', flexDirection: 'row' }}>
               <Text style={styles.chinese}>{card.chinese}</Text>
-              {card.tag ? (
-                <TouchableOpacity style={styles.tag}>
-                  <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
-                    {card.tag}
-                  </Text>
-                </TouchableOpacity>
+              <View style={[styles.tag, { backgroundColor: '#FEB1C3' }]}>
+                <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>
+                  {deck.name}
+                </Text>
+              </View>
+              {card.idiom ? (
+                <View style={[styles.tag, { backgroundColor: '#94BAF4' }]}>
+                  <Text style={{ color: 'white', fontSize: 12, textAlign: 'center', fontWeight: '600' }}>Idiom</Text>
+                </View>
               ) : null}
             </View>
             <View style={{ backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>

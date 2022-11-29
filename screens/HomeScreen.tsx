@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { Text, View } from '../components/Themed';
 import Icon from 'react-native-vector-icons/AntDesign';
-import { RootTabScreenProps } from '../types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
@@ -92,12 +91,12 @@ export default function HomeScreen({ route, navigation }: any) {
       });
 
       // gets cards that are not new but are due this session
-      let reviewArray = allCards.filter((obj: { dueDate: number; timesReviewed: number }) => {
+      let reviewArray = allCardsTemp.filter((obj: { dueDate: number; timesReviewed: number }) => {
         return obj.dueDate === 0 && obj.timesReviewed > 0;
       });
 
       // gets cards that are new
-      let newCardArray = allCards.filter((obj: { timesReviewed: number }) => {
+      let newCardArray = allCardsTemp.filter((obj: { timesReviewed: number }) => {
         return obj.timesReviewed === 0;
       });
 
@@ -196,7 +195,7 @@ export default function HomeScreen({ route, navigation }: any) {
   // TODO: doesn't happen straight away
   useEffect(() => {
     generateTodaysRevision();
-  }, []);
+  }, [userType]);
 
   // TODO:(later) fix - doesn't reset at midnight
   const getStats = async () => {
@@ -250,8 +249,8 @@ export default function HomeScreen({ route, navigation }: any) {
   };
 
   useEffect(() => {
+    getStats();
     if (userType.current === 'student') {
-      getStats();
       const willFocusSubscription = navigation.addListener('focus', () => {
         console.log('getting stats');
         getStats();

@@ -15,6 +15,7 @@ import { ref, update, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
 import isChinese from 'is-chinese';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
@@ -30,6 +31,10 @@ export default function EditTeacher({ route, navigation }: any) {
 
   const [english, setEnglish]: any = useState(card.english);
   const [chinese, setChinese]: any = useState(card.chinese);
+  const [idiom, setIdiom]: any = useState(card.idiom);
+
+  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [dropdownOpen2, setDropdownOpen2] = useState(false);
 
   const [error, setError] = useState(String);
 
@@ -38,6 +43,19 @@ export default function EditTeacher({ route, navigation }: any) {
       setTimeout(() => setModalVisible(false), 700);
     }
   });
+
+  useEffect(() => {
+    setIdiomOptions([
+      {
+        label: 'Idiom',
+        value: true,
+      },
+      {
+        label: 'Phrase/Word',
+        value: false,
+      },
+    ]);
+  }, []);
 
   // adds a card with data from the text inputs
   const updateCard = () => {
@@ -50,6 +68,8 @@ export default function EditTeacher({ route, navigation }: any) {
       setError('Chinese definition missing!');
     } else if (!isChinese(chinese)) {
       setError('Please make sure the Chinese definition only contains Chinese characters');
+    } else if (idiom === '') {
+      setError('Please indicate if the Card is an idiom or a phrase/word');
     } else {
       setError('');
       console.log(english + ' / ' + chinese);
@@ -58,6 +78,7 @@ export default function EditTeacher({ route, navigation }: any) {
       update(ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards/' + card.key), {
         english: english,
         chinese: chinese,
+        idiom: idiom,
       }).then(() => {
         onValue(
           ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards/' + card.key),
@@ -101,6 +122,27 @@ export default function EditTeacher({ route, navigation }: any) {
             onChangeText={(text) => setEnglish(text)}
             autoCompleteType=""
             style={styles.inputText}
+          />
+
+          <DropDownPicker
+            open={dropdownOpen2}
+            value={idiom}
+            items={idiomOptions}
+            setOpen={setDropdownOpen2}
+            setValue={setIdiom}
+            setItems={setIdiomOptions}
+            placeholder="Idiom or phrase/word?"
+            style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
+            containerStyle={[styles.control, { marginHorizontal: 20 }]}
+            textStyle={styles.inputText}
+            dropDownContainerStyle={styles.dropdownStyle}
+            placeholderStyle={{
+              fontWeight: '400',
+              color: '#C4C4C4',
+            }}
+            zIndex={2000}
+            zIndexInverse={2000}
+            itemSeparatorStyle={{ borderColor: 'red' }}
           />
 
           <View style={{ alignSelf: 'center' }}>
@@ -153,7 +195,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignSelf: 'center',
-    marginTop: 10,
+    marginTop: 30,
   },
   buttonText: {
     color: 'white',

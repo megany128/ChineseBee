@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
 import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -22,9 +21,7 @@ moment().format();
 
 export default function EditScreen({ route, navigation }: any) {
   // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
-  var hanzi = require('hanzi');
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -32,10 +29,14 @@ export default function EditScreen({ route, navigation }: any) {
 
   const [english, setEnglish]: any = useState(card.english);
   const [chinese, setChinese]: any = useState(card.chinese);
-  const [tag, setTag]: any = useState(card.tag);
+  const [tag, setTag]: any = useState(card.tag ? card.tag : null);
+  const [idiom, setIdiom]: any = useState(card.idiom);
 
   const [tagOptions, setTagOptions]: any = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [dropdownOpen2, setDropdownOpen2] = useState(false);
 
   const [error, setError] = useState(String);
 
@@ -57,6 +58,17 @@ export default function EditScreen({ route, navigation }: any) {
       }
       tagOptionsTemp2[0] = { label: '', value: '' };
       setTagOptions(tagOptionsTemp2);
+
+      setIdiomOptions([
+        {
+          label: 'Idiom',
+          value: true,
+        },
+        {
+          label: 'Phrase/Word',
+          value: false,
+        },
+      ]);
     });
   }, []);
 
@@ -71,6 +83,8 @@ export default function EditScreen({ route, navigation }: any) {
       setError('Chinese definition missing!');
     } else if (!isChinese(chinese)) {
       setError('Please make sure the Chinese definition only contains Chinese characters');
+    } else if (idiom === '') {
+      setError('Please indicate if the Card is an idiom or a phrase/word');
     } else {
       setError('');
       console.log(english + ' / ' + chinese);
@@ -80,11 +94,16 @@ export default function EditScreen({ route, navigation }: any) {
         english: english,
         chinese: chinese,
         tag: tag,
+        idiom: idiom,
       });
 
       card.english = english;
       card.chinese = chinese;
       card.tag = tag;
+      card.idiom = idiom;
+
+      console.log('idiom is', idiom);
+      console.log('tag is', tag);
 
       navigation.pop(1);
       navigation.navigate('CardInfoScreen', { card: card, myCard: true });
@@ -122,14 +141,13 @@ export default function EditScreen({ route, navigation }: any) {
           />
 
           <DropDownPicker
-            open={dropdownOpen}
-            searchable={true}
-            value={tag}
-            items={tagOptions}
-            setOpen={setDropdownOpen}
-            setValue={setTag}
-            setItems={setTagOptions}
-            placeholder="Tags (Optional)"
+            open={dropdownOpen2}
+            value={idiom}
+            items={idiomOptions}
+            setOpen={setDropdownOpen2}
+            setValue={setIdiom}
+            setItems={setIdiomOptions}
+            placeholder="Idiom or phrase/word?"
             style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
             containerStyle={[styles.control, { marginHorizontal: 20 }]}
             textStyle={styles.inputText}
@@ -140,6 +158,28 @@ export default function EditScreen({ route, navigation }: any) {
             }}
             zIndex={2000}
             zIndexInverse={2000}
+            itemSeparatorStyle={{ borderColor: 'red' }}
+          />
+
+          <DropDownPicker
+            open={dropdownOpen}
+            searchable={true}
+            value={tag}
+            items={tagOptions}
+            setOpen={setDropdownOpen}
+            setValue={setTag}
+            setItems={setTagOptions}
+            placeholder="Tags (Optional)"
+            style={[styles.inputStyle, { width: 360, marginLeft: 10, marginTop: 20 }]}
+            containerStyle={[styles.control, { marginHorizontal: 20 }]}
+            textStyle={styles.inputText}
+            dropDownContainerStyle={[styles.dropdownStyle, { marginTop: 20 }]}
+            placeholderStyle={{
+              fontWeight: '400',
+              color: '#C4C4C4',
+            }}
+            zIndex={1000}
+            zIndexInverse={1000}
             itemSeparatorStyle={{ borderColor: 'red' }}
             searchPlaceholder="Search tags or type to add a new tag..."
             searchContainerStyle={{
@@ -203,6 +243,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignSelf: 'center',
+    marginTop: 20,
   },
   buttonText: {
     color: 'white',

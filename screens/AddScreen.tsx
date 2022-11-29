@@ -30,10 +30,15 @@ export default function AddScreen({ route, navigation }: any) {
   const [tagOptions, setTagOptions]: any = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [dropdownOpen2, setDropdownOpen2] = useState(false);
+
   const [english, setEnglish]: any = useState('');
   const [chinese, setChinese]: any = useState('');
+  const [idiom, setIdiom]: any = useState('');
+
   const { tagParam } = route.params;
-  const [tag, setTag]: any = useState(tagParam);
+  const [tag, setTag]: any = useState(tagParam.length > 0 ? tagParam : null);
 
   const [error, setError] = useState(String);
 
@@ -55,6 +60,17 @@ export default function AddScreen({ route, navigation }: any) {
       }
       tagOptionsTemp2[0] = { label: '', value: '' };
       setTagOptions(tagOptionsTemp2);
+
+      setIdiomOptions([
+        {
+          label: 'Idiom',
+          value: true,
+        },
+        {
+          label: 'Phrase/Word',
+          value: false,
+        },
+      ]);
     });
   }, []);
 
@@ -81,6 +97,8 @@ export default function AddScreen({ route, navigation }: any) {
       setError('Chinese definition missing!');
     } else if (!isChinese(chinese)) {
       setError('Please make sure the Chinese definition only contains Chinese characters');
+    } else if (idiom === '') {
+      setError('Please indicate if the Card is an idiom or a phrase/word');
     } else {
       setError('');
       console.log(english + ' / ' + chinese);
@@ -95,6 +113,7 @@ export default function AddScreen({ route, navigation }: any) {
         timesCorrect: 0,
         timesReviewed: 0,
         dueDate: 0,
+        idiom: idiom,
       });
 
       // TODO: (later) add to IOTDCards and WOTDCards
@@ -145,14 +164,13 @@ export default function AddScreen({ route, navigation }: any) {
           />
 
           <DropDownPicker
-            open={dropdownOpen}
-            searchable={true}
-            value={tag}
-            items={tagOptions}
-            setOpen={setDropdownOpen}
-            setValue={setTag}
-            setItems={setTagOptions}
-            placeholder="Tags (Optional)"
+            open={dropdownOpen2}
+            value={idiom}
+            items={idiomOptions}
+            setOpen={setDropdownOpen2}
+            setValue={setIdiom}
+            setItems={setIdiomOptions}
+            placeholder="Idiom or phrase/word?"
             style={[styles.inputStyle, { width: 360, marginLeft: 10 }]}
             containerStyle={[styles.control, { marginHorizontal: 20 }]}
             textStyle={styles.inputText}
@@ -163,6 +181,28 @@ export default function AddScreen({ route, navigation }: any) {
             }}
             zIndex={2000}
             zIndexInverse={2000}
+            itemSeparatorStyle={{ borderColor: 'red' }}
+          />
+
+          <DropDownPicker
+            open={dropdownOpen}
+            searchable={true}
+            value={tag}
+            items={tagOptions}
+            setOpen={setDropdownOpen}
+            setValue={setTag}
+            setItems={setTagOptions}
+            placeholder="Tags (Optional)"
+            style={[styles.inputStyle, { width: 360, marginLeft: 10, marginTop: 20 }]}
+            containerStyle={[styles.control, { marginHorizontal: 20 }]}
+            textStyle={styles.inputText}
+            dropDownContainerStyle={[styles.dropdownStyle, { marginTop: 20 }]}
+            placeholderStyle={{
+              fontWeight: '400',
+              color: '#C4C4C4',
+            }}
+            zIndex={1000}
+            zIndexInverse={1000}
             itemSeparatorStyle={{ borderColor: 'red' }}
             searchPlaceholder="Search tags or type to add a new tag..."
             searchContainerStyle={{
