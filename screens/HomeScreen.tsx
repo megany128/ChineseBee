@@ -50,6 +50,8 @@ export default function HomeScreen({ route, navigation }: any) {
   const IOTDCards: any = useRef([]);
 
   const todaysRevision = useRef();
+  const newCardsLength = useRef(0);
+  const reviewCardsLength = useRef(0);
 
   // TODO: (later) modal to set this
   const newCardLimit = 5;
@@ -103,6 +105,11 @@ export default function HomeScreen({ route, navigation }: any) {
       let combinedCards: any = [...reviewArray.slice(0, reviewLimit), ...newCardArray.slice(0, newCardLimit)];
       let todaysRevisionTemp: any = [...shuffleCards(combinedCards)];
       todaysRevision.current = todaysRevisionTemp;
+      newCardsLength.current = newCardArray.slice(0, newCardLimit).length;
+      reviewCardsLength.current = reviewArray.slice(0, reviewLimit).length;
+
+      console.log('num of new:', newCardsLength.current);
+      console.log('num of review:', reviewCardsLength.current);
 
       console.log('REVIEW ARRAY');
       console.log('============');
@@ -186,6 +193,7 @@ export default function HomeScreen({ route, navigation }: any) {
     });
   }, []);
 
+  // TODO: doesn't happen straight away
   useEffect(() => {
     generateTodaysRevision();
   }, []);
@@ -396,7 +404,12 @@ export default function HomeScreen({ route, navigation }: any) {
           <TouchableOpacity
             style={styles.todaysRevision}
             onPress={() =>
-              navigation.navigate('DailyStudyScreen', { todaysRevision: todaysRevision.current, allCards: allCards })
+              navigation.navigate('DailyStudyScreen', {
+                todaysRevision: todaysRevision.current,
+                allCards: allCards,
+                newCardsLength: newCardsLength.current,
+                reviewCardsLength: reviewCardsLength.current,
+              })
             }
           >
             <Text style={styles.revisionText}>今天的复习</Text>
@@ -504,7 +517,7 @@ export default function HomeScreen({ route, navigation }: any) {
                 borderRadius: 50,
                 marginHorizontal: 10,
               }}
-              onPress={() => navigation.navigate('AddScreen')}
+              onPress={() => navigation.navigate('AddScreen', { tagParam: '' })}
             >
               <Icon name="plus" size={60} color="#FFFFFF" />
             </TouchableOpacity>

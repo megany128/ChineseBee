@@ -46,7 +46,7 @@ export default function CardsScreen({ route, navigation }: any) {
     const [starred, setStarred] = useState(cardItem.starred);
     return (
       <View style={{ backgroundColor: 'transparent' }}>
-        <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', {card: cardItem, myCard: true})}>
+        <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', { card: cardItem, myCard: true })}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column', backgroundColor: 'transparent' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -382,7 +382,7 @@ export default function CardsScreen({ route, navigation }: any) {
               ) : null
             }
           />
-          <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen')}>
+          <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen', { tagParam: '' })}>
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
           </TouchableOpacity>
         </View>

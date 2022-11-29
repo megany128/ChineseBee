@@ -46,7 +46,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
   const Card = ({ cardItem, id }: any) => {
     return (
       <View>
-        <Pressable onPress={() => navigation.navigate('CardInfoScreen', {card: cardItem, myCard: true})}>
+        <Pressable onPress={() => navigation.navigate('CardInfoScreen', { card: cardItem, myCard: true })}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -315,7 +315,10 @@ export default function SearchByTagScreen({ route, navigation }: any) {
           ) : null
         }
       />
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen', tagSearch)}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate('AddScreen', { tagParam: tagSearch })}
+      >
         <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
       </TouchableOpacity>
     </SafeAreaView>

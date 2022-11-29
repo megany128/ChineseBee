@@ -16,6 +16,7 @@ import { ref, onValue, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
 import DropDownPicker from 'react-native-dropdown-picker';
+import isChinese from 'is-chinese';
 
 moment().format();
 
@@ -68,6 +69,8 @@ export default function EditScreen({ route, navigation }: any) {
       setError('English definition missing!');
     } else if (chinese === '') {
       setError('Chinese definition missing!');
+    } else if (!isChinese(chinese)) {
+      setError('Please make sure the Chinese definition only contains Chinese characters');
     } else {
       setError('');
       console.log(english + ' / ' + chinese);
@@ -84,7 +87,7 @@ export default function EditScreen({ route, navigation }: any) {
       card.tag = tag;
 
       navigation.pop(1);
-      navigation.navigate('CardInfoScreen', {card: card, myCard: true});
+      navigation.navigate('CardInfoScreen', { card: card, myCard: true });
     }
   };
 

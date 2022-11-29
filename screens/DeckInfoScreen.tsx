@@ -28,7 +28,7 @@ export default function DeckInfoScreen({ route, navigation }: any) {
   const Card = ({ cardItem, id }: any) => {
     return (
       <View>
-        <Pressable onPress={() => navigation.navigate('CardInfoScreen', {card: cardItem, myCard: false})}>
+        <Pressable onPress={() => navigation.navigate('CardInfoScreen', { card: cardItem, myCard: false })}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>
@@ -63,17 +63,17 @@ export default function DeckInfoScreen({ route, navigation }: any) {
 
   const loadNewData = () => {
     // gets cards ordered by createdAt
-    console.log('class deck is', classDeck)
+    console.log('class deck is', classDeck);
     let orderedData: any;
     if (!classDeck) orderedData = query(ref(db, '/sharedCards/' + deck['key'] + '/cards'));
     else orderedData = query(ref(db, '/teachers/' + teacherUID + '/decks/' + deck['key'] + '/cards'));
 
-    console.log('ordered data', orderedData)
+    console.log('ordered data', orderedData);
     return onValue(orderedData, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItems = { ...data };
 
-      console.log('data is', data)
+      console.log('data is', data);
 
       // uses state to set cards to the data just retrieved
       setCards(Object.values(cardItems));

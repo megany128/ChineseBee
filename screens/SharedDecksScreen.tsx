@@ -12,7 +12,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
   const [classDecks, setClassDecks]: any = useState([]);
   const [refreshing, setRefreshing] = useState(true);
   const classCode = useRef('');
-  const teacherID = useRef('')
+  const teacherID = useRef('');
 
   useEffect(() => {
     loadNewData();
@@ -44,16 +44,16 @@ export default function SharedDecksScreen({ route, navigation }: any) {
         let data3 = querySnapShot.val() || {};
         let user: any = { ...data3 };
 
-        let classCodeTemp = userData.classCode
+        let classCodeTemp = userData.classCode;
         console.log('code is', classCodeTemp);
         let teacher = user[classCodeTemp];
         console.log('teacher is', user[classCodeTemp]);
-        teacherID.current = teacher
+        teacherID.current = teacher;
 
         onValue(ref(db, '/teachers/' + teacher + '/decks'), (querySnapShot) => {
           let data4 = querySnapShot.val() || {};
           let decks = Object.values(data4);
-          setClassDecks(decks)
+          setClassDecks(decks);
         });
       });
     });
@@ -67,7 +67,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
             navigation.navigate('DeckInfoScreen', {
               deck: deck,
               classDeck: classDeck,
-              teacherUID: teacherUID
+              teacherUID: teacherUID,
             })
           }
         >
@@ -90,31 +90,34 @@ export default function SharedDecksScreen({ route, navigation }: any) {
       <FlatList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
         numColumns={2}
-        style={[styles.cardList, {maxHeight: (sharedDecks.length / 2) * 170}]}
+        style={[styles.cardList, { maxHeight: (sharedDecks.length / 2) * 170 }]}
         contentContainerStyle={styles.contentContainerStyle}
         showsVerticalScrollIndicator={false}
         data={sharedDecks}
         keyExtractor={(item) => item['key']}
-        renderItem={({ item }) => <Deck deck={item} classDeck={false} teacherUID={''}/>}
+        renderItem={({ item }) => <Deck deck={item} classDeck={false} teacherUID={''} />}
         ListEmptyComponent={() => <Text>There are no shared decks yet...</Text>}
       />
-       <Text style={{
-        fontSize: 32,
-        fontWeight: '700',
-        marginLeft: 30,
-        marginTop: 20}}>
-          CLASS DECKS
-        </Text>
-        
-        <FlatList
+      <Text
+        style={{
+          fontSize: 32,
+          fontWeight: '700',
+          marginLeft: 30,
+          marginTop: 20,
+        }}
+      >
+        CLASS DECKS
+      </Text>
+
+      <FlatList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
         numColumns={2}
-        style={[styles.cardList, {maxHeight: (classDecks.length / 2) * 170}]}
+        style={[styles.cardList, { maxHeight: (classDecks.length / 2) * 170 }]}
         contentContainerStyle={styles.contentContainerStyle}
         showsVerticalScrollIndicator={false}
         data={classDecks}
         keyExtractor={(item) => item['key']}
-        renderItem={({ item }) => <Deck deck={item} classDeck={true} teacherUID={teacherID.current}/>}
+        renderItem={({ item }) => <Deck deck={item} classDeck={true} teacherUID={teacherID.current} />}
         ListEmptyComponent={() => <Text>Your teacher hasn't added any class decks yet...</Text>}
       />
     </SafeAreaView>

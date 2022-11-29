@@ -62,7 +62,7 @@ export default function TestResultsScreen({ route, navigation }: any) {
     const [starred, setStarred] = useState(cardItem.starred);
     return (
       <View>
-        <Pressable onPress={() => navigation.navigate('CardInfoScreen', {card: cardItem, myCard: true})}>
+        <Pressable onPress={() => navigation.navigate('CardInfoScreen', { card: cardItem, myCard: true })}>
           <View style={styles.cardContainer}>
             <View style={{ flexDirection: 'column' }}>
               <Text style={styles.chinese}>{cardItem['chinese']}</Text>

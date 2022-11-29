@@ -8,25 +8,22 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { RootStackScreenProps } from '../types';
 import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
 import moment from 'moment';
 import Modal from 'react-native-modal';
 import Entypo from 'react-native-vector-icons/Entypo';
 import DropDownPicker from 'react-native-dropdown-picker';
+import isChinese from 'is-chinese';
 
 moment().format();
 
 export default function AddScreen({ route, navigation }: any) {
   // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
-  var hanzi = require('hanzi');
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -35,14 +32,10 @@ export default function AddScreen({ route, navigation }: any) {
 
   const [english, setEnglish]: any = useState('');
   const [chinese, setChinese]: any = useState('');
-  const [tag, setTag]: any = useState(route.params);
-  const teacherUID = useState('');
+  const { tagParam } = route.params;
+  const [tag, setTag]: any = useState(tagParam);
 
   const [error, setError] = useState(String);
-
-  // useEffect(() => {
-  //   hanzi.start();
-  // }, []);
 
   useEffect(() => {
     if (modalVisible) {
@@ -86,6 +79,8 @@ export default function AddScreen({ route, navigation }: any) {
       setError('English definition missing!');
     } else if (chinese === '') {
       setError('Chinese definition missing!');
+    } else if (!isChinese(chinese)) {
+      setError('Please make sure the Chinese definition only contains Chinese characters');
     } else {
       setError('');
       console.log(english + ' / ' + chinese);
@@ -264,7 +259,7 @@ const styles = StyleSheet.create({
   },
   error: {
     color: '#D54826FF',
-    marginVertical: 20,
+    marginBottom: 20,
   },
   modalView: {
     height: '15%',

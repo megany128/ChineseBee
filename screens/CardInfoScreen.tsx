@@ -17,7 +17,7 @@ var pinyin = require('chinese-to-pinyin');
 
 export default function CardInfoScreen({ route, navigation }: any) {
   const auth = getAuth();
-  const {card, myCard} = route.params;
+  const { card, myCard } = route.params;
   const [starred, setStarred] = useState(card.starred);
   console.log(myCard);
 
@@ -65,29 +65,27 @@ export default function CardInfoScreen({ route, navigation }: any) {
           <TouchableOpacity style={{ marginRight: 5 }} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={40} color="white" />
           </TouchableOpacity>
-          {
-            myCard && (
-              <View
-            style={{
-              justifyContent: 'space-between',
-              backgroundColor: 'transparent',
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}
-          >
-            <TouchableOpacity onPress={() => navigation.navigate('EditScreen', card)}>
-              <FontAwesome5 name="pen" size={25} style={{ marginRight: 20 }} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), { starred: !starred })
-              }
+          {myCard && (
+            <View
+              style={{
+                justifyContent: 'space-between',
+                backgroundColor: 'transparent',
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
             >
-              <AntDesign name={starred ? 'star' : 'staro'} size={30} color="white" />
-            </TouchableOpacity>
-          </View>
-            )
-          }
+              <TouchableOpacity onPress={() => navigation.navigate('EditScreen', card)}>
+                <FontAwesome5 name="pen" size={25} style={{ marginRight: 20 }} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key), { starred: !starred })
+                }
+              >
+                <AntDesign name={starred ? 'star' : 'staro'} size={30} color="white" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         <View style={{ backgroundColor: 'white', height: 1000 }}>
           <View style={{ backgroundColor: 'transparent', marginHorizontal: 30, marginTop: 30 }}>
@@ -124,29 +122,29 @@ export default function CardInfoScreen({ route, navigation }: any) {
             <Text>{getMastery()}</Text>
             {/* <Text style={styles.title}>Example Phrases</Text> */}
 
-                {myCard && (
-                  <TouchableOpacity
-                  style={styles.button}
-                  onPress={() =>
-                    Alert.alert('Delete Card', 'Are you sure? This is irreversible', [
-                      {
-                        text: 'Cancel',
-                        onPress: () => console.log('Cancel Pressed'),
-                        style: 'cancel',
+            {myCard && (
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() =>
+                  Alert.alert('Delete Card', 'Are you sure? This is irreversible', [
+                    {
+                      text: 'Cancel',
+                      onPress: () => console.log('Cancel Pressed'),
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        remove(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
+                        navigation.goBack();
                       },
-                      {
-                        text: 'OK',
-                        onPress: () => {
-                          remove(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
-                          navigation.goBack();
-                        },
-                      },
-                    ])
-                  }
-                >
-                  <Text style={styles.buttonText}>DELETE</Text>
-                </TouchableOpacity>
-                )}
+                    },
+                  ])
+                }
+              >
+                <Text style={styles.buttonText}>DELETE</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

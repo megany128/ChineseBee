@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { ref, update, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
+import isChinese from 'is-chinese';
 
 moment().format();
 
@@ -47,6 +48,8 @@ export default function EditTeacher({ route, navigation }: any) {
       setError('English definition missing!');
     } else if (chinese === '') {
       setError('Chinese definition missing!');
+    } else if (!isChinese(chinese)) {
+      setError('Please make sure the Chinese definition only contains Chinese characters');
     } else {
       setError('');
       console.log(english + ' / ' + chinese);

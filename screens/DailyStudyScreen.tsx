@@ -34,7 +34,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   // TODO: (later) change to async storage
   const [progress, setProgress] = useState(0);
-  const { todaysRevision, allCards } = route.params;
+  const { todaysRevision, allCards, newCardsLength, reviewCardsLength } = route.params;
 
   const [cardNum, setCardNum] = useState(0);
 
@@ -49,9 +49,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   const [typingQuestion, setTypingQuestion] = useState(false);
   const [writingQuestion, setWritingQuestion] = useState(0);
-
-  const [newCards, setNewCards] = useState(5);
-  const [reviewCards, setReviewCards] = useState(20);
   // const [finishedWriting, setFinishedWriting] = useState(false);
 
   const timeOpened = new Date();
@@ -173,12 +170,14 @@ export default function DailyStudyScreen({ route, navigation }: any) {
               today's recap:
             </Text>
             <View style={{ flexDirection: 'row' }}>
-              <Text style={{ textAlign: 'center', marginTop: 5, color: '#FEB1C3', fontWeight: '600' }}>{newCards}</Text>
+              <Text style={{ textAlign: 'center', marginTop: 5, color: '#FEB1C3', fontWeight: '600' }}>
+                {newCardsLength}
+              </Text>
               <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600' }}> new cards learned</Text>
             </View>
             <View style={{ flexDirection: 'row' }}>
               <Text style={{ textAlign: 'center', marginTop: 5, color: '#94BAF4', fontWeight: '600' }}>
-                {reviewCards}
+                {reviewCardsLength}
               </Text>
               <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600' }}> cards reviewed</Text>
             </View>
