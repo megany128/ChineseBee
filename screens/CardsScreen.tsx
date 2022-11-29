@@ -42,8 +42,8 @@ export default function CardsScreen({ route, navigation }: any) {
   const [filteredClassDecks, setFilteredClassDecks] = useState([]);
 
   // creates a Card component
-  const Card = ({ cardItem, id }: any) => {
-    const [starred, setStarred] = useState(cardItem.starred);
+  const Card = ({ cardItem, id, starredInitial }: any) => {
+    const [starred, setStarred] = useState(starredInitial);
     return (
       <View style={{ backgroundColor: 'transparent' }}>
         <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', { card: cardItem, myCard: true })}>
@@ -68,7 +68,6 @@ export default function CardsScreen({ route, navigation }: any) {
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TouchableOpacity
                   onPress={() => {
-                    setStarred(!starred);
                     updateStarred(cardItem);
                   }}
                 >
@@ -124,6 +123,7 @@ export default function CardsScreen({ route, navigation }: any) {
         starred: !cardItem['starred'],
       });
       getStarred(starredFilter);
+      loadNewData();
     }
   };
 
@@ -373,7 +373,13 @@ export default function CardsScreen({ route, navigation }: any) {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
             data={cardKeys}
             keyExtractor={(item) => item}
-            renderItem={({ item }) => <Card id={item} cardItem={filteredCards[item as keyof typeof cards]} />}
+            renderItem={({ item }) => (
+              <Card
+                id={item}
+                cardItem={filteredCards[item as keyof typeof cards]}
+                starredInitial={filteredCards[item as keyof typeof cards]['starred' as keyof typeof cards]}
+              />
+            )}
             ListEmptyComponent={() =>
               !starredFilter ? (
                 <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No cards yet!</Text>

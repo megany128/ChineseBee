@@ -123,26 +123,25 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     if (progress < 1) {
       for (cardNum; cardNum < todaysRevision.length; ) {
         return (
-          <View style={{ flex: 1 }}>
+          <View>
             <Question key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
-
-            {/* {typingQuestion && 
-            <Input
-            inputContainerStyle={styles.inputStyle}
-            containerStyle={styles.control}
-            value={value.typingAnswer}
-            onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
-            style={styles.inputText}
-            autoFocus={true}
-            blurOnSubmit={true}
-            autoCompleteType=""
-            onSubmitEditing={() => {
-              value.typingAnswer === todaysRevision[cardNum]['chinese']
-                ? ((correct.current = true), setModalVisible(true))
-                : ((correct.current = false), setModalVisible(true));
-            }}
-          />
-          } */}
+            {typingQuestion && (
+              <Input
+                inputContainerStyle={styles.inputStyle}
+                containerStyle={styles.control}
+                value={value.typingAnswer}
+                onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
+                style={styles.inputText}
+                autoFocus={true}
+                blurOnSubmit={true}
+                autoCompleteType=""
+                onSubmitEditing={() => {
+                  value.typingAnswer === todaysRevision[cardNum]['chinese']
+                    ? ((correct.current = true), setModalVisible(true))
+                    : ((correct.current = false), setModalVisible(true));
+                }}
+              />
+            )}
           </View>
         );
       }
@@ -369,7 +368,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         />
       </View>
     );
-    return null;
   };
 
   // Typing (English -> Chinese)
@@ -540,7 +538,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   const Question = (card: any) => {
     let timesReviewed = card.card.timesReviewed;
     let cardType: any = currentCardType;
-    console.log('card type:', cardType);
     let type = 0;
 
     if (cardType === '') {
@@ -639,43 +636,26 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     if (cardType === 'NewCard') {
       return <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
     } else if (cardType === 'ListeningCTOC') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ListeningCTOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
     } else if (cardType === 'ReadingCTOE') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ReadingCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
     } else if (cardType === 'ListeningCTOE') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ListeningCTOE key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
     } else if (cardType === 'ReadingETOC') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ReadingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
     } else if (cardType === 'TypingETOC') {
-      // setTypingQuestion(true)
+      setTypingQuestion(true);
       return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-          <View style={{ flex: 1 }}>
-            <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
-            <Input
-              inputContainerStyle={styles.inputStyle}
-              containerStyle={styles.control}
-              value={value.typingAnswer}
-              onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
-              style={styles.inputText}
-              autoFocus={true}
-              blurOnSubmit={true}
-              autoCompleteType=""
-              onSubmitEditing={() => {
-                value.typingAnswer === todaysRevision[cardNum]['chinese']
-                  ? ((correct.current = true), setModalVisible(true))
-                  : ((correct.current = false), setModalVisible(true));
-              }}
-            />
-          </View>
+          <TypingETOC key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
         </TouchableWithoutFeedback>
       );
     } else if (cardType === 'handwritingETOC') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return (
         <View style={{ flex: 1 }}>
           <Text style={[styles.typingCard, { marginTop: 25 }]}>{todaysRevision[cardNum].english}</Text>

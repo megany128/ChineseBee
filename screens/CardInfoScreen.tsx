@@ -13,8 +13,6 @@ import { getAuth } from 'firebase/auth';
 
 var pinyin = require('chinese-to-pinyin');
 
-// TODO: add field - myCard. if myCard is true, allow for star, edit, delete. If false, just
-
 export default function CardInfoScreen({ route, navigation }: any) {
   const auth = getAuth();
   const { card, myCard } = route.params;
