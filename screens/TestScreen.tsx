@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import Modal from 'react-native-modal';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
 import { ref, update, onValue } from 'firebase/database';
@@ -18,6 +17,7 @@ import { Input } from 'react-native-elements';
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Speech from 'expo-speech';
+import Toast from 'react-native-toast-message';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -57,8 +57,6 @@ export default function TestScreen({ route, navigation }: any) {
 
   const [cardNum, setCardNum] = useState(0);
 
-  const [modalVisible, setModalVisible] = useState(false);
-
   const answers: any = useRef([]);
   const correctAnswerOption: any = useRef(0);
 
@@ -66,6 +64,7 @@ export default function TestScreen({ route, navigation }: any) {
   const correct = useRef(false);
 
   const [writingQuestion, setWritingQuestion] = useState(0);
+  const [typingQuestion, setTypingQuestion] = useState(false);
 
   // const [finishedWriting, setFinishedWriting] = useState(false);
 
@@ -75,35 +74,28 @@ export default function TestScreen({ route, navigation }: any) {
     typingAnswer: '',
   });
 
-  // useEffect(() => {
-  //   if (modalVisible) {
-  //     setTimeout(() => hideModal(cards[cardNum]), 1500);
-  //   }
-  // });
-
   useEffect(() => {
-    return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
-      let data = querySnapShot.val() || [];
-      let user = { ...data };
-      correctReadingETOC.current = user.correctReadingETOC;
-      totalReadingETOC.current = user.totalReadingETOC;
+    correctCards.current = [];
+    incorrectCards.current = [];
 
-      correctReadingCTOE.current = user.correctReadingCTOE;
-      totalReadingCTOE.current = user.totalReadingCTOE;
+    correctReadingETOC.current = 0;
+    totalReadingETOC.current = 0;
 
-      correctListeningCTOC.current = user.correctListeningCTOC;
-      totalListeningCTOC.current = user.totalListeningCTOC;
+    correctReadingCTOE.current = 0;
+    totalReadingCTOE.current = 0;
 
-      correctListeningCTOE.current = user.correctListeningCTOE;
-      totalListeningCTOE.current = user.totalListeningCTOE;
+    correctListeningCTOC.current = 0;
+    totalListeningCTOC.current = 0;
 
-      correctTypingETOC.current = user.correctTypingETOC;
-      totalTypingETOC.current = user.totalTypingETOC;
+    correctListeningCTOE.current = 0;
+    totalListeningCTOE.current = 0;
 
-      correctHandwritingETOC.current = user.correctHandwritingETOC;
-      totalHandwritingETOC.current = user.totalHandwritingETOC;
-    });
-  });
+    correctTypingETOC.current = 0;
+    totalTypingETOC.current = 0;
+
+    correctHandwritingETOC.current = 0;
+    totalHandwritingETOC.current = 0;
+  }, []);
 
   // gets cards from database when screen loads and creates array of cards to revise
   useEffect(() => {
@@ -114,6 +106,14 @@ export default function TestScreen({ route, navigation }: any) {
       console.log(cards[card].chinese + ' / ' + cards[card].english);
     }
   }, []);
+
+  const showToast = (card: any, right: boolean) => {
+    Toast.show({
+      type: right ? 'correctToast' : 'incorrectToast',
+      props: { english: card.english, chinese: card.chinese, pinyin: pinyin(card.chinese) },
+      onHide: () => hideToast(card, right),
+    });
+  };
 
   // shuffles cards in an array through recursion
   const shuffleCards: any = (array: []) => {
@@ -127,11 +127,9 @@ export default function TestScreen({ route, navigation }: any) {
     return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
-  const hideModal = (card: any) => {
-    console.log('hide modal');
-    setModalVisible(false);
+  const hideToast = (card: any, right: boolean) => {
     newQuestion.current = true;
-    if (correct.current) {
+    if (right) {
       console.log('correct');
       let newCorrectCards = [...correctCards.current, card];
       correctCards.current = newCorrectCards;
@@ -148,8 +146,37 @@ export default function TestScreen({ route, navigation }: any) {
   const renderQuestions = () => {
     for (cardNum; cardNum < cards.length; ) {
       return (
-        <View style={{ flex: 1 }}>
+        <View>
           <Question key={cards[cardNum]} card={cards[cardNum]} />
+          {typingQuestion && (
+            <Input
+              inputContainerStyle={styles.inputStyle}
+              containerStyle={styles.control}
+              value={value.typingAnswer}
+              onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
+              style={styles.inputText}
+              autoFocus={true}
+              blurOnSubmit={true}
+              autoCompleteType=""
+              onSubmitEditing={() => {
+                value.typingAnswer === cards[cardNum]['chinese']
+                  ? ((correct.current = true),
+                    (correctTypingETOC.current += 1),
+                    (totalTypingETOC.current += 1),
+                    showToast(cards[cardNum], true),
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctTypingETOC: correctTypingETOC.current,
+                      totalTypingETOC: totalTypingETOC.current,
+                    }))
+                  : ((correct.current = false),
+                    (totalTypingETOC.current += 1),
+                    showToast(cards[cardNum], false),
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalTypingETOC: totalTypingETOC.current,
+                    }));
+              }}
+            />
+          )}
         </View>
       );
     }
@@ -244,7 +271,7 @@ export default function TestScreen({ route, navigation }: any) {
               allCards[wrongAnswerIndexes[0]]['english'] != allCards[randomNum]['english'] &&
               allCards[wrongAnswerIndexes[0]]['chinese'] != allCards[randomNum]['chinese']
             ) {
-              wrongAnswerIndexes[i] = randomNum;
+              wrongAnswerIndexes[i] = 0;
               valid = true;
               // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
@@ -275,13 +302,14 @@ export default function TestScreen({ route, navigation }: any) {
           }
         }
       }
+      console.log('final answers are', answers.current);
+
       // once list of answers has been generated, sets newQuestion to false to prevent the answers from constantly regenerating
       // with each rerender
       newQuestion.current = false;
       // TODO: (later) solution for when not enough cards match the criteria
     }
     let answerOption = [0, 1, 2, 3];
-
     if (answerOption.length > 0) {
       // renders each answer in turn
       return answerOption.map((j) => (
@@ -295,7 +323,7 @@ export default function TestScreen({ route, navigation }: any) {
               onPress={() => {
                 console.log('correct');
                 correct.current = true;
-                setModalVisible(true);
+                showToast(card, true);
 
                 switch (cardType) {
                   case 'ReadingETOC':
@@ -347,7 +375,7 @@ export default function TestScreen({ route, navigation }: any) {
               onPress={() => {
                 console.log('wrong');
                 correct.current = false;
-                setModalVisible(true);
+                showToast(card, false);
 
                 switch (cardType) {
                   case 'ReadingETOC':
@@ -461,15 +489,13 @@ export default function TestScreen({ route, navigation }: any) {
             console.log('number of mistakes: ' + event.nativeEvent.data);
             let mistakes = JSON.parse(event.nativeEvent.data);
             if (mistakes < 3) {
-              correctHandwritingETOC.current += 1;
-              update(ref(db, '/students/' + auth.currentUser?.uid), {
-                correctHandwritingETOC: totalHandwritingETOC.current,
-              });
+              correct.current = true;
+              correctHandwritingETOC.current = correctHandwritingETOC.current + 1;
+              totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
+            } else {
+              correct.current = false;
+              totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
             }
-            totalHandwritingETOC.current += 1;
-            update(ref(db, '/students/' + auth.currentUser?.uid), {
-              totalHandwritingETOC: totalHandwritingETOC.current,
-            });
           }}
         />
       </View>
@@ -641,55 +667,28 @@ export default function TestScreen({ route, navigation }: any) {
     console.log('card type is', cardType);
 
     if (cardType === 'ListeningCTOC') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ListeningCTOC key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'ReadingCTOE') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ReadingCTOE key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'ListeningCTOE') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ListeningCTOE key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'ReadingETOC') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return <ReadingETOC key={cards[cardNum]} card={cards[cardNum]} />;
     } else if (cardType === 'TypingETOC') {
-      // setTypingQuestion(true)
+      setTypingQuestion(true);
       return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-          <View style={{ flex: 1 }}>
+          <View>
             <TypingETOC key={cards[cardNum]} card={cards[cardNum]} />
-            <Input
-              inputContainerStyle={styles.inputStyle}
-              containerStyle={styles.control}
-              value={value.typingAnswer}
-              onChangeText={(text) => setValue({ ...value, typingAnswer: text })}
-              style={styles.inputText}
-              autoFocus={true}
-              blurOnSubmit={true}
-              autoCompleteType=""
-              onSubmitEditing={() => {
-                value.typingAnswer === cards[cardNum]['chinese']
-                  ? ((correct.current = true),
-                    (correctTypingETOC.current += 1),
-                    (totalTypingETOC.current += 1),
-                    setModalVisible(true),
-                    update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      correctTypingETOC: correctTypingETOC.current,
-                      totalTypingETOC: totalTypingETOC.current,
-                    }))
-                  : ((correct.current = false),
-                    (totalHandwritingETOC.current += 1),
-                    setModalVisible(true),
-                    update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      totalTypingETOC: totalTypingETOC.current,
-                    }));
-              }}
-            />
           </View>
         </TouchableWithoutFeedback>
       );
     } else if (cardType === 'HandwritingETOC') {
-      // setTypingQuestion(false)
+      setTypingQuestion(false);
       return (
         <View style={{ flex: 1 }}>
           <Text style={[styles.typingCard, { marginTop: 25 }]}>{cards[cardNum].english}</Text>
@@ -713,7 +712,7 @@ export default function TestScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={[{ marginBottom: 230 }, styles.nextCard]}
-              onPress={() => hideModal(cards[cardNum])}
+              onPress={() => showToast(cards[cardNum], correct.current)}
             >
               <Text style={styles.nextCardText}>NEXT CARD!</Text>
             </TouchableOpacity>
@@ -726,15 +725,6 @@ export default function TestScreen({ route, navigation }: any) {
 
   // move to the next question
   const updateCardNum = async (card: any, right: boolean) => {
-    console.log('moving to next question');
-    let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
-    AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
-    setWritingQuestion(0);
-
-    let cardNumber = cardNum + 1;
-    setCardNum(cardNumber);
-    console.log('new card: ' + cardNum);
-
     // TODO: fix 'right' for writing question
     const newTimesCorrect = right ? card.timesCorrect + 1 : card.timesCorrect;
 
@@ -743,6 +733,14 @@ export default function TestScreen({ route, navigation }: any) {
       timesReviewed: card.timesReviewed + 1,
     });
 
+    console.log('moving to next question');
+    let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
+    AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
+    setWritingQuestion(0);
+
+    let cardNumber = cardNum + 1;
+    setCardNum(cardNumber);
+    console.log('new card: ' + cardNum);
     setProgress(cardNumber / cards.length);
   };
 
@@ -774,57 +772,6 @@ export default function TestScreen({ route, navigation }: any) {
         />
       </View>
       <View style={{ alignSelf: 'center' }}>{renderQuestions()}</View>
-      {modalVisible && (
-        <Modal isVisible={modalVisible} onBackdropPress={() => hideModal(cards[cardNum])} style={{ margin: 0 }}>
-          {correct.current === true ? (
-            <View style={styles.correctModalView}>
-              <View
-                style={{
-                  borderRadius: 100,
-                  backgroundColor: 'white',
-                  width: 65,
-                  height: 65,
-                  marginLeft: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Entypo name="check" size={35} color="#FEB1C3" />
-              </View>
-              <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{cards[cardNum]['chinese']}</Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {pinyin(cards[cardNum]['chinese'])}
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{cards[cardNum]['english']}</Text>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.wrongModalView}>
-              <View
-                style={{
-                  borderRadius: 100,
-                  backgroundColor: 'white',
-                  width: 65,
-                  height: 65,
-                  marginLeft: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Entypo name="cross" size={35} color="#94BAF4" />
-              </View>
-              <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{cards[cardNum]['chinese']}</Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {pinyin(cards[cardNum]['chinese'])}
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{cards[cardNum]['english']}</Text>
-              </View>
-            </View>
-          )}
-        </Modal>
-      )}
     </SafeAreaView>
   );
 }
@@ -927,29 +874,11 @@ const styles = StyleSheet.create({
     marginTop: 60,
     height: 200,
   },
-  correctModalView: {
-    height: '15%',
-    marginTop: 'auto',
-    backgroundColor: '#FEB1C3',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  wrongModalView: {
-    height: '15%',
-    marginTop: 'auto',
-    backgroundColor: '#94BAF4',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   control: {
     marginTop: 50,
     borderColor: '#C4C4C4',
-    marginLeft: 20,
-    width: 380,
+    marginHorizontal: 20,
+    width: 360,
   },
   inputText: {
     marginLeft: 20,

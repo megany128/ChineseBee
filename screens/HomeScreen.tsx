@@ -74,6 +74,21 @@ export default function HomeScreen({ route, navigation }: any) {
     return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
+  useEffect(() => {
+    AsyncStorage.setItem('dailyStudyProgress', '0');
+  }, []);
+
+  // temporarily, while generateTodaysRevision is in onpress
+  useEffect(() => {
+    onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let cardItems = { ...data };
+
+      let allCardsTemp: any = Object.values(cardItems);
+      setAllCards(allCardsTemp);
+    });
+  }, []);
+
   const generateTodaysRevision = () => {
     console.log('\nGENERATING TODAYS REVISION...\n');
     onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
@@ -81,7 +96,6 @@ export default function HomeScreen({ route, navigation }: any) {
       let cardItems = { ...data };
 
       let allCardsTemp: any = Object.values(cardItems);
-      setAllCards(allCardsTemp);
       // TODO: (later) fix this is sue
       // setWOTDCards(allCardsTemp.filter((obj: any) => {
       //   return !obj.idiom;
@@ -168,10 +182,8 @@ export default function HomeScreen({ route, navigation }: any) {
           let cards: any = Object.values(decks[deck].cards);
           for (let card = 0; card < cards.length; card++) {
             if (cards[card].idiom) {
-              console.log('iotd candidate', cards[card]);
               setIOTDCards([...IOTDCards, cards[card]]);
             } else {
-              console.log('wotd candidate', cards[card]);
               setWOTDCards([...WOTDCards, cards[card]]);
             }
           }
@@ -193,9 +205,9 @@ export default function HomeScreen({ route, navigation }: any) {
   }, []);
 
   // TODO: doesn't happen straight away
-  useEffect(() => {
-    generateTodaysRevision();
-  }, [userType]);
+  // useEffect(() => {
+  //   generateTodaysRevision();
+  // }, []);
 
   // TODO:(later) fix - doesn't reset at midnight
   const getStats = async () => {
@@ -251,9 +263,12 @@ export default function HomeScreen({ route, navigation }: any) {
   useEffect(() => {
     getStats();
     if (userType.current === 'student') {
-      const willFocusSubscription = navigation.addListener('focus', () => {
+      const willFocusSubscription = navigation.addListener('focus', async () => {
         console.log('getting stats');
         getStats();
+
+        let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
+        setProgress(parseFloat(dailyStudyProgress));
       });
 
       return willFocusSubscription;
@@ -402,14 +417,15 @@ export default function HomeScreen({ route, navigation }: any) {
           {/* TODO: (later) little bee at end of progress bar */}
           <TouchableOpacity
             style={styles.todaysRevision}
-            onPress={() =>
+            onPress={() => {
+              generateTodaysRevision();
               navigation.navigate('DailyStudyScreen', {
                 todaysRevision: todaysRevision.current,
                 allCards: allCards,
                 newCardsLength: newCardsLength.current,
                 reviewCardsLength: reviewCardsLength.current,
-              })
-            }
+              });
+            }}
           >
             <Text style={styles.revisionText}>今天的复习</Text>
             <Progress.Bar

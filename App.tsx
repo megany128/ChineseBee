@@ -3,17 +3,74 @@ import React from 'react';
 import RootNavigation from './navigation';
 import { ThemeProvider } from 'react-native-elements';
 import './config/firebase';
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
+import Entypo from 'react-native-vector-icons/Entypo';
 
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
-import Navigation from './navigation';
+import Toast from 'react-native-toast-message';
 
 export default function App() {
   const isLoadingComplete = useCachedResources();
   const colorScheme = useColorScheme();
+
+  const toastConfig = {
+    correctToast: ({ props }: any) => (
+      <View style={styles.correctModalView}>
+        <View
+          style={{
+            borderRadius: 100,
+            backgroundColor: 'white',
+            width: 65,
+            height: 65,
+            marginLeft: 30,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Entypo name="check" size={35} color="#FEB1C3" />
+        </View>
+        <View style={{ flexDirection: 'column', marginLeft: 20 }}>
+          <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{props.chinese}</Text>
+          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{props.pinyin}</Text>
+          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{props.english}</Text>
+        </View>
+      </View>
+    ),
+    incorrectToast: ({ props }: any) => (
+      <View style={styles.wrongModalView}>
+        <View
+          style={{
+            borderRadius: 100,
+            backgroundColor: 'white',
+            width: 65,
+            height: 65,
+            marginLeft: 30,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Entypo name="cross" size={35} color="#94BAF4" />
+        </View>
+        <View style={{ flexDirection: 'column', marginLeft: 20 }}>
+          <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>{props.chinese}</Text>
+          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{props.pinyin}</Text>
+          <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{props.english}</Text>
+        </View>
+      </View>
+    ),
+  };
 
   if (!isLoadingComplete) {
     return null;
@@ -21,7 +78,34 @@ export default function App() {
     return (
       <ThemeProvider>
         <RootNavigation />
+        <Toast position="bottom" bottomOffset={40} visibilityTime={1000} config={toastConfig} />
       </ThemeProvider>
     );
   }
 }
+
+const styles = StyleSheet.create({
+  correctModalView: {
+    width: 380,
+    height: 100,
+    backgroundColor: '#FEB1C3',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  wrongModalView: {
+    width: 380,
+    height: 100,
+    marginTop: 'auto',
+    backgroundColor: '#94BAF4',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+});

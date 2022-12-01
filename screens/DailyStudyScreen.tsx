@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import Modal from 'react-native-modal';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
 import { ref, onValue, update } from 'firebase/database';
@@ -23,6 +22,7 @@ import * as Speech from 'expo-speech';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/Entypo';
 import Icon3 from 'react-native-vector-icons/FontAwesome';
+import Toast from 'react-native-toast-message';
 
 var pinyin = require('chinese-to-pinyin');
 
@@ -38,8 +38,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   const [cardNum, setCardNum] = useState(0);
 
-  const [modalVisible, setModalVisible] = useState(false);
-
   const answers: any = useRef([]);
   const correctAnswerOption: any = useRef(0);
 
@@ -49,6 +47,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   const [typingQuestion, setTypingQuestion] = useState(false);
   const [writingQuestion, setWritingQuestion] = useState(0);
+  const [writingMistakes, setWritingMistakes] = useState(0);
   // const [finishedWriting, setFinishedWriting] = useState(false);
 
   const timeOpened = new Date();
@@ -57,11 +56,13 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     typingAnswer: '',
   });
 
-  // useEffect(() => {
-  //   if (modalVisible) {
-  //     setTimeout(() => hideModal(todaysRevision[cardNum]), 1500);
-  //   }
-  // });
+  const showToast = (card: any, right: boolean) => {
+    Toast.show({
+      type: right ? 'correctToast' : 'incorrectToast',
+      props: { english: card.english, chinese: card.chinese, pinyin: pinyin(card.chinese) },
+      onHide: () => hideToast(card, right),
+    });
+  };
 
   // gets cards from database when screen loads and creates array of cards to revise
   useEffect(() => {
@@ -105,10 +106,9 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
-  const hideModal = (card: any) => {
-    setModalVisible(false);
+  const hideToast = (card: any, right: boolean) => {
     newQuestion.current = true;
-    if (correct.current) {
+    if (right) {
       console.log('correct');
     } else {
       console.log('wrong');
@@ -137,8 +137,8 @@ export default function DailyStudyScreen({ route, navigation }: any) {
                 autoCompleteType=""
                 onSubmitEditing={() => {
                   value.typingAnswer === todaysRevision[cardNum]['chinese']
-                    ? ((correct.current = true), setModalVisible(true))
-                    : ((correct.current = false), setModalVisible(true));
+                    ? ((correct.current = true), showToast(todaysRevision[cardNum], true))
+                    : ((correct.current = false), showToast(todaysRevision[cardNum], false));
                 }}
               />
             )}
@@ -168,13 +168,13 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             <Text style={{ textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#FFCB44' }}>
               today's recap:
             </Text>
-            <View style={{ flexDirection: 'row' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
               <Text style={{ textAlign: 'center', marginTop: 5, color: '#FEB1C3', fontWeight: '600' }}>
                 {newCardsLength}
               </Text>
               <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600' }}> new cards learned</Text>
             </View>
-            <View style={{ flexDirection: 'row' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
               <Text style={{ textAlign: 'center', marginTop: 5, color: '#94BAF4', fontWeight: '600' }}>
                 {reviewCardsLength}
               </Text>
@@ -206,6 +206,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           let valid = false;
           while (!valid) {
             let randomNum = Math.floor(Math.random() * (allCards.length - 1));
+            console.log('random number is', randomNum + ' so random card is ' + allCards[randomNum]);
             if (card.english != allCards[randomNum]['english'] && card.chinese != allCards[randomNum]['chinese']) {
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
@@ -278,7 +279,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
               onPress={() => {
                 console.log('correct');
                 correct.current = true;
-                setModalVisible(true);
+                showToast(card, true);
               }}
             >
               <Text style={styles.answerChoice}>{type === 'english' ? card.english : card.chinese}</Text>
@@ -286,7 +287,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={styles.answerChoiceBox}
-              onPress={() => (console.log('wrong'), (correct.current = false), setModalVisible(true))}
+              onPress={() => (console.log('wrong'), (correct.current = false), showToast(card, false))}
             >
               <Text style={styles.answerChoice}>
                 {j >= correctAnswerOption.current ? answers.current![j - 1][type] : answers.current![j][type]}
@@ -296,12 +297,13 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         </View>
       ));
     } else {
-      return <Text>NA</Text>;
+      return null;
     }
   };
 
   // Writing (English -> Chinese)
   const HandwritingETOC = (character: any) => {
+    setWritingMistakes(0);
     console.log(character.card);
 
     const INJECTED_JAVASCRIPT =
@@ -364,6 +366,12 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           injectedJavaScript={INJECTED_JAVASCRIPT}
           onMessage={(event) => {
             console.log('number of mistakes: ' + event.nativeEvent.data);
+            let mistakes = JSON.parse(event.nativeEvent.data);
+            if (mistakes < 3) {
+              correct.current = true;
+            } else {
+              correct.current = false;
+            }
           }}
         />
       </View>
@@ -634,6 +642,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     }
 
     if (cardType === 'NewCard') {
+      setTypingQuestion(false);
       return <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
     } else if (cardType === 'ListeningCTOC') {
       setTypingQuestion(false);
@@ -682,7 +691,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={[{ marginBottom: 230 }, styles.nextCard]}
-              onPress={() => hideModal(todaysRevision[cardNum])}
+              onPress={() => showToast(todaysRevision[cardNum], correct.current)}
             >
               <Text style={styles.nextCardText}>NEXT CARD!</Text>
             </TouchableOpacity>
@@ -696,18 +705,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   // TODO: fix!!
   // move to the next question
   const updateCardNum = async (card: any, right: boolean) => {
-    let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
-    AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
-    setWritingQuestion(0);
-
-    let cardNumber = cardNum + 1;
-    setCardNum(cardNumber);
-    console.log('new card: ' + cardNum);
-
-    setProgress((cardNumber + 1) / todaysRevision.length);
-    console.log('new progress:', (cardNumber + 1) / todaysRevision.length);
-    AsyncStorage.setItem('dailyStudyProgress', ((cardNumber + 1) / todaysRevision.length).toString());
-    console.log('new async progress:', (cardNumber + 1) / todaysRevision.length);
+    console.log('answer was', right ? 'correct' : 'incorrect');
 
     // TODO: fix 'right' for writing question
     const newTimesCorrect = right ? card.timesCorrect + 1 : card.timesCorrect;
@@ -719,6 +717,20 @@ export default function DailyStudyScreen({ route, navigation }: any) {
       timesReviewed: card.timesReviewed + 1,
       dueDate: dueDate,
     });
+
+    let currentCardsStudied = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
+    AsyncStorage.setItem('cardsStudied', JSON.stringify(currentCardsStudied + 1));
+    setWritingQuestion(0);
+
+    let cardNumber = cardNum + 1;
+    console.log('new card: ' + cardNum);
+
+    AsyncStorage.setItem('dailyStudyProgress', ((cardNumber + 1) / todaysRevision.length).toString());
+    console.log('new async progress:', (cardNumber + 1) / todaysRevision.length);
+
+    setCardNum(cardNumber);
+    setProgress((cardNumber + 1) / todaysRevision.length);
+    console.log('new progress:', (cardNumber + 1) / todaysRevision.length);
   };
 
   // adapted from https://www.skritter.com/api/v0/docs/scheduling
@@ -773,69 +785,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         />
       </View>
       <View style={{ alignSelf: 'center' }}>{renderQuestions()}</View>
-      {modalVisible && (
-        <Modal
-          isVisible={modalVisible}
-          onBackdropPress={() => hideModal(todaysRevision[cardNum])}
-          style={{ margin: 0 }}
-        >
-          {correct.current === true ? (
-            <View style={styles.correctModalView}>
-              <View
-                style={{
-                  borderRadius: 100,
-                  backgroundColor: 'white',
-                  width: 65,
-                  height: 65,
-                  marginLeft: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Icon2 name="check" size={35} color="#FEB1C3" />
-              </View>
-              <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
-                  {todaysRevision[cardNum]['chinese']}
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {pinyin(todaysRevision[cardNum]['chinese'])}
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {todaysRevision[cardNum]['english']}
-                </Text>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.wrongModalView}>
-              <View
-                style={{
-                  borderRadius: 100,
-                  backgroundColor: 'white',
-                  width: 65,
-                  height: 65,
-                  marginLeft: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Icon2 name="cross" size={35} color="#94BAF4" />
-              </View>
-              <View style={{ flexDirection: 'column', marginLeft: 20 }}>
-                <Text style={{ color: 'white', fontWeight: '900', fontSize: 18 }}>
-                  {todaysRevision[cardNum]['chinese']}
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {pinyin(todaysRevision[cardNum]['chinese'])}
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                  {todaysRevision[cardNum]['english']}
-                </Text>
-              </View>
-            </View>
-          )}
-        </Modal>
-      )}
     </SafeAreaView>
   );
 }
@@ -959,8 +908,8 @@ const styles = StyleSheet.create({
   control: {
     marginTop: 50,
     borderColor: '#C4C4C4',
-    marginLeft: 20,
-    width: 380,
+    marginHorizontal: 20,
+    width: 360,
   },
   inputText: {
     marginLeft: 20,

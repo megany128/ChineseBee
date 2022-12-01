@@ -1,31 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  SafeAreaView,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Pressable,
-  FlatList,
-  ScrollView,
-} from 'react-native';
-import Modal from 'react-native-modal';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Pressable, FlatList, ScrollView } from 'react-native';
 import { getAuth } from 'firebase/auth';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, update } from 'firebase/database';
 import { db } from '../config/firebase';
-import moment from 'moment';
-import * as Progress from 'react-native-progress';
-import { Input } from 'react-native-elements';
-import { WebView } from 'react-native-webview';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Speech from 'expo-speech';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 var pinyin = require('chinese-to-pinyin');
 
@@ -48,7 +28,7 @@ export default function TestResultsScreen({ route, navigation }: any) {
     totalHandwritingETOC,
   } = route.params;
   const auth = getAuth();
-  console.log('correct:', correctCards);
+  console.log('correct listening:', correctListeningCTOC);
 
   const updateStarred = (cardItem: any) => {
     update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem.key), {
@@ -152,7 +132,7 @@ export default function TestResultsScreen({ route, navigation }: any) {
             data={incorrectCards}
             keyExtractor={(item) => item.key}
             renderItem={({ item }) => <Card cardItem={item} />}
-            ListEmptyComponent={() => <Text style={{ marginTop: -10 }}>None incorrect</Text>}
+            ListEmptyComponent={() => <Text>None incorrect</Text>}
             horizontal={true}
           />
           <Text style={styles.header2}>Question Type Breakdown</Text>
@@ -181,9 +161,11 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     borderTopLeftRadius: 20,
                     borderBottomLeftRadius: 20,
                     alignSelf: 'center',
-                    borderRightColor: 'white',
-                    borderRightWidth: 3,
+                    borderRightColor: parseInt(totalReadingETOC) - parseInt(correctReadingETOC) > 0 ? 'white' : '',
+                    borderRightWidth: parseInt(totalReadingETOC) - parseInt(correctReadingETOC) > 0 ? 3 : 0,
                     justifyContent: 'center',
+                    borderTopRightRadius: parseInt(totalReadingETOC) - parseInt(correctReadingETOC) === 0 ? 20 : 0,
+                    borderBottomRightRadius: parseInt(totalReadingETOC) - parseInt(correctReadingETOC) === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{correctReadingETOC}</Text>
@@ -199,6 +181,8 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     alignSelf: 'center',
                     justifyContent: 'center',
                     alignItems: 'flex-end',
+                    borderTopLeftRadius: correctReadingETOC === 0 ? 20 : 0,
+                    borderBottomLeftRadius: correctReadingETOC === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{totalReadingETOC - correctReadingETOC}</Text>
@@ -219,9 +203,11 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     borderTopLeftRadius: 20,
                     borderBottomLeftRadius: 20,
                     alignSelf: 'center',
-                    borderRightColor: 'white',
-                    borderRightWidth: 3,
+                    borderRightColor: parseInt(totalReadingCTOE) - parseInt(correctReadingCTOE) > 0 ? 'white' : '',
+                    borderRightWidth: parseInt(totalReadingCTOE) - parseInt(correctReadingCTOE) > 0 ? 3 : 0,
                     justifyContent: 'center',
+                    borderTopRightRadius: parseInt(totalReadingCTOE) - parseInt(correctReadingCTOE) === 0 ? 20 : 0,
+                    borderBottomRightRadius: parseInt(totalReadingCTOE) - parseInt(correctReadingCTOE) === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{correctReadingCTOE}</Text>
@@ -237,6 +223,8 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     alignSelf: 'center',
                     justifyContent: 'center',
                     alignItems: 'flex-end',
+                    borderTopLeftRadius: correctReadingCTOE === 0 ? 20 : 0,
+                    borderBottomLeftRadius: correctReadingCTOE === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{totalReadingCTOE - correctReadingCTOE}</Text>
@@ -259,9 +247,12 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     borderTopLeftRadius: 20,
                     borderBottomLeftRadius: 20,
                     alignSelf: 'center',
-                    borderRightColor: 'white',
-                    borderRightWidth: 3,
+                    borderRightColor: parseInt(totalListeningCTOC) - parseInt(correctListeningCTOC) > 0 ? 'white' : '',
+                    borderRightWidth: parseInt(totalListeningCTOC) - parseInt(correctListeningCTOC) > 0 ? 3 : 0,
                     justifyContent: 'center',
+                    borderTopRightRadius: parseInt(totalListeningCTOC) - parseInt(correctListeningCTOC) === 0 ? 20 : 0,
+                    borderBottomRightRadius:
+                      parseInt(totalListeningCTOC) - parseInt(correctListeningCTOC) === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{correctListeningCTOC}</Text>
@@ -277,6 +268,8 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     alignSelf: 'center',
                     justifyContent: 'center',
                     alignItems: 'flex-end',
+                    borderTopLeftRadius: correctListeningCTOC === 0 ? 20 : 0,
+                    borderBottomLeftRadius: correctListeningCTOC === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{totalListeningCTOC - correctListeningCTOC}</Text>
@@ -297,9 +290,12 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     borderTopLeftRadius: 20,
                     borderBottomLeftRadius: 20,
                     alignSelf: 'center',
-                    borderRightColor: 'white',
-                    borderRightWidth: 3,
+                    borderRightColor: parseInt(totalListeningCTOE) - parseInt(correctListeningCTOE) > 0 ? 'white' : '',
+                    borderRightWidth: parseInt(totalListeningCTOE) - parseInt(correctListeningCTOE) > 0 ? 3 : 0,
                     justifyContent: 'center',
+                    borderTopRightRadius: parseInt(totalListeningCTOE) - parseInt(correctListeningCTOE) === 0 ? 20 : 0,
+                    borderBottomRightRadius:
+                      parseInt(totalListeningCTOE) - parseInt(correctListeningCTOE) === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{correctListeningCTOE}</Text>
@@ -315,6 +311,8 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     alignSelf: 'center',
                     justifyContent: 'center',
                     alignItems: 'flex-end',
+                    borderTopLeftRadius: correctListeningCTOE === 0 ? 20 : 0,
+                    borderBottomLeftRadius: correctListeningCTOE === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{totalListeningCTOE - correctListeningCTOE}</Text>
@@ -336,9 +334,14 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     borderTopLeftRadius: 20,
                     borderBottomLeftRadius: 20,
                     alignSelf: 'center',
-                    borderRightColor: 'white',
-                    borderRightWidth: 3,
+                    borderRightColor:
+                      parseInt(totalHandwritingETOC) - parseInt(correctHandwritingETOC) > 0 ? 'white' : '',
+                    borderRightWidth: parseInt(totalHandwritingETOC) - parseInt(correctHandwritingETOC) > 0 ? 3 : 0,
                     justifyContent: 'center',
+                    borderTopRightRadius:
+                      parseInt(totalHandwritingETOC) - parseInt(correctHandwritingETOC) === 0 ? 20 : 0,
+                    borderBottomRightRadius:
+                      parseInt(totalHandwritingETOC) - parseInt(correctHandwritingETOC) === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{correctHandwritingETOC}</Text>
@@ -354,6 +357,8 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     alignSelf: 'center',
                     justifyContent: 'center',
                     alignItems: 'flex-end',
+                    borderTopLeftRadius: correctHandwritingETOC === 0 ? 20 : 0,
+                    borderBottomLeftRadius: correctHandwritingETOC === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{totalHandwritingETOC - correctHandwritingETOC}</Text>
@@ -375,9 +380,11 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     borderTopLeftRadius: 20,
                     borderBottomLeftRadius: 20,
                     alignSelf: 'center',
-                    borderRightColor: 'white',
-                    borderRightWidth: 3,
+                    borderRightColor: parseInt(totalTypingETOC) - parseInt(correctTypingETOC) > 0 ? 'white' : '',
+                    borderRightWidth: parseInt(totalTypingETOC) - parseInt(correctTypingETOC) > 0 ? 3 : 0,
                     justifyContent: 'center',
+                    borderTopRightRadius: parseInt(totalTypingETOC) - parseInt(correctTypingETOC) === 0 ? 20 : 0,
+                    borderBottomRightRadius: parseInt(totalTypingETOC) - parseInt(correctTypingETOC) === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{correctTypingETOC}</Text>
@@ -393,6 +400,8 @@ export default function TestResultsScreen({ route, navigation }: any) {
                     alignSelf: 'center',
                     justifyContent: 'center',
                     alignItems: 'flex-end',
+                    borderTopLeftRadius: correctTypingETOC === 0 ? 20 : 0,
+                    borderBottomLeftRadius: correctTypingETOC === 0 ? 20 : 0,
                   }}
                 >
                   <Text style={styles.noOfQuestions}>{totalTypingETOC - correctTypingETOC}</Text>

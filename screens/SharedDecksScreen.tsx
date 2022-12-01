@@ -38,16 +38,13 @@ export default function SharedDecksScreen({ route, navigation }: any) {
       let userData = { ...data2 };
 
       classCode.current = userData.classCode;
-      console.log('class code is', userData.classCode);
 
       onValue(ref(db, '/classCodes/'), (querySnapShot) => {
         let data3 = querySnapShot.val() || {};
         let user: any = { ...data3 };
 
         let classCodeTemp = userData.classCode;
-        console.log('code is', classCodeTemp);
         let teacher = user[classCodeTemp];
-        console.log('teacher is', user[classCodeTemp]);
         teacherID.current = teacher;
 
         onValue(ref(db, '/teachers/' + teacher + '/decks'), (querySnapShot) => {

@@ -278,7 +278,10 @@ export default function CardsScreen({ route, navigation }: any) {
         console.log('sorting by descending mastery');
         setFilteredCards(
           cardArray.sort(function (obj1: any, obj2: any) {
-            return obj2.timesCorrect / obj2.timesReviewed - obj1.timesCorrect / obj1.timesReviewed;
+            return (
+              (obj2.timesReviewed > 0 ? obj2.timesCorrect / obj2.timesReviewed : -1) -
+              (obj1.timesReviewed > 0 ? obj1.timesCorrect / obj1.timesReviewed : -1)
+            );
           })
         );
         getStarred(starredFilter);
@@ -288,7 +291,10 @@ export default function CardsScreen({ route, navigation }: any) {
         console.log('sorting by ascending mastery');
         setFilteredCards(
           cardArray.sort(function (obj1: any, obj2: any) {
-            return obj1.timesCorrect / obj1.timesReviewed - obj2.timesCorrect / obj2.timesReviewed;
+            return (
+              (obj1.timesReviewed > 0 ? obj1.timesCorrect / obj1.timesReviewed : -1) -
+              (obj2.timesReviewed > 0 ? obj2.timesCorrect / obj2.timesReviewed : -1)
+            );
           })
         );
         getStarred(starredFilter);
