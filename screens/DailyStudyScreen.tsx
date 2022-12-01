@@ -674,27 +674,57 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             card={todaysRevision[cardNum].chinese.charAt(writingQuestion)}
           />
           {writingQuestion < todaysRevision[cardNum].chinese.length - 1 ? (
-            <TouchableOpacity
-              style={{
-                marginBottom: 230,
-                width: 40,
-                backgroundColor: '#FFCB44',
-                borderRadius: 40,
-                height: 40,
-                justifyContent: 'center',
-                alignSelf: 'center',
-              }}
-              onPress={() => setWritingQuestion(writingQuestion + 1)}
-            >
-              <Text style={styles.nextCardText}>→</Text>
-            </TouchableOpacity>
+            <View>
+              <TouchableOpacity
+                style={{
+                  marginBottom: 230,
+                  width: 40,
+                  backgroundColor: '#FFCB44',
+                  borderRadius: 40,
+                  height: 40,
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                }}
+                onPress={() => setWritingQuestion(writingQuestion + 1)}
+              >
+                <Text style={styles.nextCardText}>→</Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  color: '#C4C4C4',
+                  fontSize: 18,
+                  textAlign: 'center',
+                  position: 'absolute',
+                  bottom: 150,
+                  width: 340,
+                  left: 240,
+                }}
+              >
+                Once you've finished writing the current character, tap the button to progress!
+              </Text>
+            </View>
           ) : (
-            <TouchableOpacity
-              style={[{ marginBottom: 230 }, styles.nextCard]}
-              onPress={() => showToast(todaysRevision[cardNum], correct.current)}
-            >
-              <Text style={styles.nextCardText}>NEXT CARD!</Text>
-            </TouchableOpacity>
+            <View>
+              <TouchableOpacity
+                style={[{ marginBottom: 230 }, styles.nextCard]}
+                onPress={() => showToast(todaysRevision[cardNum], correct.current)}
+              >
+                <Text style={styles.nextCardText}>NEXT CARD!</Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  color: '#C4C4C4',
+                  fontSize: 18,
+                  textAlign: 'center',
+                  position: 'absolute',
+                  bottom: 150,
+                  width: 340,
+                  left: 240,
+                }}
+              >
+                Once you've finished writing the current character, tap the button to progress!
+              </Text>
+            </View>
           )}
         </View>
       );

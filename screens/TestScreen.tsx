@@ -36,6 +36,7 @@ export default function TestScreen({ route, navigation }: any) {
 
   const correctCards: any = useRef([]);
   const incorrectCards: any = useRef([]);
+  const wrongAnswerIndexes: any = useRef([]);
 
   const correctReadingETOC = useRef(0);
   const totalReadingETOC = useRef(0);
@@ -239,8 +240,9 @@ export default function TestScreen({ route, navigation }: any) {
       // generates correct answer option (1 - 4)
       correctAnswerOption.current = Math.floor(Math.random() * 4) + 1;
 
-      let wrongAnswerIndexes: any = [];
       // generates random cards for wrong answers
+
+      console.log('correct card is' + card.english + card.chinese);
       let i = 0;
       for (i; i < 3; i++) {
         console.log('allCards.length:', allCards.length);
@@ -251,11 +253,13 @@ export default function TestScreen({ route, navigation }: any) {
           while (!valid) {
             let randomNum = Math.floor(Math.random() * (allCards.length - 1));
             if (card.english != allCards[randomNum]['english'] && card.chinese != allCards[randomNum]['chinese']) {
-              wrongAnswerIndexes[i] = randomNum;
+              wrongAnswerIndexes.current[i] = randomNum;
               valid = true;
-              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
+            } else {
+              console.log(allCards[randomNum]['english'] + ' already has a match');
             }
           }
         }
@@ -268,14 +272,16 @@ export default function TestScreen({ route, navigation }: any) {
             if (
               card.english != allCards[randomNum]['english'] &&
               card.chinese != allCards[randomNum]['chinese'] &&
-              allCards[wrongAnswerIndexes[0]]['english'] != allCards[randomNum]['english'] &&
-              allCards[wrongAnswerIndexes[0]]['chinese'] != allCards[randomNum]['chinese']
+              allCards[wrongAnswerIndexes.current[0]]['english'] != allCards[randomNum]['english'] &&
+              allCards[wrongAnswerIndexes.current[0]]['chinese'] != allCards[randomNum]['chinese']
             ) {
-              wrongAnswerIndexes[i] = 0;
+              wrongAnswerIndexes.current[i] = randomNum;
               valid = true;
-              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
+            } else {
+              console.log(allCards[randomNum]['english'] + ' already has a match');
             }
           }
         }
@@ -285,19 +291,27 @@ export default function TestScreen({ route, navigation }: any) {
           let valid = false;
           while (!valid) {
             let randomNum = Math.floor(Math.random() * (allCards.length - 1));
+            console.log('first card is', allCards[wrongAnswerIndexes.current[0]]['english']);
+            console.log('first card is', allCards[wrongAnswerIndexes.current[0]]['chinese']);
+            console.log('second card is', allCards[wrongAnswerIndexes.current[1]]['english']);
+            console.log('second card is', allCards[wrongAnswerIndexes.current[1]]['chinese']);
+            console.log("allCards[randomNum]['english'] is", allCards[randomNum]['english']);
+            console.log("allCards[randomNum]['chinese'] is", allCards[randomNum]['chinese']);
             if (
               card.english != allCards[randomNum]['english'] &&
               card.chinese != allCards[randomNum]['chinese'] &&
-              allCards[wrongAnswerIndexes[0]]['english'] != allCards[randomNum]['english'] &&
-              allCards[wrongAnswerIndexes[0]]['chinese'] != allCards[randomNum]['chinese'] &&
-              allCards[wrongAnswerIndexes[1]]['english'] != allCards[randomNum]['english'] &&
-              allCards[wrongAnswerIndexes[1]]['chinese'] != allCards[randomNum]['chinese']
+              allCards[wrongAnswerIndexes.current[0]]['english'] != allCards[randomNum]['english'] &&
+              allCards[wrongAnswerIndexes.current[0]]['chinese'] != allCards[randomNum]['chinese'] &&
+              allCards[wrongAnswerIndexes.current[1]]['english'] != allCards[randomNum]['english'] &&
+              allCards[wrongAnswerIndexes.current[1]]['chinese'] != allCards[randomNum]['chinese']
             ) {
-              wrongAnswerIndexes[i] = randomNum;
+              wrongAnswerIndexes.current[i] = randomNum;
               valid = true;
-              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
+              console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
+            } else {
+              console.log(allCards[randomNum]['english'] + ' already has a match');
             }
           }
         }
@@ -695,27 +709,57 @@ export default function TestScreen({ route, navigation }: any) {
           <Text style={[styles.instructions, { marginBottom: 25 }]}>English → Chinese</Text>
           <HandwritingETOC key={cards[cardNum]} card={cards[cardNum].chinese.charAt(writingQuestion)} />
           {writingQuestion < cards[cardNum].chinese.length - 1 ? (
-            <TouchableOpacity
-              style={{
-                marginBottom: 230,
-                width: 40,
-                backgroundColor: '#FFCB44',
-                borderRadius: 40,
-                height: 40,
-                justifyContent: 'center',
-                alignSelf: 'center',
-              }}
-              onPress={() => setWritingQuestion(writingQuestion + 1)}
-            >
-              <Text style={styles.nextCardText}>→</Text>
-            </TouchableOpacity>
+            <View>
+              <TouchableOpacity
+                style={{
+                  marginBottom: 230,
+                  width: 40,
+                  backgroundColor: '#FFCB44',
+                  borderRadius: 40,
+                  height: 40,
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                }}
+                onPress={() => setWritingQuestion(writingQuestion + 1)}
+              >
+                <Text style={styles.nextCardText}>→</Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  color: '#C4C4C4',
+                  fontSize: 18,
+                  textAlign: 'center',
+                  position: 'absolute',
+                  bottom: 150,
+                  width: 340,
+                  left: 240,
+                }}
+              >
+                Once you've finished writing the current character, tap the button to progress!
+              </Text>
+            </View>
           ) : (
-            <TouchableOpacity
-              style={[{ marginBottom: 230 }, styles.nextCard]}
-              onPress={() => showToast(cards[cardNum], correct.current)}
-            >
-              <Text style={styles.nextCardText}>NEXT CARD!</Text>
-            </TouchableOpacity>
+            <View>
+              <TouchableOpacity
+                style={[{ marginBottom: 230 }, styles.nextCard]}
+                onPress={() => showToast(cards[cardNum], correct.current)}
+              >
+                <Text style={styles.nextCardText}>NEXT CARD!</Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  color: '#C4C4C4',
+                  fontSize: 18,
+                  textAlign: 'center',
+                  position: 'absolute',
+                  bottom: 150,
+                  width: 340,
+                  left: 240,
+                }}
+              >
+                Once you've finished writing the current character, tap the button to progress!
+              </Text>
+            </View>
           )}
         </View>
       );
