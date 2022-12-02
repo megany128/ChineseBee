@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
-import { ref, update, onValue } from 'firebase/database';
+import { ref, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import * as Progress from 'react-native-progress';
 import { Input } from 'react-native-elements';
@@ -20,7 +20,6 @@ import * as Speech from 'expo-speech';
 import Toast from 'react-native-toast-message';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 var pinyin = require('chinese-to-pinyin');
@@ -437,14 +436,90 @@ export default function TestScreen({ route, navigation }: any) {
     }
   };
 
+  let currentCharacter = useRef(-2);
+  // TODO: fix writing
+
   // Writing (English -> Chinese)
-  const HandwritingETOC = (character: any) => {
-    console.log(character.card);
+  const HandwritingETOC = (characters: any) => {
+    currentCharacter.current = -2;
+    console.log('characters are', characters.characters.length);
+
+    useEffect(() => {
+      console.log('current character has changed to ', currentCharacter.current);
+      console.log('chinese is', characters.characters[currentCharacter.current]);
+    }, [currentCharacter]);
 
     const INJECTED_JAVASCRIPT =
       `
+      var length = ` +
+      characters.characters.length +
+      `;
+      window.ReactNativeWebView.postMessage(length);
+
+      function setVisibility() {
+        var x = document.getElementById("button");
+        if (x.style.visibility === "visible") {
+          x.style.visibility = "hidden";
+        } else {
+          x.style.visibility = "visible";
+        }
+      }
+
+      function nextWord() {
+        alert('nextword')
+      }
+
+      function setVisibility2() {
+        var x = document.getElementById("button2");
+        if (x.style.visibility === "visible") {
+          x.style.visibility = "hidden";
+        } else {
+          x.style.visibility = "visible";
+        }
+      }
+
+      function nextCharacter() {` +
+      (currentCharacter.current += 2) +
+      `;
+        writer.setCharacter('` +
+      characters.characters[currentCharacter.current] +
+      `');
+      setVisibility();
+        writer.quiz({
+          onMistake: function(strokeData) {
+            console.log('Oh no! you made a mistake on stroke ' + strokeData.strokeNum);
+            console.log("You've made " + strokeData.mistakesOnStroke + " mistakes on this stroke so far");
+            console.log("You've made " + strokeData.totalMistakes + " total mistakes on this quiz");
+            console.log("There are " + strokeData.strokesRemaining + " strokes remaining in this character");
+          },
+          onCorrectStroke: function(strokeData) {
+            console.log('Yes!!! You got stroke ' + strokeData.strokeNum + ' correct!');
+            console.log('You made ' + strokeData.mistakesOnStroke + ' mistakes on this stroke');
+            console.log("You've made " + strokeData.totalMistakes + ' total mistakes on this quiz');
+            console.log('There are ' + strokeData.strokesRemaining + ' strokes remaining in this character');
+          },
+          onComplete: function(summaryData) {
+            console.log('You did it! You finished drawing ' + summaryData.character);
+            console.log('You made ' + summaryData.totalMistakes + ' total mistakes on this quiz');
+            window.ReactNativeWebView.postMessage(` +
+      currentCharacter.current +
+      `);
+
+            if (` +
+      currentCharacter.current +
+      ` < ` +
+      (characters.characters.length - 1) +
+      `) {
+              setVisibility();
+            } else {
+              setVisibility2();
+            }
+          }
+        });
+      }
+
       var writer = HanziWriter.create('grid-background-target', '` +
-      character.card +
+      characters.characters[currentCharacter.current] +
       `', {
             width: 500,
             height: 500,
@@ -474,11 +549,57 @@ export default function TestScreen({ route, navigation }: any) {
               console.log('You did it! You finished drawing ' + summaryData.character);
               console.log('You made ' + summaryData.totalMistakes + ' total mistakes on this quiz');
               window.ReactNativeWebView.postMessage(summaryData.totalMistakes)
+              if (` +
+      currentCharacter.current +
+      ` < ` +
+      (characters.characters.length - 1) +
+      `) {
+                setVisibility();
+              } else {
+                setVisibility2();
+              }
             }
           });
       `;
 
     const html = `
+    <style>
+      .container {
+        height: 200px;
+        width: 500px;
+        position: relative;
+      }
+
+      .vertical-center {
+        margin: 0;
+        position: absolute;
+        top: 70%;
+        left: 125;
+        -ms-transform: translateY(-50%);
+        transform: translateY(-50%);
+      }
+
+      .button {
+        font-size: 32px;
+        border-radius: 40px;
+        padding: 15px 32px;
+        text-align: center;
+        background-color: #FEB1C3;
+        color: #FFF;
+        visibility: hidden
+      }
+
+      .vertical-center2 {
+        margin: 0;
+        position: absolute;
+        top: 70%;
+        left: 80;
+        -ms-transform: translateY(-50%);
+        transform: translateY(-50%);
+      }
+
+    </style>
+
       <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.2/dist/hanzi-writer.min.js"></script>
       <svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" id="grid-background-target">
         <line x1="0" y1="0" x2="500" y2="500" stroke="#DDD" />
@@ -486,6 +607,14 @@ export default function TestScreen({ route, navigation }: any) {
         <line x1="250" y1="0" x2="250" y2="500" stroke="#DDD" />
         <line x1="0" y1="250" x2="500" y2="250" stroke="#DDD" />
       </svg>
+      <div class="container">
+        <div class="vertical-center">
+          <button class="button" id="button" onclick="nextCharacter()">next character</button>
+        </div>
+        <div class="vertical-center2">
+          <button class="button" id="button2" onclick="nextWord()">continue</button>
+        </div>
+      </div>
     `;
 
     // TODO: update visibility of button based on results
@@ -512,6 +641,59 @@ export default function TestScreen({ route, navigation }: any) {
             }
           }}
         />
+        {/* {writingQuestion < cards[cardNum].chinese.length - 1 ? (
+            <View>
+              <TouchableOpacity
+                style={{
+                  marginBottom: 230,
+                  width: 40,
+                  backgroundColor: '#FFCB44',
+                  borderRadius: 40,
+                  height: 40,
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                }}
+                onPress={() => setWritingQuestion(writingQuestion + 1)}
+              >
+                <Text style={styles.nextCardText}>→</Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  color: '#C4C4C4',
+                  fontSize: 18,
+                  textAlign: 'center',
+                  position: 'absolute',
+                  bottom: 150,
+                  width: 340,
+                  left: 240,
+                }}
+              >
+                Once you've finished writing the current character, tap the button to progress!
+              </Text>
+            </View>
+          ) : (
+            <View>
+              <TouchableOpacity
+                style={[{ marginBottom: 230 }, styles.nextCard]}
+                onPress={() => showToast(cards[cardNum], correct.current)}
+              >
+                <Text style={styles.nextCardText}>NEXT CARD!</Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  color: '#C4C4C4',
+                  fontSize: 18,
+                  textAlign: 'center',
+                  position: 'absolute',
+                  bottom: 150,
+                  width: 340,
+                  left: 240,
+                }}
+              >
+                Once you've finished writing the current character, tap the button to progress!
+              </Text>
+            </View>
+          )} */}
       </View>
     );
     return null;
@@ -707,60 +889,11 @@ export default function TestScreen({ route, navigation }: any) {
         <View style={{ flex: 1 }}>
           <Text style={[styles.typingCard, { marginTop: 25 }]}>{cards[cardNum].english}</Text>
           <Text style={[styles.instructions, { marginBottom: 25 }]}>English → Chinese</Text>
-          <HandwritingETOC key={cards[cardNum]} card={cards[cardNum].chinese.charAt(writingQuestion)} />
-          {writingQuestion < cards[cardNum].chinese.length - 1 ? (
-            <View>
-              <TouchableOpacity
-                style={{
-                  marginBottom: 230,
-                  width: 40,
-                  backgroundColor: '#FFCB44',
-                  borderRadius: 40,
-                  height: 40,
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                }}
-                onPress={() => setWritingQuestion(writingQuestion + 1)}
-              >
-                <Text style={styles.nextCardText}>→</Text>
-              </TouchableOpacity>
-              <Text
-                style={{
-                  color: '#C4C4C4',
-                  fontSize: 18,
-                  textAlign: 'center',
-                  position: 'absolute',
-                  bottom: 150,
-                  width: 340,
-                  left: 240,
-                }}
-              >
-                Once you've finished writing the current character, tap the button to progress!
-              </Text>
-            </View>
-          ) : (
-            <View>
-              <TouchableOpacity
-                style={[{ marginBottom: 230 }, styles.nextCard]}
-                onPress={() => showToast(cards[cardNum], correct.current)}
-              >
-                <Text style={styles.nextCardText}>NEXT CARD!</Text>
-              </TouchableOpacity>
-              <Text
-                style={{
-                  color: '#C4C4C4',
-                  fontSize: 18,
-                  textAlign: 'center',
-                  position: 'absolute',
-                  bottom: 150,
-                  width: 340,
-                  left: 240,
-                }}
-              >
-                Once you've finished writing the current character, tap the button to progress!
-              </Text>
-            </View>
-          )}
+          <HandwritingETOC
+            key={cards[cardNum]}
+            characters={Object.values(cards[cardNum].chinese)}
+            card={cards[cardNum]}
+          />
         </View>
       );
     }
