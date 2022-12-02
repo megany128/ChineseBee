@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,15 +11,11 @@ import {
 } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { RootStackScreenProps } from '../types';
 import { push, ref, limitToLast, query, onValue, update, orderByChild } from 'firebase/database';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
 import moment from 'moment';
-import Modal from 'react-native-modal';
-import Entypo from 'react-native-vector-icons/Entypo';
-import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
@@ -159,15 +155,6 @@ const styles = StyleSheet.create({
   error: {
     color: '#D54826FF',
     marginBottom: 20,
-  },
-  modalView: {
-    height: '15%',
-    marginTop: 'auto',
-    backgroundColor: '#FFCB44',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   dropdownStyle: {
     borderWidth: 1,

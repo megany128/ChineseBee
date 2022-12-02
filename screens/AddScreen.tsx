@@ -14,18 +14,16 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
-import Modal from 'react-native-modal';
 import Entypo from 'react-native-vector-icons/Entypo';
 import DropDownPicker from 'react-native-dropdown-picker';
 import isChinese from 'is-chinese';
+import Toast from 'react-native-toast-message';
 
 moment().format();
 
 export default function AddScreen({ route, navigation }: any) {
   // initialises current user & auth
   const auth = getAuth();
-
-  const [modalVisible, setModalVisible] = useState(false);
 
   const [tagOptions, setTagOptions]: any = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -38,15 +36,9 @@ export default function AddScreen({ route, navigation }: any) {
   const [idiom, setIdiom]: any = useState('');
 
   const { tagParam } = route.params;
-  const [tag, setTag]: any = useState(tagParam.length > 0 ? tagParam : null);
+  const [tag, setTag]: any = useState(tagParam && tagParam.length > 0 ? tagParam : null);
 
   const [error, setError] = useState(String);
-
-  useEffect(() => {
-    if (modalVisible) {
-      setTimeout(() => setModalVisible(false), 700);
-    }
-  });
 
   useEffect(() => {
     return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
@@ -128,8 +120,13 @@ export default function AddScreen({ route, navigation }: any) {
       setEnglish('');
       setChinese('');
       setTag(route.params ? route.params : '');
+      setIdiom(null);
 
-      setModalVisible(true);
+      Keyboard.dismiss();
+
+      Toast.show({
+        type: 'addToast',
+      });
     }
   };
 
@@ -222,29 +219,6 @@ export default function AddScreen({ route, navigation }: any) {
               <Text style={styles.buttonText}>ADD +</Text>
             </TouchableOpacity>
           </View>
-
-          <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)} style={{ margin: 0 }}>
-            <View style={styles.modalView}>
-              <View
-                style={{
-                  borderRadius: 100,
-                  backgroundColor: 'white',
-                  width: 65,
-                  height: 65,
-                  marginLeft: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Entypo name="check" size={35} color="#FFCB44" />
-              </View>
-              <Text
-                style={{ color: 'white', fontWeight: '600', fontSize: 18, textAlignVertical: 'center', marginLeft: 20 }}
-              >
-                Card added!
-              </Text>
-            </View>
-          </Modal>
         </View>
       </TouchableWithoutFeedback>
     </SafeAreaView>
@@ -300,15 +274,6 @@ const styles = StyleSheet.create({
   error: {
     color: '#D54826FF',
     marginBottom: 20,
-  },
-  modalView: {
-    height: '15%',
-    marginTop: 'auto',
-    backgroundColor: '#FFCB44',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   dropdownStyle: {
     borderWidth: 1,

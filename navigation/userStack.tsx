@@ -7,7 +7,6 @@ import { Octicons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
 import { RootTabParamList, RootTabScreenProps } from '../types';
-import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
@@ -55,21 +54,6 @@ function BottomTabNavigator() {
         options={({ navigation }: RootTabScreenProps<'Cards'>) => ({
           title: 'Cards',
           tabBarIcon: ({ color }) => <TabBarIcon name="cards" color={color} />,
-          headerRight: () => (
-            <Pressable
-              onPress={() => navigation.navigate('Modal')}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.5 : 1,
-              })}
-            >
-              <MaterialCommunityIcons
-                name="information"
-                size={25}
-                color={Colors[colorScheme].text}
-                style={{ marginRight: 15 }}
-              />
-            </Pressable>
-          ),
         })}
       />
       <BottomTab.Screen
@@ -98,9 +82,6 @@ export default function UserStack() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Root" component={BottomTabNavigator} />
         <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
-        <Stack.Group screenOptions={{ presentation: 'modal' }}>
-          <Stack.Screen name="Modal" component={ModalScreen} />
-        </Stack.Group>
         <Stack.Screen name="CardInfoScreen" component={CardInfoScreen} />
         <Stack.Screen name="AddScreen" component={AddScreen} />
         <Stack.Screen name="EditScreen" component={EditScreen} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, SafeAreaView, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, SafeAreaView, Text, View, ScrollView, Alert } from 'react-native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
@@ -177,6 +177,32 @@ export default function StatsScreen({ route, navigation }: any) {
         });
       }
     });
+  }, []);
+
+  useEffect(() => {
+    const willFocusSubscription = navigation.addListener('focus', async () => {
+      if (vocabSize === 0) {
+        Alert.alert(
+          'Wait a moment!',
+          'You have no cards! Stats will not be available until you add cards to your vocab.',
+          [
+            {
+              text: 'Cancel',
+              onPress: () => console.log('Cancel Pressed'),
+              style: 'cancel',
+            },
+            {
+              text: 'Add cards',
+              onPress: () => {
+                navigation.navigate('Cards');
+              },
+            },
+          ]
+        );
+      }
+    });
+
+    return willFocusSubscription;
   }, []);
 
   return (

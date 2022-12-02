@@ -39,7 +39,9 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
             try {
               await reauthenticateWithCredential(auth?.currentUser!, authCredential);
               try {
-                remove(ref(db, '/users/' + auth?.currentUser?.uid));
+                remove(ref(db, '/students/' + auth?.currentUser?.uid));
+                remove(ref(db, '/teachers/' + auth?.currentUser?.uid));
+                remove(ref(db, '/userRoles/' + auth?.currentUser?.uid));
                 await deleteUser(auth?.currentUser!)
                   .then(() => {
                     console.log('Successfully deleted user');
@@ -97,7 +99,7 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: '#FFF8F3', flex: 1 }}>
+    <SafeAreaView style={{ backgroundColor: 'white', flex: 1 }}>
       <View style={styles.container}>
         <View style={styles.navigation}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -154,7 +156,7 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F3',
+    backgroundColor: 'white',
     paddingBottom: 20,
     marginLeft: 20,
   },

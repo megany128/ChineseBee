@@ -27,7 +27,7 @@ export default function App() {
 
   const toastConfig = {
     correctToast: ({ props }: any) => (
-      <View style={styles.correctModalView}>
+      <View style={styles.correctView}>
         <View
           style={{
             borderRadius: 100,
@@ -49,7 +49,7 @@ export default function App() {
       </View>
     ),
     incorrectToast: ({ props }: any) => (
-      <View style={styles.wrongModalView}>
+      <View style={styles.wrongView}>
         <View
           style={{
             borderRadius: 100,
@@ -70,6 +70,26 @@ export default function App() {
         </View>
       </View>
     ),
+    addToast: () => (
+      <View style={styles.addView}>
+        <View
+          style={{
+            borderRadius: 100,
+            backgroundColor: 'white',
+            width: 65,
+            height: 65,
+            marginLeft: 30,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Entypo name="check" size={35} color="#FFCB44" />
+        </View>
+        <Text style={{ color: 'white', fontWeight: '600', fontSize: 18, textAlignVertical: 'center', marginLeft: 20 }}>
+          Card added!
+        </Text>
+      </View>
+    ),
   };
 
   if (!isLoadingComplete) {
@@ -85,7 +105,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  correctModalView: {
+  correctView: {
     width: 380,
     height: 100,
     backgroundColor: '#FEB1C3',
@@ -96,11 +116,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  wrongModalView: {
+  wrongView: {
     width: 380,
     height: 100,
     marginTop: 'auto',
     backgroundColor: '#94BAF4',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addView: {
+    width: 380,
+    height: 100,
+    marginTop: 'auto',
+    backgroundColor: '#FFCB44',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderBottomLeftRadius: 20,

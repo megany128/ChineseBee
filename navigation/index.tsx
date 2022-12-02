@@ -15,10 +15,6 @@ import { useAuthentication } from '../utils/hooks/useAuthentication';
 import UserStack from './userStack';
 import AuthStack from './authStack';
 
-/**
- * A root stack navigator is often used for displaying modals on top of all other content.
- * https://reactnavigation.org/docs/modal
- */
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {

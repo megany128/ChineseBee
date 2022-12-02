@@ -23,8 +23,6 @@ export default function EditScreen({ route, navigation }: any) {
   // initialises current user & auth
   const auth = getAuth();
 
-  const [modalVisible, setModalVisible] = useState(false);
-
   const card: any = route.params;
 
   const [english, setEnglish]: any = useState(card.english);
@@ -39,12 +37,6 @@ export default function EditScreen({ route, navigation }: any) {
   const [dropdownOpen2, setDropdownOpen2] = useState(false);
 
   const [error, setError] = useState(String);
-
-  useEffect(() => {
-    if (modalVisible) {
-      setTimeout(() => setModalVisible(false), 700);
-    }
-  });
 
   useEffect(() => {
     return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {

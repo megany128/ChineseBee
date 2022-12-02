@@ -1,12 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { useAuthentication } from '../utils/hooks/useAuthentication';
-import { Input, CheckBox } from 'react-native-elements';
-import { getAuth, signOut } from 'firebase/auth';
+import { CheckBox } from 'react-native-elements';
+import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { RootStackScreenProps } from '../types';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { push, ref, set, onValue } from 'firebase/database';
+import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 
 export default function StartTestScreen({ route, navigation }: any) {
@@ -134,12 +133,29 @@ export default function StartTestScreen({ route, navigation }: any) {
         handwritingETOC: handwritingETOC,
       });
     }
-    // 3. navigate to test screen w/ cards & question types allowed
-    // 4. create array of question types
-    // 5. for each card in card array, generate random number out of question type array length
-    // 6. set card array[i] to that number
-    // 7. in render function: map card array, use conditional rendering
   };
+
+  useEffect(() => {
+    const willFocusSubscription = navigation.addListener('focus', async () => {
+      onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
+        let data = querySnapShot.val() || {};
+        let user = { ...data };
+
+        if (!user.cards || Object.values(user.cards).length < 5) {
+          Alert.alert('Wait a moment!', "You don't have enough cards! Add at least 5 cards to your vocab.", [
+            {
+              text: 'Add cards',
+              onPress: () => {
+                navigation.navigate('Cards');
+              },
+            },
+          ]);
+        }
+      });
+    });
+
+    return willFocusSubscription;
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>

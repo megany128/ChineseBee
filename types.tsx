@@ -18,7 +18,6 @@ export type RootStackParamList = {
   StartTestScreen: undefined;
   DailyStudyScreen: undefined;
   Root: NavigatorScreenParams<RootTabParamList> | undefined;
-  Modal: undefined;
   NotFound: undefined;
   CardInfoScreen: undefined;
   EditScreen: undefined;

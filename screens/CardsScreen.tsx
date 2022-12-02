@@ -459,6 +459,7 @@ const styles = StyleSheet.create({
     borderColor: '#C4C4C4',
     marginVertical: 10,
     zIndex: 0,
+    marginLeft: 5,
   },
   cardList: {
     alignSelf: 'center',

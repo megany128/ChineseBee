@@ -32,7 +32,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   const { user } = useAuthentication();
   const auth = getAuth();
 
-  // TODO: (later) change to async storage
   const [progress, setProgress] = useState(0);
   const { todaysRevision, allCards, newCardsLength, reviewCardsLength } = route.params;
 
@@ -118,7 +117,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   };
 
   // renders each question
-  // TODO: fix bug - sometimes the correct answer is there twice
   const renderQuestions = () => {
     if (progress < 1) {
       for (cardNum; cardNum < todaysRevision.length; ) {
@@ -732,7 +730,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     return null;
   };
 
-  // TODO: fix!!
   // move to the next question
   const updateCardNum = async (card: any, right: boolean) => {
     console.log('answer was', right ? 'correct' : 'incorrect');
@@ -916,24 +913,6 @@ const styles = StyleSheet.create({
   answers: {
     marginTop: 60,
     height: 200,
-  },
-  correctModalView: {
-    height: '15%',
-    marginTop: 'auto',
-    backgroundColor: '#FEB1C3',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  wrongModalView: {
-    height: '15%',
-    marginTop: 'auto',
-    backgroundColor: '#94BAF4',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   control: {
     marginTop: 50,

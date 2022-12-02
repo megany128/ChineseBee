@@ -14,10 +14,10 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { push, ref, limitToLast, query, onValue, update, orderByChild } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
-import Modal from 'react-native-modal';
 import Entypo from 'react-native-vector-icons/Entypo';
 import isChinese from 'is-chinese';
 import DropDownPicker from 'react-native-dropdown-picker';
+import Toast from 'react-native-toast-message';
 
 moment().format();
 
@@ -27,31 +27,22 @@ export default function AddCardTeacher({ route, navigation }: any) {
 
   const { deck } = route.params;
 
-  const [modalVisible, setModalVisible] = useState(false);
-
   const [english, setEnglish]: any = useState('');
   const [chinese, setChinese]: any = useState('');
-  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [idiomOptions, setIdiomOptions]: any = useState([
+    {
+      label: 'Idiom',
+      value: true,
+    },
+    {
+      label: 'Phrase/Word',
+      value: false,
+    },
+  ]);
   const [dropdownOpen2, setDropdownOpen2] = useState(false);
   const [idiom, setIdiom]: any = useState('');
 
   const [error, setError] = useState(String);
-
-  useEffect(() => {
-    if (modalVisible) {
-      setTimeout(() => setModalVisible(false), 700);
-    }
-    setIdiomOptions([
-      {
-        label: 'Idiom',
-        value: true,
-      },
-      {
-        label: 'Phrase/Word',
-        value: false,
-      },
-    ]);
-  });
 
   // gets the key of the last card created
   const getKey = () => {
@@ -105,8 +96,11 @@ export default function AddCardTeacher({ route, navigation }: any) {
       // resets the text inputs
       setEnglish('');
       setChinese('');
+      Keyboard.dismiss();
 
-      setModalVisible(true);
+      Toast.show({
+        type: 'addToast',
+      });
     }
   };
 
@@ -166,29 +160,6 @@ export default function AddCardTeacher({ route, navigation }: any) {
               <Text style={styles.buttonText}>ADD +</Text>
             </TouchableOpacity>
           </View>
-
-          <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)} style={{ margin: 0 }}>
-            <View style={styles.modalView}>
-              <View
-                style={{
-                  borderRadius: 100,
-                  backgroundColor: 'white',
-                  width: 65,
-                  height: 65,
-                  marginLeft: 30,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Entypo name="check" size={35} color="#FFCB44" />
-              </View>
-              <Text
-                style={{ color: 'white', fontWeight: '600', fontSize: 18, textAlignVertical: 'center', marginLeft: 20 }}
-              >
-                Card added!
-              </Text>
-            </View>
-          </Modal>
         </View>
       </TouchableWithoutFeedback>
     </SafeAreaView>
@@ -244,15 +215,6 @@ const styles = StyleSheet.create({
   error: {
     color: '#D54826FF',
     marginVertical: 20,
-  },
-  modalView: {
-    height: '15%',
-    marginTop: 'auto',
-    backgroundColor: '#FFCB44',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   dropdownStyle: {
     borderWidth: 1,

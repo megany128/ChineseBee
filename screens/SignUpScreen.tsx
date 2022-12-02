@@ -82,6 +82,8 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
 
             correctHandwritingETOC: 0,
             totalHandwritingETOC: 0,
+
+            classCode: '',
           });
           update(ref(db, '/userRoles/'), {
             [data.user.uid]: 'student',
@@ -291,7 +293,6 @@ const styles = StyleSheet.create({
   },
   error: {
     color: '#D54826FF',
-    marginLeft: 30,
     marginBottom: 20,
   },
   selectedButton: {

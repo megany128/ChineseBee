@@ -434,6 +434,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     marginBottom: 20,
+    marginRight: 10,
   },
   cardContainer: {
     flexDirection: 'row',

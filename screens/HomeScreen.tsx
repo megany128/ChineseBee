@@ -36,7 +36,7 @@ export default function HomeScreen({ route, navigation }: any) {
   const auth = getAuth();
 
   const [name, setName] = useState(String);
-  const userType = useRef('');
+  const [userType, setUserType] = useState('');
   const [progress, setProgress] = useState(0);
 
   const [cardsStudied, setCardsStudied] = useState(0);
@@ -200,7 +200,7 @@ export default function HomeScreen({ route, navigation }: any) {
       let data = querySnapShot.val() || {};
       let userRoles = { ...data };
 
-      userType.current = userRoles[auth.currentUser!.uid];
+      setUserType(userRoles[auth.currentUser!.uid]);
     });
   }, []);
 
@@ -262,7 +262,7 @@ export default function HomeScreen({ route, navigation }: any) {
 
   useEffect(() => {
     getStats();
-    if (userType.current === 'student') {
+    if (userType === 'student') {
       const willFocusSubscription = navigation.addListener('focus', async () => {
         console.log('getting stats');
         getStats();
@@ -275,7 +275,7 @@ export default function HomeScreen({ route, navigation }: any) {
     } else {
       loadNewUserData();
     }
-  }, []);
+  }, [userType]);
 
   const loadNewUserData = () => {
     setRefreshing(true);
@@ -391,7 +391,7 @@ export default function HomeScreen({ route, navigation }: any) {
     );
   };
 
-  return userType.current === 'student' ? (
+  return userType === 'student' ? (
     <LinearGradient colors={['rgba(255,203,68,0.2)', 'rgba(255,255,255,0.3)']} style={styles.container}>
       <SafeAreaView>
         <ScrollView>

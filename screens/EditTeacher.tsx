@@ -23,8 +23,6 @@ export default function EditTeacher({ route, navigation }: any) {
   // initialises current user & auth
   const auth = getAuth();
 
-  const [modalVisible, setModalVisible] = useState(false);
-
   const { card, deck } = route.params;
 
   const [cardInfo, setCardInfo] = useState(card);
@@ -37,12 +35,6 @@ export default function EditTeacher({ route, navigation }: any) {
   const [dropdownOpen2, setDropdownOpen2] = useState(false);
 
   const [error, setError] = useState(String);
-
-  useEffect(() => {
-    if (modalVisible) {
-      setTimeout(() => setModalVisible(false), 700);
-    }
-  });
 
   useEffect(() => {
     setIdiomOptions([
