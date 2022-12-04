@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,6 +14,8 @@ import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'fir
 import { StackScreenProps } from '@react-navigation/stack';
 
 const auth = getAuth();
+
+// sign in screen
 const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
   const [value, setValue] = React.useState({
     email: '',
@@ -21,10 +23,12 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
     error: '',
   });
 
+  // navigates to sign up screen
   const onFooterLinkPress = () => {
     navigation.navigate('SignUpScreen');
   };
 
+  // resets password
   const handlePasswordReset = (email: string) => {
     if (email) {
       sendPasswordResetEmail(auth, email)
@@ -40,6 +44,7 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
     }
   };
 
+  // signs in user
   async function signIn() {
     if (value.email === '' || value.password === '') {
       setValue({
@@ -52,6 +57,7 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
     try {
       await signInWithEmailAndPassword(auth, value.email, value.password);
     } catch (error: any) {
+      // error handling
       console.log(error.message);
       if (error.message.includes('wrong-password')) {
         setValue({
@@ -86,6 +92,8 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
         <View style={styles.container}>
           <Text style={styles.title}>log in</Text>
           {value.error && <Text style={styles.error}>{value.error}</Text>}
+
+          {/* email input */}
           <TextInput
             style={styles.input}
             placeholder="email address"
@@ -97,6 +105,8 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             underlineColorAndroid="transparent"
             autoCapitalize="none"
           />
+
+          {/* password input */}
           <TextInput
             style={styles.input}
             placeholderTextColor="#C4C4C4"
@@ -107,15 +117,18 @@ const SignInScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             underlineColorAndroid="transparent"
             autoCapitalize="none"
           />
+
           <TouchableOpacity style={styles.button} onPress={() => signIn()}>
             <Text style={styles.buttonTitle}>LOG IN →</Text>
           </TouchableOpacity>
+
           <View style={styles.footerView}>
             <Text style={styles.footerText}>don't have an account? </Text>
             <TouchableOpacity onPress={onFooterLinkPress}>
               <Text style={styles.footerLink}>sign up</Text>
             </TouchableOpacity>
           </View>
+
           <TouchableOpacity onPress={() => handlePasswordReset(value.email)}>
             <Text style={{ fontSize: 16, color: '#94BAF4', marginTop: 30, fontWeight: '600', fontStyle: 'italic' }}>
               reset password

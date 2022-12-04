@@ -5,7 +5,8 @@ import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase/auth';
 
-export default function StatsScreen({ route, navigation }: any) {
+// displays user's stats
+export default function StatsScreen({ navigation }: any) {
   const auth = getAuth();
 
   const [vocabSize, setVocabSize] = useState(0);
@@ -64,6 +65,7 @@ export default function StatsScreen({ route, navigation }: any) {
     ],
   };
 
+  // gets stats for student/teacher
   useEffect(() => {
     onValue(ref(db, '/userRoles'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -179,26 +181,37 @@ export default function StatsScreen({ route, navigation }: any) {
     });
   }, []);
 
+  // checks if user has enough cards for stats to be generated
   useEffect(() => {
     const willFocusSubscription = navigation.addListener('focus', async () => {
-      if (vocabSize === 0) {
-        Alert.alert(
-          'Wait a moment!',
-          'You have no cards! Stats will not be available until you add cards to your vocab.',
-          [
-            {
-              text: 'Cancel',
-              onPress: () => console.log('Cancel Pressed'),
-              style: 'cancel',
-            },
-            {
-              text: 'Add cards',
-              onPress: () => {
-                navigation.navigate('Cards');
-              },
-            },
-          ]
-        );
+      if (userType === 'student') {
+        return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
+          let data = querySnapShot.val() || {};
+          let user = { ...data };
+
+          if (user.cards) {
+            let allCards: any = Object.values(user.cards);
+            if (allCards.length === 0) {
+              Alert.alert(
+                'Wait a moment!',
+                'You have no cards! Stats will not be available until you add cards to your vocab.',
+                [
+                  {
+                    text: 'Cancel',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Add cards',
+                    onPress: () => {
+                      navigation.navigate('Cards');
+                    },
+                  },
+                ]
+              );
+            }
+          }
+        });
       }
     });
 
@@ -212,6 +225,7 @@ export default function StatsScreen({ route, navigation }: any) {
           <View style={styles.navigation}>
             <Text style={styles.header}>{userType === 'student' ? 'STATS' : 'CLASS STATS'}</Text>
           </View>
+
           <View style={{ marginHorizontal: 40 }}>
             <Text style={styles.sectionTitle}>{userType === 'student' ? 'VOCAB' : 'CLASS'}</Text>
             <View
@@ -235,6 +249,7 @@ export default function StatsScreen({ route, navigation }: any) {
                 <Text style={styles.subtitle}>{userType === 'student' ? 'cards mastered' : 'class decks'}</Text>
               </View>
             </View>
+
             {userType === 'student' && (
               <View>
                 <Text style={styles.sectionTitle}>MASTERY</Text>
@@ -252,6 +267,8 @@ export default function StatsScreen({ route, navigation }: any) {
                 />
               </View>
             )}
+
+            {/* question type mastery */}
             <Text style={styles.sectionTitle}>QUESTION TYPE MASTERY</Text>
             <BarChart
               style={{ marginTop: 10, backgroundColor: 'transparent' }}

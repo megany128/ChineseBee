@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   FlatList,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/AntDesign';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
@@ -19,9 +18,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 var pinyin = require('chinese-to-pinyin');
 
-export default function CardsScreen({ route, navigation }: any) {
-  // initialises current user & auth
-  const { user } = useAuthentication();
+// displays student's cards
+export default function CardsScreen({ navigation }: any) {
   const auth = getAuth();
   const [refreshing, setRefreshing] = useState(true);
 
@@ -42,8 +40,9 @@ export default function CardsScreen({ route, navigation }: any) {
   const [filteredClassDecks, setFilteredClassDecks] = useState([]);
 
   // creates a Card component
-  const Card = ({ cardItem, id, starredInitial }: any) => {
+  const Card = ({ cardItem, starredInitial }: any) => {
     const [starred, setStarred] = useState(starredInitial);
+
     return (
       <View style={{ backgroundColor: 'transparent' }}>
         <TouchableOpacity onPress={() => navigation.navigate('CardInfoScreen', { card: cardItem, myCard: true })}>
@@ -96,18 +95,13 @@ export default function CardsScreen({ route, navigation }: any) {
     );
   };
 
-  // TODO: applying starred doesn't happen immediately
   // toggles a card's starred status
   const updateStarred = (cardItem: any) => {
-    console.log(cardItem['starred']);
-    console.log(starredFilter);
     if (cardItem['starred'] && starredFilter === true) {
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
         starred: !cardItem['starred'],
       });
       getStarred(starredFilter);
-      console.log('filtered cards:', filteredCards);
-      console.log('key:', cardItem['key']);
       setFilteredCards(
         filteredCards.filter((obj: any) => {
           return !(obj.key === cardItem['key']);
@@ -118,7 +112,6 @@ export default function CardsScreen({ route, navigation }: any) {
         starred: !cardItem['starred'],
       });
     } else {
-      console.log('updating');
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
         starred: !cardItem['starred'],
       });
@@ -127,6 +120,7 @@ export default function CardsScreen({ route, navigation }: any) {
     }
   };
 
+  // loads new data
   const loadNewData = () => {
     setRefreshing(true);
     // gets cards ordered by createdAt
@@ -148,7 +142,7 @@ export default function CardsScreen({ route, navigation }: any) {
     });
   };
 
-  // gets cards from database when screen loads
+  // checks if user is teacher and if so, gets class code and decks
   useEffect(() => {
     onValue(ref(db, '/userRoles'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -160,23 +154,21 @@ export default function CardsScreen({ route, navigation }: any) {
         return onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
           let data = querySnapShot.val() || [];
           let user = { ...data };
+
           classCode.current = user.classCode;
 
-          if (user.type === 'student') {
-          } else {
-            // teacher stuff here
-            if (user.decks) {
-              let decks: any = Object.values(user.decks);
-              console.log('decks:', decks);
-              setClassDecks(decks);
-              setFilteredClassDecks(decks);
-            }
+          if (user.decks) {
+            let decks: any = Object.values(user.decks);
+
+            setClassDecks(decks);
+            setFilteredClassDecks(decks);
           }
         });
       }
     });
   }, []);
 
+  // loads new data on render
   useEffect(() => {
     loadNewData();
   }, []);
@@ -318,7 +310,7 @@ export default function CardsScreen({ route, navigation }: any) {
     }
   };
 
-  // creates a Student component
+  // creates a Deck component
   const Deck = ({ deckItem }: any) => {
     return (
       <View style={{ backgroundColor: 'transparent' }}>
@@ -347,11 +339,15 @@ export default function CardsScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* navigation section */}
       <View style={styles.navigation}>
         <Text style={styles.header}>{userType.current === 'student' ? 'CARDS' : 'CLASS DECKS'}</Text>
       </View>
+
+      {/* student view */}
       {userType.current === 'student' ? (
         <View style={{ backgroundColor: 'transparent' }}>
+          {/* search bar, sort, and star filter */}
           <View style={{ backgroundColor: 'transparent', zIndex: 1000, flexDirection: 'row' }}>
             <TextInput
               style={styles.searchBar}
@@ -372,6 +368,8 @@ export default function CardsScreen({ route, navigation }: any) {
               <Icon name={starredFilter ? 'star' : 'staro'} size={20} color="#FFFFFF" style={{ alignSelf: 'center' }} />
             </TouchableOpacity>
           </View>
+
+          {/* list of cards */}
           <FlatList
             style={styles.cardList}
             contentContainerStyle={styles.contentContainerStyle}
@@ -394,12 +392,15 @@ export default function CardsScreen({ route, navigation }: any) {
               ) : null
             }
           />
+
+          {/* add card */}
           <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddScreen', { tagParam: '' })}>
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View>
+          {/* search bar */}
           <TextInput
             style={[styles.searchBar, { width: 350 }]}
             value={search}
@@ -412,6 +413,8 @@ export default function CardsScreen({ route, navigation }: any) {
             autoComplete="off"
             autoCorrect={false}
           />
+
+          {/* list of decks */}
           <FlatList
             style={styles.cardList}
             contentContainerStyle={[styles.contentContainerStyle, { marginLeft: 10 }]}
@@ -421,6 +424,8 @@ export default function CardsScreen({ route, navigation }: any) {
             renderItem={({ item }: any) => <Deck deckItem={item} />}
             ListEmptyComponent={() => <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No results...</Text>}
           />
+
+          {/* add card */}
           <TouchableOpacity style={[styles.addButton, { bottom: 80 }]} onPress={() => navigation.navigate('AddDeck')}>
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
           </TouchableOpacity>

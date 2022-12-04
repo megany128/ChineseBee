@@ -14,21 +14,29 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { push, ref, limitToLast, query, onValue, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
-import Entypo from 'react-native-vector-icons/Entypo';
 import DropDownPicker from 'react-native-dropdown-picker';
 import isChinese from 'is-chinese';
 import Toast from 'react-native-toast-message';
 
 moment().format();
 
+// allows student to add a card
 export default function AddScreen({ route, navigation }: any) {
-  // initialises current user & auth
   const auth = getAuth();
 
   const [tagOptions, setTagOptions]: any = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [idiomOptions, setIdiomOptions]: any = useState([
+    {
+      label: 'Idiom',
+      value: true,
+    },
+    {
+      label: 'Phrase/Word',
+      value: false,
+    },
+  ]);
   const [dropdownOpen2, setDropdownOpen2] = useState(false);
 
   const [english, setEnglish]: any = useState('');
@@ -40,6 +48,7 @@ export default function AddScreen({ route, navigation }: any) {
 
   const [error, setError] = useState(String);
 
+  // sets tag options based on the current user's existing tags
   useEffect(() => {
     return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
       let data = querySnapShot.val() || [];
@@ -52,17 +61,6 @@ export default function AddScreen({ route, navigation }: any) {
       }
       tagOptionsTemp2[0] = { label: '', value: '' };
       setTagOptions(tagOptionsTemp2);
-
-      setIdiomOptions([
-        {
-          label: 'Idiom',
-          value: true,
-        },
-        {
-          label: 'Phrase/Word',
-          value: false,
-        },
-      ]);
     });
   }, []);
 
@@ -132,14 +130,17 @@ export default function AddScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* navigation section*/}
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
         <Text style={styles.header}>ADD CARD</Text>
       </View>
+
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={{ marginTop: 20, flex: 1 }}>
+          {/* chinese meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="Chinese"
@@ -150,6 +151,7 @@ export default function AddScreen({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* english meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="English"
@@ -160,6 +162,7 @@ export default function AddScreen({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* dropdown picker for idiom or phrase/word */}
           <DropDownPicker
             open={dropdownOpen2}
             value={idiom}
@@ -181,6 +184,7 @@ export default function AddScreen({ route, navigation }: any) {
             itemSeparatorStyle={{ borderColor: 'red' }}
           />
 
+          {/* dropdown picker for tag */}
           <DropDownPicker
             open={dropdownOpen}
             searchable={true}

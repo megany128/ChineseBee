@@ -6,7 +6,8 @@ import { ref, onValue, query } from 'firebase/database';
 import { db } from '../config/firebase';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-export default function SharedDecksScreen({ route, navigation }: any) {
+// allows students to view share decks and class decks
+export default function SharedDecksScreen({ navigation }: any) {
   const auth = getAuth();
   const [sharedDecks, setSharedDecks] = useState([]);
   const [classDecks, setClassDecks]: any = useState([]);
@@ -14,10 +15,12 @@ export default function SharedDecksScreen({ route, navigation }: any) {
   const classCode = useRef('');
   const teacherID = useRef('');
 
+  // loads new data on render
   useEffect(() => {
     loadNewData();
   }, []);
 
+  // loads shared decks
   const loadNewData = () => {
     const data = query(ref(db, '/sharedCards'));
     setRefreshing(true);
@@ -33,6 +36,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
       setRefreshing(false);
     });
 
+    // loads class decks
     onValue(ref(db, '/students/' + auth?.currentUser?.uid), (querySnapShot) => {
       let data2 = querySnapShot.val() || {};
       let userData = { ...data2 };
@@ -56,6 +60,7 @@ export default function SharedDecksScreen({ route, navigation }: any) {
     });
   };
 
+  // Deck component
   const Deck = ({ deck, classDeck, teacherUID }: any) => {
     return (
       <View>
@@ -78,12 +83,15 @@ export default function SharedDecksScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* navigation section */}
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
         <Text style={styles.header}>SHARED DECKS</Text>
       </View>
+
+      {/* list of shared decks */}
       <FlatList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
         numColumns={2}
@@ -95,6 +103,8 @@ export default function SharedDecksScreen({ route, navigation }: any) {
         renderItem={({ item }) => <Deck deck={item} classDeck={false} teacherUID={''} />}
         ListEmptyComponent={() => <Text>There are no shared decks yet...</Text>}
       />
+
+      {/* list of class decks */}
       <Text
         style={{
           fontSize: 32,

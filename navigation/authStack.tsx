@@ -7,6 +7,7 @@ import SignUpScreen from '../screens/SignUpScreen';
 
 const Stack = createStackNavigator();
 
+// Auth Stack with Sign In and Sign Up screen for unauthenticated users
 export default function AuthStack() {
   return (
     <NavigationContainer>

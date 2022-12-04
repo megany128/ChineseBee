@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,15 +14,14 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { push, ref, limitToLast, query, onValue, update, orderByChild } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
-import Entypo from 'react-native-vector-icons/Entypo';
 import isChinese from 'is-chinese';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Toast from 'react-native-toast-message';
 
 moment().format();
 
+// allows teacher to add card
 export default function AddCardTeacher({ route, navigation }: any) {
-  // initialises current user & auth
   const auth = getAuth();
 
   const { deck } = route.params;
@@ -106,14 +105,17 @@ export default function AddCardTeacher({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* navigation section*/}
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
         <Text style={styles.header}>ADD CARD</Text>
       </View>
+
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={{ marginTop: 20, flex: 1 }}>
+          {/* chinese meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="Chinese"
@@ -124,6 +126,7 @@ export default function AddCardTeacher({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* english meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="English"
@@ -134,6 +137,7 @@ export default function AddCardTeacher({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* dropdown picker for idiom or phrase/word */}
           <DropDownPicker
             open={dropdownOpen2}
             value={idiom}

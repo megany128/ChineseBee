@@ -8,9 +8,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
-import { ref, update, onValue } from 'firebase/database';
+import { ref, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import * as Progress from 'react-native-progress';
 import { Input } from 'react-native-elements';
@@ -20,14 +19,12 @@ import * as Speech from 'expo-speech';
 import Toast from 'react-native-toast-message';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 var pinyin = require('chinese-to-pinyin');
 
+// tests student on list of cards
 export default function TestScreen({ route, navigation }: any) {
-  // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
 
   const [progress, setProgress] = useState(0);
@@ -67,14 +64,13 @@ export default function TestScreen({ route, navigation }: any) {
   const [writingQuestion, setWritingQuestion] = useState(0);
   const [typingQuestion, setTypingQuestion] = useState(false);
 
-  // const [finishedWriting, setFinishedWriting] = useState(false);
-
   const timeOpened = new Date();
 
   const [value, setValue] = React.useState({
     typingAnswer: '',
   });
 
+  // resets all counters
   useEffect(() => {
     correctCards.current = [];
     incorrectCards.current = [];
@@ -108,6 +104,7 @@ export default function TestScreen({ route, navigation }: any) {
     }
   }, []);
 
+  // shows toast based on whether answer is right or wrong
   const showToast = (card: any, right: boolean) => {
     Toast.show({
       type: right ? 'correctToast' : 'incorrectToast',
@@ -116,7 +113,7 @@ export default function TestScreen({ route, navigation }: any) {
     });
   };
 
-  // shuffles cards in an array through recursion
+  // shuffles cards in an array using recursion
   const shuffleCards: any = (array: []) => {
     let shuffledArray: [] = [];
     if (!array.length) return shuffledArray;
@@ -128,6 +125,7 @@ export default function TestScreen({ route, navigation }: any) {
     return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
+  // hides toast and moves to the next card
   const hideToast = (card: any, right: boolean) => {
     newQuestion.current = true;
     if (right) {
@@ -200,6 +198,8 @@ export default function TestScreen({ route, navigation }: any) {
           <Text style={{ fontSize: 52, color: 'white', fontWeight: '800' }}>{correctCards.current.length}</Text>
           <Text style={{ fontSize: 24, color: 'white', fontWeight: '600' }}>out of {cards.length}</Text>
         </View>
+
+        {/* shows test results */}
         <View style={{ marginTop: 30 }}>
           <Text style={{ textAlign: 'center', fontSize: 36, fontWeight: '700' }}>good job!</Text>
           <TouchableOpacity
@@ -230,10 +230,12 @@ export default function TestScreen({ route, navigation }: any) {
     );
   };
 
+  // sets new question on render
   useEffect(() => {
     newQuestion.current = true;
   }, []);
 
+  // generates random answers for a question
   const generateRandomAnswers = (type: string, card: any, cardType: string) => {
     // if it's a new question, generate new answers
     if (newQuestion.current) {
@@ -506,9 +508,18 @@ export default function TestScreen({ route, navigation }: any) {
               correct.current = true;
               correctHandwritingETOC.current = correctHandwritingETOC.current + 1;
               totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
+
+              update(ref(db, '/students/' + auth.currentUser?.uid), {
+                correctHandwritingETOC: correctHandwritingETOC.current,
+                totalHandwritingETOC: totalHandwritingETOC.current,
+              });
             } else {
               correct.current = false;
               totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
+
+              update(ref(db, '/students/' + auth.currentUser?.uid), {
+                totalHandwritingETOC: totalHandwritingETOC.current,
+              });
             }
           }}
         />
@@ -680,6 +691,7 @@ export default function TestScreen({ route, navigation }: any) {
     cardType = possibleQuestionTypes[type];
     console.log('card type is', cardType);
 
+    // generates a question type based on number of times reviewed
     if (cardType === 'ListeningCTOC') {
       setTypingQuestion(false);
       return <ListeningCTOC key={cards[cardNum]} card={cards[cardNum]} />;

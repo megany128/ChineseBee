@@ -13,10 +13,9 @@ import {
 import { Text, View } from '../components/Themed';
 import Icon from 'react-native-vector-icons/AntDesign';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getAuth, signOut } from 'firebase/auth';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
+import { getAuth } from 'firebase/auth';
 import { db } from '../config/firebase';
-import { query, ref, set, onValue, update } from 'firebase/database';
+import { query, ref, onValue, update } from 'firebase/database';
 import * as Progress from 'react-native-progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FlipCard from 'react-native-flip-card';
@@ -30,9 +29,9 @@ var voucher_codes = require('voucher-code-generator');
 
 const { utcToZonedTime } = require('date-fns-tz');
 
-export default function HomeScreen({ route, navigation }: any) {
+// home screen
+export default function HomeScreen({ navigation }: any) {
   // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
 
   const [name, setName] = useState(String);
@@ -74,11 +73,7 @@ export default function HomeScreen({ route, navigation }: any) {
     return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
-  useEffect(() => {
-    AsyncStorage.setItem('dailyStudyProgress', '0');
-  }, []);
-
-  // temporarily, while generateTodaysRevision is in onpress
+  // gets student's cards
   useEffect(() => {
     onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -89,6 +84,7 @@ export default function HomeScreen({ route, navigation }: any) {
     });
   }, []);
 
+  // generates today's revision list
   const generateTodaysRevision = () => {
     console.log('\nGENERATING TODAYS REVISION...\n');
     onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
@@ -96,7 +92,7 @@ export default function HomeScreen({ route, navigation }: any) {
       let cardItems = { ...data };
 
       let allCardsTemp: any = Object.values(cardItems);
-      // TODO: (later) fix this is sue
+      // TODO: (later) fix this
       // setWOTDCards(allCardsTemp.filter((obj: any) => {
       //   return !obj.idiom;
       // }))
@@ -104,6 +100,7 @@ export default function HomeScreen({ route, navigation }: any) {
       // setIOTDCards(allCardsTemp.filter((obj: any) => {
       //   return obj.idiom;
       // }))
+
       // gets cards that are not new but are due this session
       let reviewArray = allCardsTemp.filter((obj: { dueDate: number; timesReviewed: number }) => {
         return obj.dueDate === 0 && obj.timesReviewed > 0;
@@ -195,6 +192,7 @@ export default function HomeScreen({ route, navigation }: any) {
   };
 
   // TODO: (later) only generate new cards when last time opened was in the past
+  // sets user type (student or teacher)
   useEffect(() => {
     onValue(ref(db, '/userRoles'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -210,6 +208,7 @@ export default function HomeScreen({ route, navigation }: any) {
   // }, []);
 
   // TODO:(later) fix - doesn't reset at midnight
+  // gets stats
   const getStats = async () => {
     let cardsStudiedTemp = parseInt((await AsyncStorage.getItem('cardsStudied')) || '0');
     let minutesLearningTemp = parseInt((await AsyncStorage.getItem('minutesLearning')) || '0');
@@ -260,6 +259,7 @@ export default function HomeScreen({ route, navigation }: any) {
     setDayStreak(streak);
   };
 
+  // gets stats and daily progress whenever screen is opened
   useEffect(() => {
     getStats();
     if (userType === 'student') {
@@ -277,6 +277,7 @@ export default function HomeScreen({ route, navigation }: any) {
     }
   }, [userType]);
 
+  // generates class code if teacher doesn't already have one
   const loadNewUserData = () => {
     setRefreshing(true);
     onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
@@ -284,12 +285,14 @@ export default function HomeScreen({ route, navigation }: any) {
       let user = { ...data };
       classCode.current = user.classCode;
       console.log('classcode:', classCode.current);
+      setName(user.name);
+
       if (!user.classCode) {
         console.log('classcode2:', classCode.current);
         let unique = false;
         let newCode = [''];
         while (!unique) {
-          console.log('generating referral code');
+          console.log('generating class code');
           newCode = voucher_codes.generate({
             length: 6,
             count: 1,
@@ -321,6 +324,7 @@ export default function HomeScreen({ route, navigation }: any) {
       }
     });
 
+    // gets all students in class
     return onValue(ref(db, '/students/'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let students = { ...data };
@@ -335,6 +339,7 @@ export default function HomeScreen({ route, navigation }: any) {
     });
   };
 
+  // gets daily study progress
   useEffect(() => {
     return onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || [];
@@ -391,6 +396,7 @@ export default function HomeScreen({ route, navigation }: any) {
     );
   };
 
+  // student view
   return userType === 'student' ? (
     <LinearGradient colors={['rgba(255,203,68,0.2)', 'rgba(255,255,255,0.3)']} style={styles.container}>
       <SafeAreaView>
@@ -415,6 +421,7 @@ export default function HomeScreen({ route, navigation }: any) {
           </View>
 
           {/* TODO: (later) little bee at end of progress bar */}
+          {/* today's revision */}
           <TouchableOpacity
             style={styles.todaysRevision}
             onPress={() => {
@@ -439,6 +446,7 @@ export default function HomeScreen({ route, navigation }: any) {
             />
           </TouchableOpacity>
 
+          {/* word of the day and idiom of the day */}
           <View
             style={{
               flexDirection: 'row',
@@ -495,6 +503,7 @@ export default function HomeScreen({ route, navigation }: any) {
             )}
           </View>
 
+          {/* stats */}
           <View style={styles.stats}>
             <View
               style={{
@@ -520,6 +529,7 @@ export default function HomeScreen({ route, navigation }: any) {
             </View>
           </View>
 
+          {/* quick actions */}
           <Text style={styles.quickActionsHeader}>QUICK ACTIONS</Text>
           <View style={styles.quickActions}>
             <TouchableOpacity
@@ -569,6 +579,7 @@ export default function HomeScreen({ route, navigation }: any) {
       </SafeAreaView>
     </LinearGradient>
   ) : (
+    // teacher view
     <LinearGradient colors={['rgba(255,203,68,0.2)', 'rgba(255,255,255,0.3)']} style={styles.container}>
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <SafeAreaView>
@@ -590,6 +601,8 @@ export default function HomeScreen({ route, navigation }: any) {
               <Ionicons name="person-circle-outline" size={35} style={{ marginRight: 10 }} />
             </TouchableOpacity>
           </View>
+
+          {/* class code and students */}
           <View style={{ backgroundColor: 'transparent', width: 360 }}>
             <Text style={[styles.title, { marginTop: 0 }]}>CLASS CODE</Text>
             <Text style={styles.classCode}>{classCode.current}</Text>

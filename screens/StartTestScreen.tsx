@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { CheckBox } from 'react-native-elements';
 import { getAuth } from 'firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -8,9 +7,8 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 
-export default function StartTestScreen({ route, navigation }: any) {
-  // initialises current user & auth
-  const { user } = useAuthentication();
+// allows student to select test settings
+export default function StartTestScreen({ navigation }: any) {
   const auth = getAuth();
 
   const [dropdown1Open, setDropdown1Open] = useState(false);
@@ -44,6 +42,7 @@ export default function StartTestScreen({ route, navigation }: any) {
   // TODO: (later) add option for mastery (mastered, learning, struggling)
   const [tagOptions, setTagOptions]: any = useState([]);
 
+  // sets tag options based on the current user's existing tags
   useEffect(() => {
     return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
       let data = querySnapShot.val() || [];
@@ -59,6 +58,7 @@ export default function StartTestScreen({ route, navigation }: any) {
     });
   }, []);
 
+  // gets student's cards
   useEffect(() => {
     return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -79,6 +79,7 @@ export default function StartTestScreen({ route, navigation }: any) {
     return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
+  // generates test based on criteria
   const generateTest = () => {
     console.log('\nGENERATING TEST');
     console.log('===============');
@@ -135,6 +136,7 @@ export default function StartTestScreen({ route, navigation }: any) {
     }
   };
 
+  // checks if user has enough cards to generate a test
   useEffect(() => {
     const willFocusSubscription = navigation.addListener('focus', async () => {
       onValue(ref(db, '/students/' + auth.currentUser?.uid), async (querySnapShot) => {
@@ -165,6 +167,8 @@ export default function StartTestScreen({ route, navigation }: any) {
         </TouchableOpacity>
         <Text style={styles.header}>START TEST</Text>
       </View>
+
+      {/* dropdown picker for no. of questions */}
       <View style={{ marginTop: 20, flex: 1 }}>
         <DropDownPicker
           open={dropdown1Open}
@@ -186,6 +190,7 @@ export default function StartTestScreen({ route, navigation }: any) {
           zIndexInverse={1000}
         />
 
+        {/* dropdown picker for tags selected */}
         <DropDownPicker
           open={dropdown2Open}
           multiple={true}
@@ -224,6 +229,7 @@ export default function StartTestScreen({ route, navigation }: any) {
           }}
         />
 
+        {/* checkbox for starred cards only */}
         <CheckBox
           title="Starred cards only"
           checked={starredCards}
@@ -233,6 +239,7 @@ export default function StartTestScreen({ route, navigation }: any) {
           onPress={() => setStarredCards(!starredCards)}
         />
 
+        {/* selection of question types */}
         <Text style={styles.header2}>Question Types</Text>
 
         <View style={{ justifyContent: 'space-evenly' }}>

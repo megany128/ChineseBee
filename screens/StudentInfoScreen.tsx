@@ -1,18 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, SafeAreaView, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart,
-} from 'react-native-chart-kit';
-import { push, ref, set, onValue, update } from 'firebase/database';
+import { BarChart, PieChart } from 'react-native-chart-kit';
+import { ref, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase/auth';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+// allows teacher to see stats of specific student
 export default function StudentInfoScreen({ route, navigation }: any) {
   const auth = getAuth();
 
@@ -74,6 +68,7 @@ export default function StudentInfoScreen({ route, navigation }: any) {
     ],
   };
 
+  // gets student's stats
   useEffect(() => {
     return onValue(ref(db, '/students/' + student.uid), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -165,6 +160,7 @@ export default function StudentInfoScreen({ route, navigation }: any) {
                 <Text style={styles.subtitle}>cards mastered</Text>
               </View>
             </View>
+
             <Text style={styles.sectionTitle}>MASTERY</Text>
             <PieChart
               style={{ marginTop: 10 }}
@@ -178,6 +174,7 @@ export default function StudentInfoScreen({ route, navigation }: any) {
               backgroundColor={'transparent'}
               paddingLeft="10"
             />
+
             <Text style={styles.sectionTitle}>QUESTION TYPE MASTERY</Text>
             <BarChart
               style={{ marginTop: 10, backgroundColor: 'transparent' }}

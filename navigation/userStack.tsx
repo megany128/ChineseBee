@@ -5,7 +5,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Octicons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
 import { RootTabParamList, RootTabScreenProps } from '../types';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import Colors from '../constants/Colors';
@@ -36,6 +35,7 @@ const Stack = createStackNavigator();
 
 const BottomTab = createBottomTabNavigator<RootTabParamList>();
 
+// Bottom tab with Home, Cards, and Stats screen
 function BottomTabNavigator() {
   const colorScheme = useColorScheme();
 
@@ -76,6 +76,7 @@ function BottomTabNavigator() {
   );
 }
 
+// User Stack for authenticated users
 export default function UserStack() {
   return (
     <NavigationContainer>
@@ -105,9 +106,6 @@ export default function UserStack() {
   );
 }
 
-/**
- * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
- */
 function TabBarIcon(props: { name: React.ComponentProps<typeof MaterialCommunityIcons>['name']; color: string }) {
   return <MaterialCommunityIcons size={30} style={{ marginBottom: -3 }} {...props} />;
 }

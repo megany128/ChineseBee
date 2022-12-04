@@ -19,8 +19,8 @@ import isChinese from 'is-chinese';
 
 moment().format();
 
+// allows student to edit card
 export default function EditScreen({ route, navigation }: any) {
-  // initialises current user & auth
   const auth = getAuth();
 
   const card: any = route.params;
@@ -33,11 +33,21 @@ export default function EditScreen({ route, navigation }: any) {
   const [tagOptions, setTagOptions]: any = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [idiomOptions, setIdiomOptions]: any = useState([
+    {
+      label: 'Idiom',
+      value: true,
+    },
+    {
+      label: 'Phrase/Word',
+      value: false,
+    },
+  ]);
   const [dropdownOpen2, setDropdownOpen2] = useState(false);
 
   const [error, setError] = useState(String);
 
+  // sets tag options based on the current user's existing tags
   useEffect(() => {
     return onValue(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), async (querySnapShot) => {
       let data = querySnapShot.val() || [];
@@ -50,17 +60,6 @@ export default function EditScreen({ route, navigation }: any) {
       }
       tagOptionsTemp2[0] = { label: '', value: '' };
       setTagOptions(tagOptionsTemp2);
-
-      setIdiomOptions([
-        {
-          label: 'Idiom',
-          value: true,
-        },
-        {
-          label: 'Phrase/Word',
-          value: false,
-        },
-      ]);
     });
   }, []);
 
@@ -105,13 +104,16 @@ export default function EditScreen({ route, navigation }: any) {
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <SafeAreaView style={styles.container}>
+        {/* navigation section*/}
         <View style={styles.navigation}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="chevron-back" size={40} />
           </TouchableOpacity>
           <Text style={styles.header}>EDIT CARD</Text>
         </View>
+
         <View style={{ marginTop: 20, flex: 1 }}>
+          {/* chinese meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="Chinese"
@@ -122,6 +124,7 @@ export default function EditScreen({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* english meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="English"
@@ -132,6 +135,7 @@ export default function EditScreen({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* dropdown picker for idiom or phrase/word */}
           <DropDownPicker
             open={dropdownOpen2}
             value={idiom}
@@ -153,6 +157,7 @@ export default function EditScreen({ route, navigation }: any) {
             itemSeparatorStyle={{ borderColor: 'red' }}
           />
 
+          {/* dropdown picker for tag */}
           <DropDownPicker
             open={dropdownOpen}
             searchable={true}
@@ -185,6 +190,7 @@ export default function EditScreen({ route, navigation }: any) {
             addCustomItem={true}
           />
 
+          {/* save changes */}
           <View style={{ alignSelf: 'center' }}>
             {error && <Text style={styles.error}>{error}</Text>}
             <TouchableOpacity style={styles.button} onPress={() => updateCard()}>

@@ -10,6 +10,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 var pinyin = require('chinese-to-pinyin');
 
 // TODO: (later) when tap on card info and toggle starred, navigating back doesnt update it
+// allows student to see their test results
 export default function TestResultsScreen({ route, navigation }: any) {
   const {
     correctCards,
@@ -101,7 +102,9 @@ export default function TestResultsScreen({ route, navigation }: any) {
           </TouchableOpacity>
           <Text style={styles.header}>TEST RESULTS</Text>
         </View>
+
         <View style={{ marginHorizontal: 30, marginTop: 20 }}>
+          {/* list of correct cards */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={styles.header2}>Correct</Text>
             <Text style={styles.header2}>{correctCards.length}</Text>
@@ -119,10 +122,13 @@ export default function TestResultsScreen({ route, navigation }: any) {
             ListEmptyComponent={() => <Text>None correct</Text>}
             horizontal={true}
           />
+
+          {/* list of incorrect cards */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={styles.header2}>Incorrect</Text>
             <Text style={styles.header2}>{incorrectCards.length}</Text>
           </View>
+
           <FlatList
             snapToAlignment="start"
             decelerationRate={'fast'}
@@ -135,6 +141,8 @@ export default function TestResultsScreen({ route, navigation }: any) {
             ListEmptyComponent={() => <Text>None incorrect</Text>}
             horizontal={true}
           />
+
+          {/* question type breakdown */}
           <Text style={styles.header2}>Question Type Breakdown</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>

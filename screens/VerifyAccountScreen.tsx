@@ -1,27 +1,30 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, SafeAreaView, TextInput, Text, View, Alert } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getAuth, EmailAuthProvider, deleteUser, reauthenticateWithCredential } from 'firebase/auth';
 import { db } from '../config/firebase';
-import { onValue, set, ref, remove, update } from 'firebase/database';
+import { ref, remove } from 'firebase/database';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-export default function VerifyAccountScreen({ route, navigation }: any) {
+// allows user to verify their account before deletion
+export default function VerifyAccountScreen({ navigation }: any) {
   const auth = getAuth();
   const [error, setError] = useState('');
   const [verifyEmail, setVerifyEmail] = useState('');
   const [verifyPassword, setVerifyPassword] = useState('');
 
+  // verifies user's email on render
   useEffect(() => {
     setVerifyEmail(auth?.currentUser?.email!);
   }, []);
 
+  // verifies account
   const verifyAccount = () => {
     const provider = EmailAuthProvider;
     const authCredential = provider.credential(verifyEmail, verifyPassword);
     return authCredential;
   };
 
+  // deletes account
   const deleteAccount = async () => {
     // TODO: (later) delete from class list as well
     Alert.alert('Are you sure?', 'This is irreversible!', [
@@ -52,6 +55,7 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
                     console.log('error:', error.message);
                   });
               } catch (error: any) {
+                // error handling
                 if (error.message.includes('wrong-password')) {
                   setError('Wrong password');
                 } else if (error.message.includes('too-many-requests')) {
@@ -66,6 +70,7 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
                 console.log('error:', error.message);
               }
             } catch (error: any) {
+              // error handling
               if (error.message.includes('wrong-password')) {
                 setError('Wrong password');
               } else if (error.message.includes('too-many-requests')) {
@@ -80,6 +85,7 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
               console.log('error:', error.message);
             }
           } catch (error: any) {
+            // error handling
             if (error.message.includes('wrong-password')) {
               setError('Wrong password');
             } else if (error.message.includes('too-many-requests')) {
@@ -107,10 +113,13 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
           </TouchableOpacity>
           <Text style={styles.header}>DELETE ACCOUNT</Text>
         </View>
+
         <Text style={{ color: '#2A3242', fontWeight: '500', marginTop: 20, marginLeft: 10 }}>
           Please sign in again to delete your account
         </Text>
+
         {error && <Text style={styles.error}>{error}</Text>}
+        {/* email input */}
         <TextInput
           style={[styles.input, { width: '90%', marginLeft: 10, marginTop: 20 }]}
           placeholder="email address"
@@ -123,6 +132,8 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
           autoCapitalize="none"
           editable={false}
         />
+
+        {/* password input */}
         <TextInput
           style={[styles.input, { width: '90%', marginLeft: 10, marginTop: 20 }]}
           placeholderTextColor="#C4C4C4"
@@ -133,6 +144,8 @@ export default function VerifyAccountScreen({ route, navigation }: any) {
           underlineColorAndroid="transparent"
           autoCapitalize="none"
         />
+
+        {/* deletes account */}
         <TouchableOpacity
           style={{
             backgroundColor: '#D54826FF',

@@ -10,22 +10,18 @@ import {
   TouchableOpacity,
   FlatList,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import { RootTabScreenProps } from '../types';
-import { ref, set, onValue, orderByChild, query, update } from 'firebase/database';
+import { ref, onValue, orderByChild, query, update } from 'firebase/database';
 import { db } from '../config/firebase';
-import { SwipeListView } from 'react-native-swipe-list-view';
 
 var pinyin = require('chinese-to-pinyin');
 
+// allows students to search all cards under a certain tag
 export default function SearchByTagScreen({ route, navigation }: any) {
-  // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
   const [refreshing, setRefreshing] = useState(true);
 
@@ -93,15 +89,12 @@ export default function SearchByTagScreen({ route, navigation }: any) {
   // TODO: applying starred doesn't happen immediately
   // toggles a card's starred status
   const updateStarred = (cardItem: any) => {
-    console.log(cardItem['starred']);
-    console.log(starredFilter);
     if (cardItem['starred'] && starredFilter === true) {
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
         starred: false,
       });
       getStarred(starredFilter);
-      console.log('filtered cards:', filteredCards);
-      console.log('key:', cardItem['key']);
+
       setFilteredCards(
         filteredCards.filter((obj: any) => {
           return !(obj.key === cardItem['key']);
@@ -112,7 +105,6 @@ export default function SearchByTagScreen({ route, navigation }: any) {
         starred: false,
       });
     } else {
-      console.log('updating');
       update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + cardItem['key']), {
         starred: true,
       });
@@ -120,6 +112,7 @@ export default function SearchByTagScreen({ route, navigation }: any) {
     }
   };
 
+  // loads new data
   const loadNewData = () => {
     setRefreshing(true);
     // gets cards ordered by createdAt
@@ -269,12 +262,15 @@ export default function SearchByTagScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* navigation section */}
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
         <Text style={styles.header}>{tagSearch}</Text>
       </View>
+
+      {/* search, sort, and starred filter */}
       <View style={{ backgroundColor: 'transparent', zIndex: 1000, flexDirection: 'row' }}>
         <TextInput
           style={styles.searchBar}
@@ -300,6 +296,8 @@ export default function SearchByTagScreen({ route, navigation }: any) {
           />
         </TouchableOpacity>
       </View>
+
+      {/* list of cards with specified tag */}
       <FlatList
         style={styles.cardList}
         contentContainerStyle={styles.contentContainerStyle}
@@ -316,6 +314,8 @@ export default function SearchByTagScreen({ route, navigation }: any) {
           ) : null
         }
       />
+
+      {/* add card */}
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => navigation.navigate('AddScreen', { tagParam: tagSearch })}

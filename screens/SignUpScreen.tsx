@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
-  Alert,
   TextInput,
   TouchableOpacity,
   SafeAreaView,
@@ -17,6 +16,8 @@ import { ref, set, update } from 'firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const auth = getAuth();
+
+// sign up screen
 const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
   const [value, setValue] = React.useState({
     name: '',
@@ -27,10 +28,12 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
 
   const [userType, setUserType] = useState('student');
 
+  // navigates to sign in screen
   const onFooterLinkPress = () => {
     navigation.navigate('SignInScreen');
   };
 
+  // signs up user
   async function signUp() {
     if (value.email === '' || value.password === '') {
       setValue({
@@ -89,6 +92,7 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             [data.user.uid]: 'student',
           });
         })
+        // error handling
         .catch((error) => {
           if (error.message.includes('email-already-in-use')) {
             setValue({
@@ -129,6 +133,7 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             [data.user.uid]: 'teacher',
           });
         })
+        // error handling
         .catch((error) => {
           if (error.message.includes('email-already-in-use')) {
             setValue({
@@ -165,6 +170,7 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
         <View style={styles.container}>
           <Text style={styles.title}>sign up</Text>
           {value.error && <Text style={styles.error}>{value.error}</Text>}
+          {/* select user type */}
           <View
             style={{
               flexDirection: 'row',
@@ -188,6 +194,7 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
+          {/* name input */}
           <TextInput
             style={styles.input}
             placeholder="name"
@@ -197,6 +204,8 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             underlineColorAndroid="transparent"
             autoCapitalize="none"
           />
+
+          {/* email input */}
           <TextInput
             style={styles.input}
             placeholder="email address"
@@ -208,6 +217,8 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             underlineColorAndroid="transparent"
             autoCapitalize="none"
           />
+
+          {/* password input */}
           <TextInput
             style={styles.input}
             placeholderTextColor="#C4C4C4"
@@ -218,9 +229,11 @@ const SignUpScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
             underlineColorAndroid="transparent"
             autoCapitalize="none"
           />
+
           <TouchableOpacity style={styles.button} onPress={() => signUp()}>
             <Text style={styles.buttonTitle}>SIGN UP →</Text>
           </TouchableOpacity>
+
           <View style={styles.footerView}>
             <Text style={styles.footerText}>don't have an account? </Text>
             <TouchableOpacity onPress={onFooterLinkPress}>

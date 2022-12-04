@@ -19,35 +19,30 @@ import DropDownPicker from 'react-native-dropdown-picker';
 
 moment().format();
 
+// allows teacher to edit card
 export default function EditTeacher({ route, navigation }: any) {
   // initialises current user & auth
   const auth = getAuth();
 
   const { card, deck } = route.params;
 
-  const [cardInfo, setCardInfo] = useState(card);
-
   const [english, setEnglish]: any = useState(card.english);
   const [chinese, setChinese]: any = useState(card.chinese);
   const [idiom, setIdiom]: any = useState(card.idiom);
 
-  const [idiomOptions, setIdiomOptions]: any = useState([]);
+  const [idiomOptions, setIdiomOptions]: any = useState([
+    {
+      label: 'Idiom',
+      value: true,
+    },
+    {
+      label: 'Phrase/Word',
+      value: false,
+    },
+  ]);
   const [dropdownOpen2, setDropdownOpen2] = useState(false);
 
   const [error, setError] = useState(String);
-
-  useEffect(() => {
-    setIdiomOptions([
-      {
-        label: 'Idiom',
-        value: true,
-      },
-      {
-        label: 'Phrase/Word',
-        value: false,
-      },
-    ]);
-  }, []);
 
   // adds a card with data from the text inputs
   const updateCard = () => {
@@ -89,13 +84,16 @@ export default function EditTeacher({ route, navigation }: any) {
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <SafeAreaView style={styles.container}>
+        {/* navigation section*/}
         <View style={styles.navigation}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="chevron-back" size={40} />
           </TouchableOpacity>
           <Text style={styles.header}>EDIT CARD</Text>
         </View>
+
         <View style={{ marginTop: 20, flex: 1 }}>
+          {/* chinese meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="Chinese"
@@ -106,6 +104,7 @@ export default function EditTeacher({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* english meaning input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="English"
@@ -116,6 +115,7 @@ export default function EditTeacher({ route, navigation }: any) {
             style={styles.inputText}
           />
 
+          {/* dropdown picker for idiom or phrase/word */}
           <DropDownPicker
             open={dropdownOpen2}
             value={idiom}
@@ -137,6 +137,7 @@ export default function EditTeacher({ route, navigation }: any) {
             itemSeparatorStyle={{ borderColor: 'red' }}
           />
 
+          {/* save changes */}
           <View style={{ alignSelf: 'center' }}>
             {error && <Text style={styles.error}>{error}</Text>}
             <TouchableOpacity style={styles.button} onPress={() => updateCard()}>

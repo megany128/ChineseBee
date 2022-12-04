@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, StyleSheet, Text, View, Pressable, TouchableOpacity, FlatList, Alert } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import moment from 'moment';
-
 import { ref, push, onValue, limitToLast, query, update, remove } from 'firebase/database';
 import { db } from '../config/firebase';
 
@@ -13,9 +11,8 @@ var pinyin = require('chinese-to-pinyin');
 
 moment().format();
 
+// allows teacher to view info about a deck
 export default function ClassDeckInfoScreen({ route, navigation }: any) {
-  // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
 
   const [cards, setCards] = useState({});
@@ -53,9 +50,6 @@ export default function ClassDeckInfoScreen({ route, navigation }: any) {
                   {deck['name']}
                 </Text>
               </View>
-              {/* <TouchableOpacity style={styles.addToVocabListSmall} onPress={() => alert('Add to vocab list?')}>
-                <AntDesign name='plus' size={20} color='#FFCB44'/>
-              </TouchableOpacity> */}
             </View>
           </View>
         </Pressable>
@@ -63,6 +57,7 @@ export default function ClassDeckInfoScreen({ route, navigation }: any) {
     );
   };
 
+  // loads new data
   const loadNewData = () => {
     // gets cards ordered by createdAt
     const orderedData = query(ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key'] + '/cards'));
@@ -84,50 +79,7 @@ export default function ClassDeckInfoScreen({ route, navigation }: any) {
     loadNewData();
   }, []);
 
-  // gets the key of the last card created
-  const getKey = () => {
-    var cardRef = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), limitToLast(1));
-    let key = '';
-    onValue(cardRef, (querySnapShot) => {
-      let data = querySnapShot.val() || {};
-      let card = { ...data };
-      key = Object.keys(card)[0];
-    });
-    return key;
-  };
-
-  const addCardsToVocab = () => {
-    for (let i = 0; i < cardArray.length; i++) {
-      console.log(cardArray[i]['english']);
-      push(ref(db, '/students/' + auth.currentUser?.uid + '/cards'), {
-        english: cardArray[i]['english'],
-        chinese: cardArray[i]['chinese'],
-        tag: deck['name'],
-        starred: false,
-        createdAt: moment().valueOf(),
-        timesCorrect: 0,
-        timesReviewed: 0,
-        dueDate: 0,
-        idiom: cardArray[i]['idiom'],
-      });
-      update(ref(db, '/students/' + auth.currentUser?.uid + '/tags'), {
-        [deck['name']]: '',
-      });
-      const key = getKey();
-      update(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + key), {
-        key,
-      });
-    }
-    Alert.alert('Success', 'Cards added', [
-      {
-        text: 'OK',
-        onPress: () => {
-          navigation.goBack();
-        },
-      },
-    ]);
-  };
-
+  // deletes the deck
   const deleteDeck = () => {
     remove(ref(db, '/teachers/' + auth.currentUser?.uid + '/decks/' + deck['key']));
     Alert.alert('Deck deleted', "Cards will remain in students' vocab lists", [
@@ -142,6 +94,7 @@ export default function ClassDeckInfoScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* navigation section */}
       <View style={styles.navigation}>
         <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: -10 }}>
@@ -153,6 +106,8 @@ export default function ClassDeckInfoScreen({ route, navigation }: any) {
           <Feather name="trash" size={30} />
         </TouchableOpacity>
       </View>
+
+      {/* list of cards in deck*/}
       <FlatList
         style={styles.cardList}
         contentContainerStyle={styles.contentContainerStyle}
@@ -162,6 +117,8 @@ export default function ClassDeckInfoScreen({ route, navigation }: any) {
         renderItem={({ item }) => <Card id={item} cardItem={cardArray[item as keyof typeof cards]} />}
         ListEmptyComponent={() => <Text style={{ marginLeft: 30, paddingBottom: 15 }}>No cards in this deck!</Text>}
       />
+
+      {/* add card to deck */}
       <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddCardTeacher', { deck: deck })}>
         <Text style={{ color: 'white', fontSize: 16, fontWeight: '900', alignSelf: 'center' }}>ADD +</Text>
       </TouchableOpacity>
@@ -232,28 +189,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 15,
     height: 25,
-  },
-  addToVocabList: {
-    marginHorizontal: 30,
-    marginTop: 20,
-    alignSelf: 'center',
-    backgroundColor: 'white',
-    width: 350,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FFCB44',
-    alignItems: 'center',
-  },
-  addToVocabListSmall: {
-    borderColor: '#FFCB44',
-    borderRadius: 20,
-    borderWidth: 1,
-    width: 25,
-    height: 25,
-    marginTop: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   addButton: {
     borderRadius: 30,

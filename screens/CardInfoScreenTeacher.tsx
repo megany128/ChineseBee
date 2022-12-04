@@ -3,7 +3,6 @@ import React from 'react';
 import { Text, View } from '../components/Themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import * as Speech from 'expo-speech';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { ref, remove } from 'firebase/database';
@@ -12,12 +11,14 @@ import { getAuth } from 'firebase/auth';
 
 var pinyin = require('chinese-to-pinyin');
 
+// allows teacher to view info about a card
 export default function CardInfoScreenTeacher({ route, navigation }: any) {
   const auth = getAuth();
   const { card, deck } = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* top view with navigation and quick actions */}
       <View style={{ justifyContent: 'flex-start', backgroundColor: 'transparent' }}>
         <View
           style={{
@@ -47,6 +48,8 @@ export default function CardInfoScreenTeacher({ route, navigation }: any) {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* info about card */}
         <View style={{ backgroundColor: 'white', height: 1000 }}>
           <View style={{ backgroundColor: 'transparent', marginHorizontal: 30, marginTop: 30 }}>
             <View style={{ backgroundColor: 'transparent', flexDirection: 'row' }}>
@@ -81,6 +84,7 @@ export default function CardInfoScreenTeacher({ route, navigation }: any) {
             <Text style={styles.title}>Definition</Text>
             <Text>{card.english}</Text>
 
+            {/* delete card */}
             <TouchableOpacity
               style={styles.button}
               onPress={() =>

@@ -1,35 +1,35 @@
 import { StyleSheet, SafeAreaView, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import EditScreenInfo from '../components/EditScreenInfo';
 import { Text, View } from '../components/Themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import * as Speech from 'expo-speech';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { ref, set, onValue, remove, query, update } from 'firebase/database';
+import { ref, onValue, remove, query, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import { getAuth } from 'firebase/auth';
 
 var pinyin = require('chinese-to-pinyin');
 
+// allows student to view info about a card
 export default function CardInfoScreen({ route, navigation }: any) {
   const auth = getAuth();
   const { card, myCard } = route.params;
   const [starred, setStarred] = useState(card.starred);
-  console.log(myCard);
 
+  // checks whether card is starred or not
   useEffect(() => {
     const data = query(ref(db, '/students/' + auth.currentUser?.uid + '/cards/' + card.key));
     return onValue(data, (querySnapShot) => {
       let data = querySnapShot.val() || {};
       let cardItem = { ...data };
 
-      // uses state to set cards to the data just retrieved
       setStarred(cardItem.starred);
     });
   }, []);
 
+  // gets mastery level of card (correct/total)
   const getMastery = () => {
     if (card.timesReviewed > 0) {
       let successRate = card.timesCorrect / card.timesReviewed;
@@ -47,6 +47,7 @@ export default function CardInfoScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* top view with navigation and quick actions */}
       <View style={{ justifyContent: 'flex-start', backgroundColor: 'transparent' }}>
         <View
           style={{
@@ -85,6 +86,8 @@ export default function CardInfoScreen({ route, navigation }: any) {
             </View>
           )}
         </View>
+
+        {/* info about card */}
         <View style={{ backgroundColor: 'white', height: 1000 }}>
           <View style={{ backgroundColor: 'transparent', marginHorizontal: 30, marginTop: 30 }}>
             <View style={{ backgroundColor: 'transparent', flexDirection: 'row' }}>
@@ -123,8 +126,8 @@ export default function CardInfoScreen({ route, navigation }: any) {
 
             <Text style={styles.title}>Mastery Level</Text>
             <Text>{getMastery()}</Text>
-            {/* <Text style={styles.title}>Example Phrases</Text> */}
 
+            {/* delete card */}
             {myCard && (
               <TouchableOpacity
                 style={styles.button}

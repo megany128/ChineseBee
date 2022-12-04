@@ -9,7 +9,6 @@ import {
   Keyboard,
   Alert,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { Input } from 'react-native-elements';
 import { getAuth } from 'firebase/auth';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -19,9 +18,8 @@ import moment from 'moment';
 
 moment().format();
 
-export default function AddDeck({ route, navigation }: any) {
-  // initialises current user & auth
-  const { user } = useAuthentication();
+// allows teacher to create deck
+export default function AddDeck({ navigation }: any) {
   const auth = getAuth();
 
   const [name, setName]: any = useState('');
@@ -77,14 +75,17 @@ export default function AddDeck({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* navigation section*/}
       <View style={styles.navigation}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={40} />
         </TouchableOpacity>
         <Text style={styles.header}>ADD CLASS DECK</Text>
       </View>
+
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={{ marginTop: 20, flex: 1 }}>
+          {/* deck name input*/}
           <Input
             inputContainerStyle={styles.inputStyle}
             placeholder="Deck name"
@@ -94,6 +95,7 @@ export default function AddDeck({ route, navigation }: any) {
             autoCompleteType=""
             style={styles.inputText}
           />
+
           <View style={{ alignSelf: 'center' }}>
             {error && <Text style={styles.error}>{error}</Text>}
             <TouchableOpacity style={styles.button} onPress={() => addDeck()}>

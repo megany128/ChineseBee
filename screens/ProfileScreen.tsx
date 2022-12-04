@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, SafeAreaView, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
 import { getAuth, signOut, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { onValue, ref, update, set } from 'firebase/database';
 import { db } from '../config/firebase';
 import { Text, View } from '../components/Themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+// profile screen
 export default function ProfileScreen({ navigation }: any) {
   const auth = getAuth();
   const userType = useRef('');
@@ -18,10 +18,12 @@ export default function ProfileScreen({ navigation }: any) {
     classCode: '',
   });
 
+  // gets user data on render
   useEffect(() => {
     getData();
   }, []);
 
+  // gets user data
   const getData = async () => {
     onValue(ref(db, '/userRoles'), async (querySnapShot) => {
       let data = querySnapShot.val() || {};
@@ -30,6 +32,7 @@ export default function ProfileScreen({ navigation }: any) {
       userType.current = userRoles[auth.currentUser!.uid];
 
       if (userRoles[auth.currentUser!.uid] === 'student') {
+        // gets student data
         return await onValue(ref(db, '/students/' + auth?.currentUser?.uid), (querySnapShot) => {
           let data = querySnapShot.val() || {};
           let userData = { ...data };
@@ -42,6 +45,7 @@ export default function ProfileScreen({ navigation }: any) {
           });
         });
       } else {
+        // gets teacher data
         return await onValue(ref(db, '/teachers/' + auth?.currentUser?.uid), (querySnapShot) => {
           let data = querySnapShot.val() || {};
           let userData = { ...data };
@@ -56,6 +60,7 @@ export default function ProfileScreen({ navigation }: any) {
     });
   };
 
+  // resets password
   const handlePasswordReset = (email: string) => {
     sendPasswordResetEmail(auth, email)
       .then(function (user) {
@@ -70,12 +75,15 @@ export default function ProfileScreen({ navigation }: any) {
     <SafeAreaView style={{ backgroundColor: 'white', flex: 1 }}>
       <ScrollView style={styles.container} horizontal={false}>
         <View style={styles.container}>
+          {/* navigation section */}
           <View style={styles.navigation}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="chevron-back" size={40} />
             </TouchableOpacity>
             <Text style={styles.header}>PROFILE</Text>
           </View>
+
+          {/* profile info */}
           <View style={{ backgroundColor: 'transparent' }}>
             <View style={{ backgroundColor: 'transparent' }}>
               {value.error && <Text style={styles.error}>{value.error}</Text>}
@@ -230,6 +238,7 @@ export default function ProfileScreen({ navigation }: any) {
                 marginVertical: 20,
               }}
             >
+              {/* sign out */}
               <TouchableOpacity
                 style={{
                   backgroundColor: 'black',
@@ -244,6 +253,8 @@ export default function ProfileScreen({ navigation }: any) {
               >
                 <Text style={styles.buttonTitle}>SIGN OUT</Text>
               </TouchableOpacity>
+
+              {/* delete account */}
               <TouchableOpacity
                 style={{
                   backgroundColor: '#D54826FF',

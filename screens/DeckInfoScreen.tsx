@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, StyleSheet, Text, View, Pressable, TouchableOpacity, FlatList, Alert } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
 import Icon3 from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
@@ -12,9 +11,9 @@ var pinyin = require('chinese-to-pinyin');
 
 moment().format();
 
+// allows student to view info about a deck
 export default function DeckInfoScreen({ route, navigation }: any) {
   // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
 
   const [cards, setCards] = useState({});
@@ -51,9 +50,6 @@ export default function DeckInfoScreen({ route, navigation }: any) {
                   {deck['name']}
                 </Text>
               </View>
-              {/* <TouchableOpacity style={styles.addToVocabListSmall} onPress={() => alert('Add to vocab list?')}>
-                <AntDesign name='plus' size={20} color='#FFCB44'/>
-              </TouchableOpacity> */}
             </View>
           </View>
         </Pressable>
@@ -61,6 +57,7 @@ export default function DeckInfoScreen({ route, navigation }: any) {
     );
   };
 
+  // loads new data
   const loadNewData = () => {
     // gets cards ordered by createdAt
     console.log('class deck is', classDeck);
@@ -101,6 +98,7 @@ export default function DeckInfoScreen({ route, navigation }: any) {
     return key;
   };
 
+  // adds cards from deck to student's vocab list
   const addCardsToVocab = () => {
     for (let i = 0; i < cardArray.length; i++) {
       console.log(cardArray[i]['english']);
@@ -144,6 +142,8 @@ export default function DeckInfoScreen({ route, navigation }: any) {
       <TouchableOpacity style={styles.addToVocabList} onPress={() => addCardsToVocab()}>
         <Text style={{ color: '#FFCB44', fontWeight: '600' }}>ADD CARDS TO VOCAB LIST</Text>
       </TouchableOpacity>
+
+      {/* list of cards in deck */}
       <FlatList
         style={styles.cardList}
         contentContainerStyle={styles.contentContainerStyle}

@@ -8,9 +8,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { useAuthentication } from '../utils/hooks/useAuthentication';
 import { getAuth } from 'firebase/auth';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, update } from 'firebase/database';
 import { db } from '../config/firebase';
 import moment from 'moment';
 import * as Progress from 'react-native-progress';
@@ -27,9 +26,9 @@ import Toast from 'react-native-toast-message';
 var pinyin = require('chinese-to-pinyin');
 
 moment().format();
+
+// daily study
 export default function DailyStudyScreen({ route, navigation }: any) {
-  // initialises current user & auth
-  const { user } = useAuthentication();
   const auth = getAuth();
 
   const [progress, setProgress] = useState(0);
@@ -46,8 +45,24 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   const [typingQuestion, setTypingQuestion] = useState(false);
   const [writingQuestion, setWritingQuestion] = useState(0);
-  const [writingMistakes, setWritingMistakes] = useState(0);
-  // const [finishedWriting, setFinishedWriting] = useState(false);
+
+  const correctReadingETOC = useRef(0);
+  const totalReadingETOC = useRef(0);
+
+  const correctReadingCTOE = useRef(0);
+  const totalReadingCTOE = useRef(0);
+
+  const correctListeningCTOC = useRef(0);
+  const totalListeningCTOC = useRef(0);
+
+  const correctListeningCTOE = useRef(0);
+  const totalListeningCTOE = useRef(0);
+
+  const correctTypingETOC = useRef(0);
+  const totalTypingETOC = useRef(0);
+
+  const correctHandwritingETOC = useRef(0);
+  const totalHandwritingETOC = useRef(0);
 
   const timeOpened = new Date();
 
@@ -55,6 +70,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     typingAnswer: '',
   });
 
+  // shows toast based on whether answer is right or wrong
   const showToast = (card: any, right: boolean) => {
     Toast.show({
       type: right ? 'correctToast' : 'incorrectToast',
@@ -63,7 +79,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     });
   };
 
-  // gets cards from database when screen loads and creates array of cards to revise
+  // gets array of cards for daily revision
   useEffect(() => {
     answers.current = [];
     console.log('\nDAILY STUDY SCREEN');
@@ -80,10 +96,12 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     }
   }, []);
 
+  // gets progress on render
   useEffect(() => {
     getProgress();
   }, []);
 
+  // gets initial progress of daily study
   const getProgress = async () => {
     let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
     setProgress(parseFloat(dailyStudyProgress));
@@ -93,7 +111,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     setCurrentCardType((await AsyncStorage.getItem('cardType')) || '');
   };
 
-  // shuffles cards in an array through recursion
+  // shuffles cards in an array using recursion
   const shuffleCards: any = (array: []) => {
     let shuffledArray: [] = [];
     if (!array.length) return shuffledArray;
@@ -105,6 +123,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     return shuffledArray.concat(shuffleCards(slicedArray));
   };
 
+  // hides toast and moves to the next card
   const hideToast = (card: any, right: boolean) => {
     newQuestion.current = true;
     if (right) {
@@ -123,6 +142,8 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         return (
           <View>
             <Question key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />
+
+            {/* shows text input if typing question */}
             {typingQuestion && (
               <Input
                 inputContainerStyle={styles.inputStyle}
@@ -135,8 +156,20 @@ export default function DailyStudyScreen({ route, navigation }: any) {
                 autoCompleteType=""
                 onSubmitEditing={() => {
                   value.typingAnswer === todaysRevision[cardNum]['chinese']
-                    ? ((correct.current = true), showToast(todaysRevision[cardNum], true))
-                    : ((correct.current = false), showToast(todaysRevision[cardNum], false));
+                    ? ((correct.current = true),
+                      (correctTypingETOC.current += 1),
+                      (totalTypingETOC.current += 1),
+                      showToast(todaysRevision[cardNum], true),
+                      update(ref(db, '/students/' + auth.currentUser?.uid), {
+                        correctTypingETOC: correctTypingETOC.current,
+                        totalTypingETOC: totalTypingETOC.current,
+                      }))
+                    : ((correct.current = false),
+                      (totalTypingETOC.current += 1),
+                      showToast(todaysRevision[cardNum], false),
+                      update(ref(db, '/students/' + auth.currentUser?.uid), {
+                        totalTypingETOC: totalTypingETOC.current,
+                      }));
                 }}
               />
             )}
@@ -160,6 +193,8 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         >
           <Icon2 name="check" size={100} style={{ alignSelf: 'center', color: 'white' }} />
         </View>
+
+        {/* today's recap when daily revision is complete */}
         <View style={{ marginTop: 30 }}>
           <Text style={{ textAlign: 'center', fontSize: 36, fontWeight: '700' }}>all done!</Text>
           <View style={{ marginTop: 30 }}>
@@ -184,11 +219,13 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     );
   };
 
+  // sets new question on render
   useEffect(() => {
     newQuestion.current = true;
   }, []);
 
-  const generateRandomAnswers = (type: string, card: any) => {
+  // generates random answers for a question
+  const generateRandomAnswers = (type: string, card: any, cardType: string) => {
     // if it's a new question, generate new answers
     if (newQuestion.current) {
       // generates correct answer option (1 - 4)
@@ -208,7 +245,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             if (card.english != allCards[randomNum]['english'] && card.chinese != allCards[randomNum]['chinese']) {
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
-              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
@@ -228,7 +264,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             ) {
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
-              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
@@ -250,7 +285,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             ) {
               wrongAnswerIndexes[i] = randomNum;
               valid = true;
-              // console.log('i = ' + i + ' and card is ' + JSON.stringify(allCards[randomNum]));
               // adds wrong answer to list of wrong answers
               answers.current = [...answers.current, allCards[randomNum]];
             }
@@ -278,6 +312,47 @@ export default function DailyStudyScreen({ route, navigation }: any) {
                 console.log('correct');
                 correct.current = true;
                 showToast(card, true);
+
+                switch (cardType) {
+                  case 'ReadingETOC':
+                    correctReadingETOC.current += 1;
+                    totalReadingETOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctReadingETOC: correctReadingETOC.current,
+                      totalReadingETOC: totalReadingETOC.current,
+                    });
+                    break;
+                  case 'ReadingCTOE':
+                    correctReadingCTOE.current += 1;
+                    totalReadingCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctReadingCTOE: correctReadingCTOE.current,
+                      totalReadingCTOE: totalReadingCTOE.current,
+                    });
+                    break;
+                  case 'ListeningCTOC':
+                    correctListeningCTOC.current += 1;
+                    totalListeningCTOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctListeningCTOC: correctListeningCTOC.current,
+                      totalListeningCTOC: totalListeningCTOC.current,
+                    });
+                    break;
+                  case 'ListeningCTOE':
+                    correctListeningCTOE.current += 1;
+                    totalListeningCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      correctListeningCTOE: correctListeningCTOE.current,
+                      totalListeningCTOE: totalListeningCTOE.current,
+                    });
+                    break;
+                  default:
+                    break;
+                }
               }}
             >
               <Text style={styles.answerChoice}>{type === 'english' ? card.english : card.chinese}</Text>
@@ -285,7 +360,44 @@ export default function DailyStudyScreen({ route, navigation }: any) {
           ) : (
             <TouchableOpacity
               style={styles.answerChoiceBox}
-              onPress={() => (console.log('wrong'), (correct.current = false), showToast(card, false))}
+              onPress={() => {
+                console.log('wrong');
+                correct.current = false;
+                showToast(card, false);
+
+                switch (cardType) {
+                  case 'ReadingETOC':
+                    totalReadingETOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalReadingETOC: totalReadingETOC.current,
+                    });
+                    break;
+                  case 'ReadingCTOE':
+                    totalReadingCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalReadingCTOE: totalReadingCTOE.current,
+                    });
+                    break;
+                  case 'ListeningCTOC':
+                    totalListeningCTOC.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalListeningCTOC: totalListeningCTOC.current,
+                    });
+                    break;
+                  case 'ListeningCTOE':
+                    totalListeningCTOE.current += 1;
+
+                    update(ref(db, '/students/' + auth.currentUser?.uid), {
+                      totalListeningCTOE: totalListeningCTOE.current,
+                    });
+                    break;
+                  default:
+                    break;
+                }
+              }}
             >
               <Text style={styles.answerChoice}>
                 {j >= correctAnswerOption.current ? answers.current![j - 1][type] : answers.current![j][type]}
@@ -301,9 +413,6 @@ export default function DailyStudyScreen({ route, navigation }: any) {
 
   // Writing (English -> Chinese)
   const HandwritingETOC = (character: any) => {
-    setWritingMistakes(0);
-    console.log(character.card);
-
     const INJECTED_JAVASCRIPT =
       `
       var writer = HanziWriter.create('grid-background-target', '` +
@@ -367,8 +476,20 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             let mistakes = JSON.parse(event.nativeEvent.data);
             if (mistakes < 3) {
               correct.current = true;
+              correctHandwritingETOC.current = correctHandwritingETOC.current + 1;
+              totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
+
+              update(ref(db, '/students/' + auth.currentUser?.uid), {
+                correctHandwritingETOC: correctHandwritingETOC.current,
+                totalHandwritingETOC: totalHandwritingETOC.current,
+              });
             } else {
               correct.current = false;
+              totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
+
+              update(ref(db, '/students/' + auth.currentUser?.uid), {
+                totalHandwritingETOC: totalHandwritingETOC.current,
+              });
             }
           }}
         />
@@ -413,7 +534,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         <View style={{ marginTop: 100 }}>
           <Text style={styles.newCard}>{card.card.chinese}</Text>
           <Text style={styles.instructions}>Chinese → English</Text>
-          <View style={styles.answers}>{generateRandomAnswers('english', card.card)}</View>
+          <View style={styles.answers}>{generateRandomAnswers('english', card.card, 'ReadingCTOE')}</View>
         </View>
       </View>
     );
@@ -435,7 +556,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
         <View style={{ marginTop: 100 }}>
           <Text style={styles.newCard}>{card.card.english}</Text>
           <Text style={styles.instructions}>English → Chinese</Text>
-          <View style={styles.answers}>{generateRandomAnswers('chinese', card.card)}</View>
+          <View style={styles.answers}>{generateRandomAnswers('chinese', card.card, 'ReadingETOC')}</View>
         </View>
       </View>
     );
@@ -469,10 +590,12 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     );
   };
 
+  // generates a random integer between min and max
   const randomInt = (min: number, max: number) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
+  // Listening (Chinese -> Chinese)
   const ListeningCTOC = (card: any) => {
     return (
       <View style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -500,14 +623,16 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             <Icon3 name="volume-up" size={60} color="white" />
           </TouchableOpacity>
           <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → Chinese</Text>
-          <View style={[styles.answers, { marginTop: 20 }]}>{generateRandomAnswers('chinese', card.card)}</View>
+          <View style={[styles.answers, { marginTop: 20 }]}>
+            {generateRandomAnswers('chinese', card.card, 'ListeningCTOC')}
+          </View>
         </View>
       </View>
     );
   };
 
+  // Listening (Chinese -> English)
   const ListeningCTOE = (card: any) => {
-    console.log('chinese:', card.card.chinese);
     return (
       <View style={{ justifyContent: 'center', alignItems: 'center' }}>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: 350, marginTop: 10 }}>
@@ -534,7 +659,9 @@ export default function DailyStudyScreen({ route, navigation }: any) {
             <Icon3 name="volume-up" size={60} color="white" />
           </TouchableOpacity>
           <Text style={[styles.instructions, { marginTop: 40 }]}>Chinese → English</Text>
-          <View style={[styles.answers, { marginTop: 20 }]}>{generateRandomAnswers('english', card.card)}</View>
+          <View style={[styles.answers, { marginTop: 20 }]}>
+            {generateRandomAnswers('english', card.card, 'ListeningCTOE')}
+          </View>
         </View>
       </View>
     );
@@ -546,6 +673,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     let cardType: any = currentCardType;
     let type = 0;
 
+    // generates a question type based on number of times reviewed
     if (cardType === '') {
       switch (true) {
         // new card
@@ -639,6 +767,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
       }
     }
 
+    // renders question type
     if (cardType === 'NewCard') {
       setTypingQuestion(false);
       return <NewCard key={todaysRevision[cardNum]} card={todaysRevision[cardNum]} />;
@@ -730,7 +859,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     return null;
   };
 
-  // move to the next question
+  // moves to the next question
   const updateCardNum = async (card: any, right: boolean) => {
     console.log('answer was', right ? 'correct' : 'incorrect');
 
@@ -761,6 +890,7 @@ export default function DailyStudyScreen({ route, navigation }: any) {
   };
 
   // adapted from https://www.skritter.com/api/v0/docs/scheduling
+  // calculates updated due date of card
   const getDueDate = (card: any, right: boolean) => {
     let interval = card.timesReviewed + 1;
     let factor = 1;
@@ -784,14 +914,18 @@ export default function DailyStudyScreen({ route, navigation }: any) {
     return interval;
   };
 
+  // exits daily study with updated stats
   const exitDailyStudy = async () => {
     const exitTime = new Date();
     console.log('time opened:', timeOpened.getTime());
     console.log('time exited:', exitTime.getTime());
+
     const minutesLearning = JSON.parse((await AsyncStorage.getItem('minutesLearning')) || '0');
     const extraMinutesLearning = (exitTime.getTime() - timeOpened.getTime()) / 60000;
     console.log('minutes:', extraMinutesLearning);
+
     AsyncStorage.setItem('minutesLearning', JSON.stringify(minutesLearning + extraMinutesLearning));
+
     navigation.goBack();
   };
 
