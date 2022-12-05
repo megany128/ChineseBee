@@ -9,7 +9,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { getAuth } from 'firebase/auth';
-import { ref, update } from 'firebase/database';
+import { ref, update, onValue } from 'firebase/database';
 import { db } from '../config/firebase';
 import * as Progress from 'react-native-progress';
 import { Input } from 'react-native-elements';
@@ -36,22 +36,34 @@ export default function TestScreen({ route, navigation }: any) {
   const wrongAnswerIndexes: any = useRef([]);
 
   const correctReadingETOC = useRef(0);
+  const actualCorrectReadingETOC = useRef(0);
   const totalReadingETOC = useRef(0);
+  const actualTotalReadingETOC = useRef(0);
 
   const correctReadingCTOE = useRef(0);
+  const actualCorrectReadingCTOE = useRef(0);
   const totalReadingCTOE = useRef(0);
+  const actualTotalReadingCTOE = useRef(0);
 
   const correctListeningCTOC = useRef(0);
+  const actualCorrectListeningCTOC = useRef(0);
   const totalListeningCTOC = useRef(0);
+  const actualTotalListeningCTOC = useRef(0);
 
   const correctListeningCTOE = useRef(0);
+  const actualCorrectListeningCTOE = useRef(0);
   const totalListeningCTOE = useRef(0);
+  const actualTotalListeningCTOE = useRef(0);
 
   const correctTypingETOC = useRef(0);
+  const actualCorrectTypingETOC = useRef(0);
   const totalTypingETOC = useRef(0);
+  const actualTotalTypingETOC = useRef(0);
 
   const correctHandwritingETOC = useRef(0);
+  const actualCorrectHandwritingETOC = useRef(0);
   const totalHandwritingETOC = useRef(0);
+  const actualTotalHandwritingETOC = useRef(0);
 
   const [cardNum, setCardNum] = useState(0);
 
@@ -92,6 +104,32 @@ export default function TestScreen({ route, navigation }: any) {
 
     correctHandwritingETOC.current = 0;
     totalHandwritingETOC.current = 0;
+  }, []);
+
+  // gets student's current stats
+  useEffect(() => {
+    onValue(ref(db, '/students/' + auth.currentUser?.uid), (querySnapShot) => {
+      let data = querySnapShot.val() || {};
+      let userData = { ...data };
+
+      actualCorrectReadingETOC.current = userData.correctReadingETOC;
+      actualTotalReadingETOC.current = userData.totalReadingETOC;
+
+      actualCorrectReadingCTOE.current = userData.correctReadingCTOE;
+      actualTotalReadingCTOE.current = userData.totalReadingCTOE;
+
+      actualCorrectListeningCTOC.current = userData.correctListeningCTOC;
+      actualTotalListeningCTOC.current = userData.totalListeningCTOC;
+
+      actualCorrectListeningCTOE.current = userData.correctListeningCTOE;
+      actualTotalListeningCTOE.current = userData.totalListeningCTOE;
+
+      actualCorrectTypingETOC.current = userData.correctTypingETOC;
+      actualTotalTypingETOC.current = userData.totalTypingETOC;
+
+      actualCorrectHandwritingETOC.current = userData.correctHandwritingETOC;
+      actualTotalHandwritingETOC.current = userData.totalHandwritingETOC;
+    });
   }, []);
 
   // gets cards from database when screen loads and creates array of cards to revise
@@ -164,14 +202,14 @@ export default function TestScreen({ route, navigation }: any) {
                     (totalTypingETOC.current += 1),
                     showToast(cards[cardNum], true),
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      correctTypingETOC: correctTypingETOC.current,
-                      totalTypingETOC: totalTypingETOC.current,
+                      correctTypingETOC: correctTypingETOC.current + actualCorrectTypingETOC.current,
+                      totalTypingETOC: totalTypingETOC.current + actualTotalTypingETOC.current,
                     }))
                   : ((correct.current = false),
                     (totalTypingETOC.current += 1),
                     showToast(cards[cardNum], false),
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      totalTypingETOC: totalTypingETOC.current,
+                      totalTypingETOC: totalTypingETOC.current + actualTotalTypingETOC.current,
                     }));
               }}
             />
@@ -347,8 +385,8 @@ export default function TestScreen({ route, navigation }: any) {
                     totalReadingETOC.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      correctReadingETOC: correctReadingETOC.current,
-                      totalReadingETOC: totalReadingETOC.current,
+                      correctReadingETOC: correctReadingETOC.current + actualCorrectReadingETOC.current,
+                      totalReadingETOC: totalReadingETOC.current + actualTotalReadingETOC.current,
                     });
                     break;
                   case 'ReadingCTOE':
@@ -356,8 +394,8 @@ export default function TestScreen({ route, navigation }: any) {
                     totalReadingCTOE.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      correctReadingCTOE: correctReadingCTOE.current,
-                      totalReadingCTOE: totalReadingCTOE.current,
+                      correctReadingCTOE: correctReadingCTOE.current + actualCorrectReadingCTOE.current,
+                      totalReadingCTOE: totalReadingCTOE.current + actualTotalReadingCTOE.current,
                     });
                     break;
                   case 'ListeningCTOC':
@@ -365,8 +403,8 @@ export default function TestScreen({ route, navigation }: any) {
                     totalListeningCTOC.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      correctListeningCTOC: correctListeningCTOC.current,
-                      totalListeningCTOC: totalListeningCTOC.current,
+                      correctListeningCTOC: correctListeningCTOC.current + actualCorrectListeningCTOC.current,
+                      totalListeningCTOC: totalListeningCTOC.current + actualTotalListeningCTOC.current,
                     });
                     break;
                   case 'ListeningCTOE':
@@ -374,8 +412,8 @@ export default function TestScreen({ route, navigation }: any) {
                     totalListeningCTOE.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      correctListeningCTOE: correctListeningCTOE.current,
-                      totalListeningCTOE: totalListeningCTOE.current,
+                      correctListeningCTOE: correctListeningCTOE.current + actualCorrectListeningCTOE.current,
+                      totalListeningCTOE: totalListeningCTOE.current + actualTotalListeningCTOE.current,
                     });
                     break;
                   default:
@@ -398,28 +436,28 @@ export default function TestScreen({ route, navigation }: any) {
                     totalReadingETOC.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      totalReadingETOC: totalReadingETOC.current,
+                      totalReadingETOC: totalReadingETOC.current + actualTotalReadingETOC.current,
                     });
                     break;
                   case 'ReadingCTOE':
                     totalReadingCTOE.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      totalReadingCTOE: totalReadingCTOE.current,
+                      totalReadingCTOE: totalReadingCTOE.current + actualTotalReadingCTOE.current,
                     });
                     break;
                   case 'ListeningCTOC':
                     totalListeningCTOC.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      totalListeningCTOC: totalListeningCTOC.current,
+                      totalListeningCTOC: totalListeningCTOC.current + actualTotalListeningCTOC.current,
                     });
                     break;
                   case 'ListeningCTOE':
                     totalListeningCTOE.current += 1;
 
                     update(ref(db, '/students/' + auth.currentUser?.uid), {
-                      totalListeningCTOE: totalListeningCTOE.current,
+                      totalListeningCTOE: totalListeningCTOE.current + actualTotalListeningCTOE.current,
                     });
                     break;
                   default:
@@ -510,15 +548,15 @@ export default function TestScreen({ route, navigation }: any) {
               totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
 
               update(ref(db, '/students/' + auth.currentUser?.uid), {
-                correctHandwritingETOC: correctHandwritingETOC.current,
-                totalHandwritingETOC: totalHandwritingETOC.current,
+                correctHandwritingETOC: correctHandwritingETOC.current + actualCorrectHandwritingETOC.current,
+                totalHandwritingETOC: totalHandwritingETOC.current + actualTotalHandwritingETOC.current,
               });
             } else {
               correct.current = false;
               totalHandwritingETOC.current = totalHandwritingETOC.current + 1;
 
               update(ref(db, '/students/' + auth.currentUser?.uid), {
-                totalHandwritingETOC: totalHandwritingETOC.current,
+                totalHandwritingETOC: totalHandwritingETOC.current + actualTotalHandwritingETOC.current,
               });
             }
           }}

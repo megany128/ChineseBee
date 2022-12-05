@@ -140,11 +140,14 @@ export default function StatsScreen({ navigation }: any) {
             let students = { ...data };
 
             if (students) {
+              console.log('current class code is', user.classCode);
               let allStudents: any = Object.values(students);
               allStudents = allStudents.filter((student: any) => {
                 return student.classCode === user.classCode;
               });
               setMyStudents(allStudents);
+
+              console.log('students are', allStudents);
 
               let correctReading = 0;
               let correctListening = 0;

@@ -285,7 +285,6 @@ export default function HomeScreen({ navigation }: any) {
       let user = { ...data };
       classCode.current = user.classCode;
       console.log('classcode:', classCode.current);
-      setName(user.name);
 
       if (!user.classCode) {
         console.log('classcode2:', classCode.current);
@@ -345,6 +344,14 @@ export default function HomeScreen({ navigation }: any) {
       let data = querySnapShot.val() || [];
       let user = { ...data };
       setName(user.name);
+
+      if (!user.name) {
+        return onValue(ref(db, '/teachers/' + auth.currentUser?.uid), async (querySnapShot) => {
+          let data = querySnapShot.val() || [];
+          let user = { ...data };
+          setName(user.name);
+        });
+      }
 
       let dailyStudyProgress = (await AsyncStorage.getItem('dailyStudyProgress')) || '0';
       setProgress(parseFloat(dailyStudyProgress));

@@ -399,6 +399,7 @@ export default function CardsScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       ) : (
+        // teacher view
         <View>
           {/* search bar */}
           <TextInput
@@ -417,7 +418,7 @@ export default function CardsScreen({ navigation }: any) {
           {/* list of decks */}
           <FlatList
             style={styles.cardList}
-            contentContainerStyle={[styles.contentContainerStyle, { marginLeft: 10 }]}
+            contentContainerStyle={styles.contentContainerStyle}
             showsVerticalScrollIndicator={false}
             data={filteredClassDecks}
             keyExtractor={(item: any) => item.key}

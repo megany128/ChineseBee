@@ -119,7 +119,7 @@ export default function SharedDecksScreen({ navigation }: any) {
       <FlatList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadNewData} />}
         numColumns={2}
-        style={[styles.cardList, { maxHeight: (classDecks.length / 2) * 170 }]}
+        style={styles.cardList}
         contentContainerStyle={styles.contentContainerStyle}
         showsVerticalScrollIndicator={false}
         data={classDecks}
