@@ -3,27 +3,14 @@ import React from 'react';
 import RootNavigation from './navigation';
 import { ThemeProvider } from 'react-native-elements';
 import './config/firebase';
-import {
-  StyleSheet,
-  Text,
-  View,
-  SafeAreaView,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  Keyboard,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-
 import useCachedResources from './hooks/useCachedResources';
-import useColorScheme from './hooks/useColorScheme';
 import Toast from 'react-native-toast-message';
 
 export default function App() {
   const isLoadingComplete = useCachedResources();
-  const colorScheme = useColorScheme();
 
   const toastConfig = {
     correctToast: ({ props }: any) => (
